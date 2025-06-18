@@ -4,6 +4,8 @@ import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.github.jacks.planetaryIdle.PlanetaryIdle
 import com.github.jacks.planetaryIdle.input.KeyboardInputProcessor
 import com.github.jacks.planetaryIdle.input.gdxInputProcessor
+import com.github.jacks.planetaryIdle.ui.models.PlanetModel
+import com.github.jacks.planetaryIdle.ui.views.planetView
 import com.github.quillraven.fleks.World
 import com.github.quillraven.fleks.world
 import ktx.app.KtxScreen
@@ -30,7 +32,8 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
 
     init {
         stage.actors {
-            // add views here with viewmodels
+            log.debug { "adding actors to stage" }
+            planetView()
         }
     }
 

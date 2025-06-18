@@ -10,6 +10,8 @@ import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.github.jacks.planetaryIdle.screens.PlanetScreen
+import com.github.jacks.planetaryIdle.ui.disposeSkin
+import com.github.jacks.planetaryIdle.ui.loadSkin
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
@@ -18,14 +20,14 @@ import ktx.assets.disposeSafely
 class PlanetaryIdle : KtxGame<KtxScreen>(), EventListener {
 
     private val batch : Batch by lazy { SpriteBatch() }
-    val stage : Stage by lazy { Stage(ScreenViewport()) }
+    val stage : Stage by lazy { Stage(ScreenViewport(), batch) }
     private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
 
     override fun create() {
         Gdx.app.logLevel = Application.LOG_DEBUG
         preferences.clear()
 
-        //loadSkin()
+        loadSkin()
         stage.addListener(this)
         addScreen(PlanetScreen(this))
         setScreen<PlanetScreen>()
@@ -44,6 +46,7 @@ class PlanetaryIdle : KtxGame<KtxScreen>(), EventListener {
         super.dispose()
         stage.disposeSafely()
         batch.disposeSafely()
+        disposeSkin()
     }
 
     override fun handle(event: Event?): Boolean {

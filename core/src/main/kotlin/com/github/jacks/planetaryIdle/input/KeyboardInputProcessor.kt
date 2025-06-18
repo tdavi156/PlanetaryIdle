@@ -1,6 +1,7 @@
 package com.github.jacks.planetaryIdle.input
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Input.Keys.W
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.scenes.scene2d.Stage
@@ -33,7 +34,12 @@ class KeyboardInputProcessor(
     }
 
     override fun keyDown(keycode: Int): Boolean {
-        return super.keyDown(keycode)
+        when (keycode) {
+            W -> {
+                log.debug { "W key is pressed" }
+            }
+        }
+        return true
     }
 
     override fun keyUp(keycode: Int): Boolean {
