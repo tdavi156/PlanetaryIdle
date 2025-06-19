@@ -27,6 +27,7 @@ enum class Labels {
     TITLE,
     DEFAULT,
     SMALL,
+    MEDIUM,
     LARGE;
 
     val skinKey = this.name.lowercase()
@@ -38,6 +39,7 @@ enum class Fonts(
 ) {
     DEFAULT("default", 1f),
     SMALL("default", 0.5f),
+    MEDIUM("default", 0.75f),
     BIG("default", 2f);
 
     val skinKey = "Font_${this.name.lowercase()}"
@@ -82,8 +84,16 @@ private fun @SkinDsl Skin.loadLabels(skin : Skin) {
             bottomHeight = 3f
         }
     }
+    label(Labels.DEFAULT.skinKey) {
+        font = skin[Fonts.DEFAULT]
+        fontColor = Color.WHITE
+    }
     label(Labels.SMALL.skinKey) {
         font = skin[Fonts.SMALL]
+        fontColor = Color.WHITE
+    }
+    label(Labels.MEDIUM.skinKey) {
+        font = skin[Fonts.MEDIUM]
         fontColor = Color.WHITE
     }
     label(Labels.LARGE.skinKey) {

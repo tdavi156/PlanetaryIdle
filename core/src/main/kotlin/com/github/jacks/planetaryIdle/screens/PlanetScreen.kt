@@ -35,8 +35,9 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
     init {
         stage.actors {
             backgroundView()
-            planetView()
+            planetView(PlanetModel(entityWorld, stage))
         }
+        stage.isDebugAll = true
     }
 
     override fun show() {

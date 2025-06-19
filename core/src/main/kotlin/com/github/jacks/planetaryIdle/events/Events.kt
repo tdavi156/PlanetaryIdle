@@ -7,6 +7,9 @@ fun Stage.fire(event : Event) {
     this.root.fire(event)
 }
 
+class AssignPopulationToFarm : Event()
+
 class FoodGrowthEvent : Event()
 
-class AssignPopulationToFood : Event()
+class ConvertFoodToPopulation : Event()
+
