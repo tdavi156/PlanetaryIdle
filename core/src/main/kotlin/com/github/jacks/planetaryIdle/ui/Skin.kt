@@ -25,6 +25,8 @@ enum class Drawables(
 
 enum class Labels {
     TITLE,
+    DEFAULT,
+    SMALL,
     LARGE;
 
     val skinKey = this.name.lowercase()
@@ -35,6 +37,7 @@ enum class Fonts(
     val scaling : Float
 ) {
     DEFAULT("default", 1f),
+    SMALL("default", 0.5f),
     BIG("default", 2f);
 
     val skinKey = "Font_${this.name.lowercase()}"
@@ -79,6 +82,10 @@ private fun @SkinDsl Skin.loadLabels(skin : Skin) {
             bottomHeight = 3f
         }
     }
+    label(Labels.SMALL.skinKey) {
+        font = skin[Fonts.SMALL]
+        fontColor = Color.WHITE
+    }
     label(Labels.LARGE.skinKey) {
         font = skin[Fonts.BIG]
         fontColor = Color.WHITE
@@ -87,6 +94,10 @@ private fun @SkinDsl Skin.loadLabels(skin : Skin) {
 
 private fun @SkinDsl Skin.loadButtons(skin: Skin) {
     textButton(Buttons.TEXT_BUTTON.skinKey) {
+        up = skin[Drawables.BUTTON_1_UP]
+        over = skin[Drawables.BUTTON_1_OVER]
+        down = skin[Drawables.BUTTON_1_DOWN]
+        disabled = skin[Drawables.BUTTON_1_DISABLED]
         font = skin[Fonts.DEFAULT]
     }
 }

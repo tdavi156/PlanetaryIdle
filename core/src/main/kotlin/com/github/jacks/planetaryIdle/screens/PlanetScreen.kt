@@ -4,7 +4,9 @@ import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.github.jacks.planetaryIdle.PlanetaryIdle
 import com.github.jacks.planetaryIdle.input.KeyboardInputProcessor
 import com.github.jacks.planetaryIdle.input.gdxInputProcessor
+import com.github.jacks.planetaryIdle.systems.RenderSystem
 import com.github.jacks.planetaryIdle.ui.models.PlanetModel
+import com.github.jacks.planetaryIdle.ui.views.backgroundView
 import com.github.jacks.planetaryIdle.ui.views.planetView
 import com.github.quillraven.fleks.World
 import com.github.quillraven.fleks.world
@@ -18,7 +20,7 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
 
     private val entityWorld : World = world {
         injectables {
-            //add(stage)
+            add(stage)
         }
 
         components {
@@ -26,13 +28,13 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
         }
 
         systems {
-            // add<SystemName>()
+            add<RenderSystem>()
         }
     }
 
     init {
         stage.actors {
-            log.debug { "adding actors to stage" }
+            backgroundView()
             planetView()
         }
     }
