@@ -38,9 +38,9 @@ enum class Fonts(
     val scaling : Float
 ) {
     DEFAULT("default", 1f),
-    SMALL("default", 0.5f),
-    MEDIUM("default", 0.75f),
-    BIG("default", 2f);
+    SMALL("default", 0.25f),
+    MEDIUM("default", 0.5f),
+    LARGE("default", 1.5f);
 
     val skinKey = "Font_${this.name.lowercase()}"
     val fontPath = "assets/fonts/${this.atlasRegionKey}.fnt"
@@ -75,7 +75,7 @@ private fun loadFonts(skin: Skin) {
 
 private fun @SkinDsl Skin.loadLabels(skin : Skin) {
     label(Labels.TITLE.skinKey) {
-        font = skin[Fonts.BIG]
+        font = skin[Fonts.LARGE]
         fontColor = Color.WHITE
         background = skin[Drawables.BUTTON_1_UP].apply {
             leftWidth = 3f
@@ -97,7 +97,7 @@ private fun @SkinDsl Skin.loadLabels(skin : Skin) {
         fontColor = Color.WHITE
     }
     label(Labels.LARGE.skinKey) {
-        font = skin[Fonts.BIG]
+        font = skin[Fonts.LARGE]
         fontColor = Color.WHITE
     }
 }
@@ -108,7 +108,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         over = skin[Drawables.BUTTON_1_OVER]
         down = skin[Drawables.BUTTON_1_DOWN]
         disabled = skin[Drawables.BUTTON_1_DISABLED]
-        font = skin[Fonts.DEFAULT]
+        font = skin[Fonts.MEDIUM]
     }
 }
 

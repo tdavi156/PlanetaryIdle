@@ -2,9 +2,13 @@ package com.github.jacks.planetaryIdle.screens
 
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.github.jacks.planetaryIdle.PlanetaryIdle
+import com.github.jacks.planetaryIdle.events.InitializeGameEvent
+import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.input.KeyboardInputProcessor
 import com.github.jacks.planetaryIdle.input.gdxInputProcessor
+import com.github.jacks.planetaryIdle.systems.EntityCreationSystem
 import com.github.jacks.planetaryIdle.systems.RenderSystem
+import com.github.jacks.planetaryIdle.systems.ResourceUpdateSystem
 import com.github.jacks.planetaryIdle.ui.models.PlanetModel
 import com.github.jacks.planetaryIdle.ui.views.backgroundView
 import com.github.jacks.planetaryIdle.ui.views.planetView
@@ -29,6 +33,8 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
 
         systems {
             add<RenderSystem>()
+            add<EntityCreationSystem>()
+            add<ResourceUpdateSystem>()
         }
     }
 
@@ -37,7 +43,7 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
             backgroundView()
             planetView(PlanetModel(entityWorld, stage))
         }
-        stage.isDebugAll = true
+        stage.isDebugAll = false
     }
 
     override fun show() {
@@ -49,6 +55,7 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
             }
         }
 
+        stage.fire(InitializeGameEvent())
         KeyboardInputProcessor(entityWorld, stage)
         gdxInputProcessor(stage)
     }
