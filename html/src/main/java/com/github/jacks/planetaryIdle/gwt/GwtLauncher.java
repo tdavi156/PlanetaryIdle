@@ -10,7 +10,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 public class GwtLauncher extends GwtApplication {
     @Override
     public GwtApplicationConfiguration getConfig () {
-        return new GwtApplicationConfiguration(640, 480);
+        return new GwtApplicationConfiguration(1080, 760);
     }
 
     @Override

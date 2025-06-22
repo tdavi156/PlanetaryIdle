@@ -10,8 +10,10 @@ fun Stage.fire(event : Event) {
 
 class InitializeGameEvent : Event()
 class QuitGameEvent : Event()
+class ResetGameEvent : Event()
 
+class GameCompletedEvent : Event()
 
 class ResourceUpdateEvent(val entity : Entity) : Event()
 
-class BuyFoodEvent(val foodType : String) : Event()
+class AssignPopEvent(val foodType : String) : Event()

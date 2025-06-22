@@ -9,9 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.utils.viewport.ScreenViewport
-import com.github.jacks.planetaryIdle.events.InitializeGameEvent
 import com.github.jacks.planetaryIdle.events.QuitGameEvent
-import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.screens.PlanetScreen
 import com.github.jacks.planetaryIdle.ui.disposeSkin
 import com.github.jacks.planetaryIdle.ui.loadSkin

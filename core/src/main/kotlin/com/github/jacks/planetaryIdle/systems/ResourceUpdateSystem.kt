@@ -1,7 +1,6 @@
 package com.github.jacks.planetaryIdle.systems
 
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.github.jacks.planetaryIdle.PlanetaryIdle
 import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
 import com.github.jacks.planetaryIdle.events.fire
