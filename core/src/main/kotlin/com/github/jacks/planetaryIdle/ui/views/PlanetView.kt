@@ -54,16 +54,12 @@ class PlanetView(
 
     private var wheatOwned : Label
     private var wheatMultiplier : Label
-    //private var wheatCost : Label
     private var cornOwned : Label
     private var cornMultiplier : Label
-    //private var cornCost : Label
     private var cabbageOwned : Label
     private var cabbageMultiplier : Label
-    //private var cabbageCost : Label
     private var potatoesOwned : Label
     private var potatoesMultiplier : Label
-    //private var potatoesCost : Label
 
     init {
         setFillParent(true)
@@ -173,7 +169,7 @@ class PlanetView(
                         label("Wheat Fields", Labels.SEMI_MEDIUM.skinKey) { cell ->
                             cell.left().padRight(15f)
                         }
-                        this@PlanetView.wheatMultiplier = label("x1", Labels.SMALL.skinKey) { cell ->
+                        this@PlanetView.wheatMultiplier = label("x1.00", Labels.SMALL.skinKey) { cell ->
                             cell.expand().left()
                         }
                         foodTableNameCell.left().width(200f)
@@ -201,7 +197,7 @@ class PlanetView(
                         label("Corn Fields", Labels.SEMI_MEDIUM.skinKey) { cell ->
                             cell.left().padRight(15f)
                         }
-                        this@PlanetView.cornMultiplier = label("x1", Labels.SMALL.skinKey) { cell ->
+                        this@PlanetView.cornMultiplier = label("x1.00", Labels.SMALL.skinKey) { cell ->
                             cell.expand().left()
                         }
                         foodTableNameCell.left().width(200f)
@@ -230,7 +226,7 @@ class PlanetView(
                         label("Cabbage Fields", Labels.SEMI_MEDIUM.skinKey) { cell ->
                             cell.left().padRight(15f)
                         }
-                        this@PlanetView.cabbageMultiplier = label("x1", Labels.SMALL.skinKey) { cell ->
+                        this@PlanetView.cabbageMultiplier = label("x1.00", Labels.SMALL.skinKey) { cell ->
                             cell.expand().left()
                         }
                         foodTableNameCell.left().width(200f)
@@ -259,7 +255,7 @@ class PlanetView(
                         label("Potato Fields", Labels.SEMI_MEDIUM.skinKey) { cell ->
                             cell.left().padRight(15f)
                         }
-                        this@PlanetView.potatoesMultiplier = label("x1", Labels.SMALL.skinKey) { cell ->
+                        this@PlanetView.potatoesMultiplier = label("x1.00", Labels.SMALL.skinKey) { cell ->
                             cell.expand().left()
                         }
                         foodTableNameCell.left().width(200f)
@@ -313,14 +309,38 @@ class PlanetView(
         model.onPropertyChange(PlanetModel::wheatAmount) { amount ->
             wheatAmountChange(amount)
         }
+        model.onPropertyChange(PlanetModel::wheatMultiplier) { multiplier ->
+            wheatMultiplierChange(multiplier)
+        }
+        model.onPropertyChange(PlanetModel::wheatCost) { cost ->
+            wheatCostChange(cost)
+        }
         model.onPropertyChange(PlanetModel::cornAmount) { amount ->
             cornAmountChange(amount)
+        }
+        model.onPropertyChange(PlanetModel::cornMultiplier) { multiplier ->
+            cornMultiplierChange(multiplier)
+        }
+        model.onPropertyChange(PlanetModel::cornCost) { cost ->
+            cornCostChange(cost)
         }
         model.onPropertyChange(PlanetModel::cabbageAmount) { amount ->
             cabbageAmountChange(amount)
         }
+        model.onPropertyChange(PlanetModel::cabbageMultiplier) { multiplier ->
+            cabbageMultiplierChange(multiplier)
+        }
+        model.onPropertyChange(PlanetModel::cabbageCost) { cost ->
+            cabbageCostChange(cost)
+        }
         model.onPropertyChange(PlanetModel::potatoesAmount) { amount ->
             potatoesAmountChange(amount)
+        }
+        model.onPropertyChange(PlanetModel::potatoesMultiplier) { multiplier ->
+            potatoesMultiplierChange(multiplier)
+        }
+        model.onPropertyChange(PlanetModel::potatoesCost) { cost ->
+            potatoesCostChange(cost)
         }
         model.onPropertyChange(PlanetModel::gameCompleted) { completed ->
             popupGameCompleted(completed)
@@ -328,16 +348,13 @@ class PlanetView(
     }
 
     private fun totalPopAmountChange(amount : Int) {
-        val formattedAmount = "%,d".format(amount)
-        totalPopulation.txt = "Progress towards planet colonization: $formattedAmount / 1,000,000"
+        totalPopulation.txt = "Progress towards planet colonization: ${"%,d".format(amount)} / 1,000,000"
     }
     private fun popAmountChange(amount : Int) {
-        val formattedAmount = "%,d".format(amount)
-        availablePopulation.txt = "You have $formattedAmount available population. (AP)"
+        availablePopulation.txt = "You have ${"%,d".format(amount)} available population. (AP)"
     }
     private fun popGainRateChange(amount : Float) {
-        val formattedAmount = "%,d".format(amount.roundToInt())
-        populationGainPerSecond.txt = "You are gaining $formattedAmount population per second."
+        populationGainPerSecond.txt = "You are gaining ${"%,d".format(amount.roundToInt())} population per second."
     }
     private fun updateAvailable(amount : Int) {
         assignWheatButton.isDisabled = amount < 10
@@ -348,14 +365,45 @@ class PlanetView(
     private fun wheatAmountChange(amount : Int) {
         wheatOwned.txt = "%,d".format(amount)
     }
+    private fun wheatMultiplierChange(multiplier : Float) {
+        wheatMultiplier.txt = "x${"%.2f".format(multiplier)}"
+    }
+    private fun wheatCostChange(cost : Float) {
+        assignWheatButton.txt = formatCost(cost)
+    }
     private fun cornAmountChange(amount : Int) {
         cornOwned.txt = "%,d".format(amount)
+    }
+    private fun cornMultiplierChange(multiplier : Float) {
+        cornMultiplier.txt = "x${"%.2f".format(multiplier)}"
+    }
+    private fun cornCostChange(cost : Float) {
+        assignCornButton.txt = formatCost(cost)
     }
     private fun cabbageAmountChange(amount : Int) {
         cabbageOwned.txt = "%,d".format(amount)
     }
+    private fun cabbageMultiplierChange(multiplier : Float) {
+        cabbageMultiplier.txt = "x${"%.2f".format(multiplier)}"
+    }
+    private fun cabbageCostChange(cost : Float) {
+        assignCabbageButton.txt = formatCost(cost)
+    }
     private fun potatoesAmountChange(amount : Int) {
         potatoesOwned.txt = "%,d".format(amount)
+    }
+    private fun potatoesMultiplierChange(multiplier : Float) {
+        potatoesMultiplier.txt = "x${"%.2f".format(multiplier)}"
+    }
+    private fun potatoesCostChange(cost : Float) {
+        assignPotatoesButton.txt = formatCost(cost)
+    }
+    private fun formatCost(cost : Float) : String {
+        return if (cost > 9999f) {
+            "${"%.0f".format(cost)} AP"
+        } else {
+            "Assign: ${"%.0f".format(cost)} AP"
+        }
     }
     private fun checkForGameEnd(amount : Int) {
         if (amount >= 1000000) {

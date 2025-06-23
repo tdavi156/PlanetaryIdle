@@ -20,7 +20,8 @@ class EntityCreationSystem(
             val createEntity = world.entity {
                 add<ResourceComponent> {
                     resourceName = c_resourceName
-                    resourceCost = c_resourceCost
+                    resourceTier = c_resourceTier
+                    baseResourceCost = c_baseResourceCost
                     baseUpdateDuration = c_baseUpdateDuration
                     resourceValue = c_resourceValue
                     amountOwned = c_amountOwned
@@ -42,7 +43,8 @@ class EntityCreationSystem(
                 world.entity {
                     add<CreateComponent> {
                         this.c_resourceName = "wheat"
-                        this.c_resourceCost = 10f
+                        this.c_resourceTier = 1f
+                        this.c_baseResourceCost = 10f
                         this.c_baseUpdateDuration = 1f
                         this.c_resourceValue = 1f
                     }
@@ -50,7 +52,8 @@ class EntityCreationSystem(
                 world.entity {
                     add<CreateComponent> {
                         this.c_resourceName = "corn"
-                        this.c_resourceCost = 100f
+                        this.c_resourceTier = 2f
+                        this.c_baseResourceCost = 100f
                         this.c_baseUpdateDuration = 2.5f
                         this.c_resourceValue = 25f
                     }
@@ -58,7 +61,8 @@ class EntityCreationSystem(
                 world.entity {
                     add<CreateComponent> {
                         this.c_resourceName = "cabbage"
-                        this.c_resourceCost = 1000f
+                        this.c_resourceTier = 3f
+                        this.c_baseResourceCost = 1000f
                         this.c_baseUpdateDuration = 7f
                         this.c_resourceValue = 350f
                     }
@@ -66,7 +70,8 @@ class EntityCreationSystem(
                 world.entity {
                     add<CreateComponent> {
                         this.c_resourceName = "potatoes"
-                        this.c_resourceCost = 10000f
+                        this.c_resourceTier = 4f
+                        this.c_baseResourceCost = 10000f
                         this.c_baseUpdateDuration = 25f
                         this.c_resourceValue = 5000f
                     }

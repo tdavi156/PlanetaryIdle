@@ -17,19 +17,19 @@ class ResourceUpdateSystem(
 ) : IteratingSystem() {
 
     override fun onTickEntity(entity: Entity) {
-        val resourceComponent  = resourceComponents[entity]
+        val rscComp  = resourceComponents[entity]
 
-        if (resourceComponent.baseUpdateDuration < -9f || resourceComponent.amountOwned == 0) {
+        if (rscComp.baseUpdateDuration < -9f || rscComp.amountOwned == 0) {
             return
         }
 
-        if (resourceComponent.currentUpdateDuration <= 0f) {
-            resourceComponent.currentUpdateDuration = resourceComponent.baseUpdateDuration
-            log.debug { "${resourceComponent.resourceName} fired resource update event" }
+        if (rscComp.currentUpdateDuration <= 0f) {
+            rscComp.currentUpdateDuration = rscComp.baseUpdateDuration
+            log.debug { "${rscComp.resourceName} fired resource update event in ${rscComp.baseUpdateDuration} seconds." }
             stage.fire(ResourceUpdateEvent(entity))
         }
 
-        resourceComponent.currentUpdateDuration -= deltaTime
+        rscComp.currentUpdateDuration -= deltaTime
     }
 
     companion object {
