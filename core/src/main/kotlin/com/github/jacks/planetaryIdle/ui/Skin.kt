@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.TextureAtlas
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable
-import com.github.jacks.planetaryIdle.ui.FontFiles.*
 import ktx.assets.disposeSafely
 import ktx.scene2d.Scene2DSkin
 import ktx.style.SkinDsl
@@ -33,43 +32,50 @@ enum class Drawables(
 }
 
 enum class Labels {
-    TITLE,
-    DEFAULT,
     SMALL,
-    SEMI_MEDIUM,
+    SMALL_BOLD,
     MEDIUM,
-    LARGE;
+    MEDIUM_BOLD,
+    DEFAULT,
+    DEFAULT_BOLD,
+    LARGE,
+    LARGE_BOLD,
+    X_LARGE,
+    X_LARGE_BOLD,
+    TITLE,
+    TITLE_BOLD;
 
     val skinKey = this.name.lowercase()
-}
-
-enum class FontFiles(
-    val fontName : String
-) {
-    DEFAULT("default"),
-    WHITE_FONT("white_font_52pt"),
-    MS_PPG_FONT("MS_PhagsPa_28pt"),
-    MS_PPG_BOLD_FONT("MS_PhagsPa_bold_28pt")
 }
 
 enum class Fonts(
     val atlasRegionKey : String,
     val scaling : Float
 ) {
-    DEFAULT(MS_PPG_BOLD_FONT.fontName, 1f),
-    SMALL(MS_PPG_BOLD_FONT.fontName, 0.7f),
-    SEMI_MEDIUM(MS_PPG_BOLD_FONT.fontName, 0.9f),
-    MEDIUM(MS_PPG_BOLD_FONT.fontName, 1.15f),
-    LARGE(MS_PPG_BOLD_FONT.fontName, 1.5f);
+    SMALL("default_16pt", 1f),
+    SMALL_BOLD("default_16pt", 1f),
+    MEDIUM("default_20pt", 1f),
+    MEDIUM_BOLD("default_bold_20pt", 1f),
+    DEFAULT("default_24pt", 1f),
+    DEFAULT_BOLD("default_bold_24pt", 1f),
+    LARGE("default_28pt", 1f),
+    LARGE_BOLD("default_bold_28pt", 1f),
+    X_LARGE("default_32pt", 1f),
+    X_LARGE_BOLD("default_bold_32pt", 1f),
+    XX_LARGE("default_40pt", 1f),
+    XX_LARGE_BOLD("default_bold_40pt", 1f);
 
     val skinKey = "Font_${this.name.lowercase()}"
     val fontPath = "fonts/${this.atlasRegionKey}.fnt"
 }
 
 enum class Buttons {
-    BLUE_TEXT_BUTTON,
-    GREEN_TEXT_BUTTON,
-    RED_TEXT_BUTTON;
+    BLUE_TEXT_BUTTON_MEDIUM,
+    GREEN_TEXT_BUTTON_MEDIUM,
+    RED_TEXT_BUTTON_MEDIUM,
+    BLUE_TEXT_BUTTON_DEFAULT,
+    GREEN_TEXT_BUTTON_DEFAULT,
+    RED_TEXT_BUTTON_DEFAULT;
 
     val skinKey = this.name.lowercase()
 }
@@ -95,8 +101,48 @@ private fun loadFonts(skin: Skin) {
 }
 
 private fun @SkinDsl Skin.loadLabels(skin : Skin) {
-    label(Labels.TITLE.skinKey) {
+    label(Labels.SMALL.skinKey) {
+        font = skin[Fonts.SMALL]
+        fontColor = Color.WHITE
+    }
+    label(Labels.SMALL_BOLD.skinKey) {
+        font = skin[Fonts.SMALL_BOLD]
+        fontColor = Color.WHITE
+    }
+    label(Labels.MEDIUM.skinKey) {
+        font = skin[Fonts.MEDIUM]
+        fontColor = Color.WHITE
+    }
+    label(Labels.MEDIUM_BOLD.skinKey) {
+        font = skin[Fonts.MEDIUM_BOLD]
+        fontColor = Color.WHITE
+    }
+    label(Labels.DEFAULT.skinKey) {
+        font = skin[Fonts.DEFAULT]
+        fontColor = Color.WHITE
+    }
+    label(Labels.DEFAULT_BOLD.skinKey) {
+        font = skin[Fonts.DEFAULT_BOLD]
+        fontColor = Color.WHITE
+    }
+    label(Labels.LARGE.skinKey) {
         font = skin[Fonts.LARGE]
+        fontColor = Color.WHITE
+    }
+    label(Labels.LARGE_BOLD.skinKey) {
+        font = skin[Fonts.LARGE_BOLD]
+        fontColor = Color.WHITE
+    }
+    label(Labels.X_LARGE.skinKey) {
+        font = skin[Fonts.X_LARGE]
+        fontColor = Color.WHITE
+    }
+    label(Labels.X_LARGE_BOLD.skinKey) {
+        font = skin[Fonts.X_LARGE_BOLD]
+        fontColor = Color.WHITE
+    }
+    label(Labels.TITLE.skinKey) {
+        font = skin[Fonts.XX_LARGE]
         fontColor = Color.WHITE
         background = skin[Drawables.BUTTON_BLUE_UP].apply {
             leftWidth = 3f
@@ -105,52 +151,67 @@ private fun @SkinDsl Skin.loadLabels(skin : Skin) {
             bottomHeight = 3f
         }
     }
-    label(Labels.DEFAULT.skinKey) {
-        font = skin[Fonts.DEFAULT]
+    label(Labels.TITLE_BOLD.skinKey) {
+        font = skin[Fonts.XX_LARGE_BOLD]
         fontColor = Color.WHITE
-    }
-    label(Labels.SMALL.skinKey) {
-        font = skin[Fonts.SMALL]
-        fontColor = Color.WHITE
-    }
-    label(Labels.SEMI_MEDIUM.skinKey) {
-        font = skin[Fonts.SEMI_MEDIUM]
-        fontColor = Color.WHITE
-    }
-    label(Labels.MEDIUM.skinKey) {
-        font = skin[Fonts.MEDIUM]
-        fontColor = Color.WHITE
-    }
-    label(Labels.LARGE.skinKey) {
-        font = skin[Fonts.LARGE]
-        fontColor = Color.WHITE
+        background = skin[Drawables.BUTTON_BLUE_UP].apply {
+            leftWidth = 3f
+            rightWidth = 3f
+            topHeight = 3f
+            bottomHeight = 3f
+        }
     }
 }
 
 private fun @SkinDsl Skin.loadButtons(skin: Skin) {
-    textButton(Buttons.BLUE_TEXT_BUTTON.skinKey) {
+    textButton(Buttons.BLUE_TEXT_BUTTON_MEDIUM.skinKey) {
         up = skin[Drawables.BUTTON_BLUE_UP]
         down = skin[Drawables.BUTTON_BLUE_DOWN]
         over = skin[Drawables.BUTTON_BLUE_OVER]
         disabled = skin[Drawables.BUTTON_RED_UP]
-        font = skin[Fonts.SEMI_MEDIUM]
+        font = skin[Fonts.MEDIUM]
         fontColor = Color(1f, 1f, 1f, 1f)
         overFontColor = Color(0f, 0f, 0f, 1f)
     }
-    textButton(Buttons.GREEN_TEXT_BUTTON.skinKey) {
+    textButton(Buttons.GREEN_TEXT_BUTTON_MEDIUM.skinKey) {
         up = skin[Drawables.BUTTON_GREEN_UP]
         down = skin[Drawables.BUTTON_GREEN_DOWN]
         over = skin[Drawables.BUTTON_GREEN_OVER]
         disabled = skin[Drawables.BUTTON_RED_UP]
-        font = skin[Fonts.SEMI_MEDIUM]
+        font = skin[Fonts.MEDIUM]
         fontColor = Color(1f, 1f, 1f, 1f)
         overFontColor = Color(0f, 0f, 0f, 1f)
     }
-    textButton(Buttons.RED_TEXT_BUTTON.skinKey) {
+    textButton(Buttons.RED_TEXT_BUTTON_MEDIUM.skinKey) {
         up = skin[Drawables.BUTTON_RED_UP]
         over = skin[Drawables.BUTTON_RED_OVER]
         disabled = skin[Drawables.BUTTON_RED_UP]
-        font = skin[Fonts.SEMI_MEDIUM]
+        font = skin[Fonts.MEDIUM]
+        fontColor = Color(1f, 1f, 1f, 1f)
+    }
+    textButton(Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) {
+        up = skin[Drawables.BUTTON_BLUE_UP]
+        down = skin[Drawables.BUTTON_BLUE_DOWN]
+        over = skin[Drawables.BUTTON_BLUE_OVER]
+        disabled = skin[Drawables.BUTTON_RED_UP]
+        font = skin[Fonts.DEFAULT]
+        fontColor = Color(1f, 1f, 1f, 1f)
+        overFontColor = Color(0f, 0f, 0f, 1f)
+    }
+    textButton(Buttons.GREEN_TEXT_BUTTON_DEFAULT.skinKey) {
+        up = skin[Drawables.BUTTON_GREEN_UP]
+        down = skin[Drawables.BUTTON_GREEN_DOWN]
+        over = skin[Drawables.BUTTON_GREEN_OVER]
+        disabled = skin[Drawables.BUTTON_RED_UP]
+        font = skin[Fonts.DEFAULT]
+        fontColor = Color(1f, 1f, 1f, 1f)
+        overFontColor = Color(0f, 0f, 0f, 1f)
+    }
+    textButton(Buttons.RED_TEXT_BUTTON_DEFAULT.skinKey) {
+        up = skin[Drawables.BUTTON_RED_UP]
+        over = skin[Drawables.BUTTON_RED_OVER]
+        disabled = skin[Drawables.BUTTON_RED_UP]
+        font = skin[Fonts.DEFAULT]
         fontColor = Color(1f, 1f, 1f, 1f)
     }
 }

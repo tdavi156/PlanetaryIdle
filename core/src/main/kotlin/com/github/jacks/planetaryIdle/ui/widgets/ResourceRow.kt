@@ -42,13 +42,13 @@ class ResourceRow(
             setFillParent(true)
             alpha = 0.5f
         }
-        this += label(resourceName, Labels.SEMI_MEDIUM.skinKey).apply {
+        this += label(resourceName, Labels.DEFAULT.skinKey).apply {
             setAlignment(Align.left)
         }
-        this += label(resourceMultiplier, Labels.SEMI_MEDIUM.skinKey).apply {
+        this += label(resourceMultiplier, Labels.DEFAULT.skinKey).apply {
             setAlignment(Align.center)
         }
-        this += label(resourceOwned, Labels.SEMI_MEDIUM.skinKey).apply {
+        this += label(resourceOwned, Labels.DEFAULT.skinKey).apply {
             setAlignment(Align.center)
         }
         this += button.apply {

@@ -74,7 +74,7 @@ class PlanetView(
 
         // Left side menu buttons
         table { menuTableCell ->
-            this@PlanetView.planetButton = textButton("Planet", Buttons.BLUE_TEXT_BUTTON.skinKey) { cell ->
+            this@PlanetView.planetButton = textButton("Planet", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
                 cell.top().left().width(180f).height(50f)
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
@@ -84,7 +84,7 @@ class PlanetView(
                 })
             }
             row()
-            this@PlanetView.galaxyButton = textButton("Galaxy", Buttons.BLUE_TEXT_BUTTON.skinKey) { cell ->
+            this@PlanetView.galaxyButton = textButton("Galaxy", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
                 cell.top().left().width(180f).height(50f)
                 isDisabled = true
                 this.addListener(object : ChangeListener() {
@@ -95,32 +95,32 @@ class PlanetView(
                 })
             }
             row()
-            this@PlanetView.automationButton = textButton("Automation", Buttons.BLUE_TEXT_BUTTON.skinKey) { cell ->
+            this@PlanetView.automationButton = textButton("Automation", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
                 cell.top().left().width(180f).height(50f)
                 isDisabled = true
             }
             row()
-            this@PlanetView.challengesButton = textButton("Challenges", Buttons.BLUE_TEXT_BUTTON.skinKey) { cell ->
+            this@PlanetView.challengesButton = textButton("Challenges", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
                 cell.top().left().width(180f).height(50f)
                 isDisabled = true
             }
             row()
-            this@PlanetView.achievementsButton = textButton("Achievements", Buttons.BLUE_TEXT_BUTTON.skinKey) { cell ->
+            this@PlanetView.achievementsButton = textButton("Achievements", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
                 cell.top().left().width(180f).height(50f)
                 isDisabled = true
             }
             row()
-            this@PlanetView.statisticsButton = textButton("Statistics", Buttons.BLUE_TEXT_BUTTON.skinKey) { cell ->
+            this@PlanetView.statisticsButton = textButton("Statistics", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
                 cell.top().left().width(180f).height(50f)
                 isDisabled = true
             }
             row()
-            this@PlanetView.settingsButton = textButton("Settings", Buttons.BLUE_TEXT_BUTTON.skinKey) { cell ->
+            this@PlanetView.settingsButton = textButton("Settings", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
                 cell.top().left().width(180f).height(50f)
                 isDisabled = true
             }
             row()
-            this@PlanetView.resetButton = textButton("Reset Game", Buttons.BLUE_TEXT_BUTTON.skinKey) { cell ->
+            this@PlanetView.resetButton = textButton("Reset Game", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
                 cell.top().left().width(180f).height(50f)
                 isDisabled = true
                 this.addListener(object : ChangeListener() {
@@ -131,7 +131,7 @@ class PlanetView(
                 })
             }
             row()
-            this@PlanetView.quitButton = textButton("Quit Game", Buttons.BLUE_TEXT_BUTTON.skinKey) { cell ->
+            this@PlanetView.quitButton = textButton("Quit Game", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
                 cell.top().left().width(180f).height(50f)
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
@@ -166,14 +166,14 @@ class PlanetView(
 
             // Middle actionable area
             table { tableCell ->
-                this@PlanetView.gameCompleted = label("Congratulations on colonizing the planet!", Labels.MEDIUM.skinKey) { cell ->
+                this@PlanetView.gameCompleted = label("Congratulations on colonizing the planet!", Labels.LARGE.skinKey) { cell ->
                     cell.center().pad(20f, 0f, 10f, 0f)
                     isVisible = false
                 }
                 row()
                 table { foodTableCell ->
                     table { foodTableNameCell ->
-                        label("Wheat Fields", Labels.SEMI_MEDIUM.skinKey) { cell ->
+                        label("Wheat Fields", Labels.MEDIUM.skinKey) { cell ->
                             cell.left().padRight(15f)
                         }
                         this@PlanetView.wheatMultiplier = label("x1.00", Labels.SMALL.skinKey) { cell ->
@@ -181,10 +181,10 @@ class PlanetView(
                         }
                         foodTableNameCell.left().width(200f)
                     }
-                    this@PlanetView.wheatOwned = label("0", Labels.SEMI_MEDIUM.skinKey) { cell ->
+                    this@PlanetView.wheatOwned = label("0", Labels.MEDIUM.skinKey) { cell ->
                         cell.expandX().left()
                     }
-                    this@PlanetView.assignWheatButton = textButton("Assign: 10 AP", Buttons.GREEN_TEXT_BUTTON.skinKey) { cell ->
+                    this@PlanetView.assignWheatButton = textButton("Assign: 10 AP", Buttons.GREEN_TEXT_BUTTON_MEDIUM.skinKey) { cell ->
                         cell.right().width(200f).height(50f)
                         this.addListener(object : ChangeListener() {
                             override fun changed(event: ChangeEvent, actor: Actor) {
@@ -201,7 +201,7 @@ class PlanetView(
                 row()
                 table { foodTableCell ->
                     table { foodTableNameCell ->
-                        label("Corn Fields", Labels.SEMI_MEDIUM.skinKey) { cell ->
+                        label("Corn Fields", Labels.MEDIUM.skinKey) { cell ->
                             cell.left().padRight(15f)
                         }
                         this@PlanetView.cornMultiplier = label("x1.00", Labels.SMALL.skinKey) { cell ->
@@ -209,10 +209,10 @@ class PlanetView(
                         }
                         foodTableNameCell.left().width(200f)
                     }
-                    this@PlanetView.cornOwned = label("0", Labels.SEMI_MEDIUM.skinKey) { cell ->
+                    this@PlanetView.cornOwned = label("0", Labels.MEDIUM.skinKey) { cell ->
                         cell.expandX().left()
                     }
-                    this@PlanetView.assignCornButton = textButton("Assign: 100 AP", Buttons.GREEN_TEXT_BUTTON.skinKey) { cell ->
+                    this@PlanetView.assignCornButton = textButton("Assign: 100 AP", Buttons.GREEN_TEXT_BUTTON_MEDIUM.skinKey) { cell ->
                         cell.right().width(200f).height(50f)
                         isDisabled = true
                         this.addListener(object : ChangeListener() {
@@ -230,7 +230,7 @@ class PlanetView(
                 row()
                 table { foodTableCell ->
                     table { foodTableNameCell ->
-                        label("Cabbage Fields", Labels.SEMI_MEDIUM.skinKey) { cell ->
+                        label("Cabbage Fields", Labels.MEDIUM.skinKey) { cell ->
                             cell.left().padRight(15f)
                         }
                         this@PlanetView.cabbageMultiplier = label("x1.00", Labels.SMALL.skinKey) { cell ->
@@ -238,10 +238,10 @@ class PlanetView(
                         }
                         foodTableNameCell.left().width(200f)
                     }
-                    this@PlanetView.cabbageOwned = label("0", Labels.SEMI_MEDIUM.skinKey) { cell ->
+                    this@PlanetView.cabbageOwned = label("0", Labels.MEDIUM.skinKey) { cell ->
                         cell.expandX().left()
                     }
-                    this@PlanetView.assignCabbageButton = textButton("Assign: 1,000 AP", Buttons.GREEN_TEXT_BUTTON.skinKey) { cell ->
+                    this@PlanetView.assignCabbageButton = textButton("Assign: 1,000 AP", Buttons.GREEN_TEXT_BUTTON_MEDIUM.skinKey) { cell ->
                         cell.right().width(200f).height(50f)
                         isDisabled = true
                         this.addListener(object : ChangeListener() {
@@ -259,7 +259,7 @@ class PlanetView(
                 row()
                 table { foodTableCell ->
                     table { foodTableNameCell ->
-                        label("Potato Fields", Labels.SEMI_MEDIUM.skinKey) { cell ->
+                        label("Potato Fields", Labels.MEDIUM.skinKey) { cell ->
                             cell.left().padRight(15f)
                         }
                         this@PlanetView.potatoesMultiplier = label("x1.00", Labels.SMALL.skinKey) { cell ->
@@ -267,10 +267,10 @@ class PlanetView(
                         }
                         foodTableNameCell.left().width(200f)
                     }
-                    this@PlanetView.potatoesOwned = label("0", Labels.SEMI_MEDIUM.skinKey) { cell ->
+                    this@PlanetView.potatoesOwned = label("0", Labels.MEDIUM.skinKey) { cell ->
                         cell.expandX().left()
                     }
-                    this@PlanetView.assignPotatoesButton = textButton("Assign: 10,000 AP", Buttons.GREEN_TEXT_BUTTON.skinKey) { cell ->
+                    this@PlanetView.assignPotatoesButton = textButton("Assign: 10,000 AP", Buttons.GREEN_TEXT_BUTTON_MEDIUM.skinKey) { cell ->
                         cell.right().width(200f).height(50f)
                         isDisabled = true
                         this.addListener(object : ChangeListener() {
@@ -292,7 +292,7 @@ class PlanetView(
 
             // Bottom progress bar
             table { tableCell ->
-                this@PlanetView.totalPopulation = label("Progress towards planet colonization: 10 / 1,000,000,000", Labels.SEMI_MEDIUM.skinKey) { cell ->
+                this@PlanetView.totalPopulation = label("Progress towards planet colonization: 10 / 1,000,000,000", Labels.DEFAULT.skinKey) { cell ->
                     cell.expandX().center()
                 }
                 // add progress bar
