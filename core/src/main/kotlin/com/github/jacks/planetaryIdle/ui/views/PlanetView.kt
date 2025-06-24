@@ -30,6 +30,8 @@ class PlanetView(
     private lateinit var stage : Stage
     private var currentView : String = "planetView"
 
+    // tables
+
     // buttons
     private val planetButton : TextButton
     private val galaxyButton : TextButton
@@ -406,13 +408,16 @@ class PlanetView(
         }
     }
     private fun checkForGameEnd(amount : Int) {
-        if (amount >= 1000000) {
+        // check that the game is not already ended so we dont call multiple times
+        if (amount >= 1000) {
             fire(GameCompletedEvent())
         }
     }
     private fun popupGameCompleted(completed : Boolean) {
+        log.debug { "popupGameCompleted" }
         this@PlanetView.gameCompleted.isVisible = completed
-        this@PlanetView.resetButton.isDisabled = !completed
+        //menuTable.invalidateHierarchy()
+        //this@PlanetView.resetButton.isDisabled = !completed
     }
 
     companion object {

@@ -40,6 +40,7 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
 
     init {
         stage.actors {
+            log.debug { "Stage is initialized." }
             backgroundView()
             // menuView()
             planetView(PlanetModel(entityWorld, stage))
