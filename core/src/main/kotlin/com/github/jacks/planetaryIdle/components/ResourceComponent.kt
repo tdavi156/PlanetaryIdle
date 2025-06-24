@@ -2,14 +2,34 @@ package com.github.jacks.planetaryIdle.components
 
 import kotlin.math.*
 
+enum class PlanetResources(
+    val resourceName : String
+) {
+    WHEAT("wheat"),
+    CORN("corn"),
+    CABBAGE("cabbage"),
+    POTATOES("potatoes");
+}
+
+data class ResourceConfiguration(
+    val name : String = "",
+    val tier : Float = 1f,
+    val baseCost : Float = 0f,
+    val baseValue : Float = 0f,
+    val baseUpdateDuration : Float = -10f,
+    val baseAmountOwned : Int = 0,
+    val isUnlocked : Boolean = false
+)
+
 data class ResourceComponent(
-    var resourceName : String = "",
-    var resourceTier : Float = 1f,
-    var baseResourceCost : Float = 0f,
-    var baseUpdateDuration : Float = -10f,
+    var name : String = "",
+    var tier : Float = 1f,
+    var baseValue : Float = 0f,
+    var baseCost : Float = 0f,
+    var baseUpdateDuration : Float = -1f,
     var currentUpdateDuration : Float = 0f,
-    var resourceValue : Float = 0f,
     var amountOwned : Int = 0,
+    var isUnlocked : Boolean = false
 ) {
 
     private val numHundreds : Float
@@ -19,5 +39,5 @@ data class ResourceComponent(
         get() = 1.5f.pow(numHundreds)
 
     val cost : Float
-        get() = baseResourceCost * (5 * resourceTier).pow(numHundreds)
+        get() = baseCost * (5 * tier).pow(numHundreds)
 }

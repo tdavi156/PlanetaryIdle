@@ -30,6 +30,11 @@ class PlanetView(
     private lateinit var stage : Stage
     private var currentView : String = "planetView"
 
+    private var wheatCost : Int = 10
+    private var cornCost : Int = 100
+    private var cabbageCost : Int = 1000
+    private var potatoesCost : Int = 10000
+
     // tables
 
     // buttons
@@ -287,7 +292,7 @@ class PlanetView(
 
             // Bottom progress bar
             table { tableCell ->
-                this@PlanetView.totalPopulation = label("Progress towards planet colonization: 10 / 1,000,000", Labels.SEMI_MEDIUM.skinKey) { cell ->
+                this@PlanetView.totalPopulation = label("Progress towards planet colonization: 10 / 1,000,000,000", Labels.SEMI_MEDIUM.skinKey) { cell ->
                     cell.expandX().center()
                 }
                 // add progress bar
@@ -350,7 +355,7 @@ class PlanetView(
     }
 
     private fun totalPopAmountChange(amount : Int) {
-        totalPopulation.txt = "Progress towards planet colonization: ${"%,d".format(amount)} / 1,000,000"
+        totalPopulation.txt = "Progress towards planet colonization: ${"%,d".format(amount)} / 1,000,000,000"
     }
     private fun popAmountChange(amount : Int) {
         availablePopulation.txt = "You have ${"%,d".format(amount)} available population. (AP)"
@@ -359,10 +364,10 @@ class PlanetView(
         populationGainPerSecond.txt = "You are gaining ${"%,d".format(amount.roundToInt())} population per second."
     }
     private fun updateAvailable(amount : Int) {
-        assignWheatButton.isDisabled = amount < 10
-        assignCornButton.isDisabled = amount < 100
-        assignCabbageButton.isDisabled = amount < 1000
-        assignPotatoesButton.isDisabled = amount < 10000
+        assignWheatButton.isDisabled = amount < wheatCost
+        assignCornButton.isDisabled = amount < cornCost
+        assignCabbageButton.isDisabled = amount < cabbageCost
+        assignPotatoesButton.isDisabled = amount < potatoesCost
     }
     private fun wheatAmountChange(amount : Int) {
         wheatOwned.txt = "%,d".format(amount)
@@ -371,6 +376,7 @@ class PlanetView(
         wheatMultiplier.txt = "x${"%.2f".format(multiplier)}"
     }
     private fun wheatCostChange(cost : Float) {
+        wheatCost = cost.roundToInt()
         assignWheatButton.txt = formatCost(cost)
     }
     private fun cornAmountChange(amount : Int) {
@@ -380,6 +386,7 @@ class PlanetView(
         cornMultiplier.txt = "x${"%.2f".format(multiplier)}"
     }
     private fun cornCostChange(cost : Float) {
+        cornCost = cost.roundToInt()
         assignCornButton.txt = formatCost(cost)
     }
     private fun cabbageAmountChange(amount : Int) {
@@ -389,6 +396,7 @@ class PlanetView(
         cabbageMultiplier.txt = "x${"%.2f".format(multiplier)}"
     }
     private fun cabbageCostChange(cost : Float) {
+        cabbageCost = cost.roundToInt()
         assignCabbageButton.txt = formatCost(cost)
     }
     private fun potatoesAmountChange(amount : Int) {
@@ -398,6 +406,7 @@ class PlanetView(
         potatoesMultiplier.txt = "x${"%.2f".format(multiplier)}"
     }
     private fun potatoesCostChange(cost : Float) {
+        potatoesCost = cost.roundToInt()
         assignPotatoesButton.txt = formatCost(cost)
     }
     private fun formatCost(cost : Float) : String {
@@ -409,7 +418,7 @@ class PlanetView(
     }
     private fun checkForGameEnd(amount : Int) {
         // check that the game is not already ended so we dont call multiple times
-        if (amount >= 1000) {
+        if (amount >= 1000000000) {
             fire(GameCompletedEvent())
         }
     }
@@ -417,7 +426,7 @@ class PlanetView(
         log.debug { "popupGameCompleted" }
         this@PlanetView.gameCompleted.isVisible = completed
         //menuTable.invalidateHierarchy()
-        //this@PlanetView.resetButton.isDisabled = !completed
+        this@PlanetView.resetButton.isDisabled = !completed
     }
 
     companion object {

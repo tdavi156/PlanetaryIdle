@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.TextureAtlas
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable
+import com.github.jacks.planetaryIdle.ui.FontFiles.*
 import ktx.assets.disposeSafely
 import ktx.scene2d.Scene2DSkin
 import ktx.style.SkinDsl
@@ -42,15 +43,23 @@ enum class Labels {
     val skinKey = this.name.lowercase()
 }
 
+enum class FontFiles(
+    val fontName : String
+) {
+    DEFAULT("default"),
+    WHITE_FONT("white_font_52pt"),
+    MS_PPG_FONT("MS_PhagsPa_28pt")
+}
+
 enum class Fonts(
     val atlasRegionKey : String,
     val scaling : Float
 ) {
-    DEFAULT("white_font_52pt", 1f),
-    SMALL("white_font_52pt", 0.25f),
-    SEMI_MEDIUM("white_font_52pt", 0.35f),
-    MEDIUM("white_font_52pt", 0.5f),
-    LARGE("white_font_52pt", 1.5f);
+    DEFAULT(WHITE_FONT.fontName, 1f),
+    SMALL(WHITE_FONT.fontName, 0.25f),
+    SEMI_MEDIUM(WHITE_FONT.fontName, 0.35f),
+    MEDIUM(WHITE_FONT.fontName, 0.5f),
+    LARGE(WHITE_FONT.fontName, 1.5f);
 
     val skinKey = "Font_${this.name.lowercase()}"
     val fontPath = "fonts/${this.atlasRegionKey}.fnt"

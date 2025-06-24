@@ -55,8 +55,8 @@ class PlanetModel(
             }
             is ResourceUpdateEvent -> {
                 val rscComp = resourceComponents[event.entity]
-                availablePopulationAmount += (rscComp.resourceValue.roundToInt() * rscComp.amountOwned)
-                totalPopulationAmount = (totalPopulationAmount + (rscComp.resourceValue.roundToInt() * rscComp.amountOwned)).coerceAtMost(1000000)
+                availablePopulationAmount += (rscComp.baseValue.roundToInt() * rscComp.amountOwned)
+                totalPopulationAmount = (totalPopulationAmount + (rscComp.baseValue.roundToInt() * rscComp.amountOwned)).coerceAtMost(1000000000)
             }
             is GameCompletedEvent -> {
                 gameCompleted = true
@@ -91,7 +91,7 @@ class PlanetModel(
 
     private fun getEntityByName(name : String) : Entity? {
         resourceEntities.forEach { entity ->
-            if (resourceComponents[entity].resourceName == name) {
+            if (resourceComponents[entity].name == name) {
                 return entity
             }
         }
@@ -105,7 +105,7 @@ class PlanetModel(
     private fun updateModel(rscComp : ResourceComponent) {
         availablePopulationAmount -= rscComp.cost.roundToInt()
         populationGainPerSecond = getPopulationGain()
-        when (rscComp.resourceName) {
+        when (rscComp.name) {
             "wheat" -> {
                 wheatAmount++
                 wheatMultiplier = rscComp.multiplier
@@ -133,7 +133,7 @@ class PlanetModel(
         var popGain = 0f
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
-            popGain += ((rscComp.resourceValue * rscComp.multiplier) / rscComp.baseUpdateDuration * rscComp.amountOwned)
+            popGain += ((rscComp.baseValue * rscComp.multiplier) / rscComp.baseUpdateDuration * rscComp.amountOwned)
         }
         return popGain
     }
