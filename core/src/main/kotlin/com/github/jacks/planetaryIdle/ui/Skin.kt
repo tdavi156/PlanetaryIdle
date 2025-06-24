@@ -48,18 +48,19 @@ enum class FontFiles(
 ) {
     DEFAULT("default"),
     WHITE_FONT("white_font_52pt"),
-    MS_PPG_FONT("MS_PhagsPa_28pt")
+    MS_PPG_FONT("MS_PhagsPa_28pt"),
+    MS_PPG_BOLD_FONT("MS_PhagsPa_bold_28pt")
 }
 
 enum class Fonts(
     val atlasRegionKey : String,
     val scaling : Float
 ) {
-    DEFAULT(WHITE_FONT.fontName, 1f),
-    SMALL(WHITE_FONT.fontName, 0.25f),
-    SEMI_MEDIUM(WHITE_FONT.fontName, 0.35f),
-    MEDIUM(WHITE_FONT.fontName, 0.5f),
-    LARGE(WHITE_FONT.fontName, 1.5f);
+    DEFAULT(MS_PPG_BOLD_FONT.fontName, 1f),
+    SMALL(MS_PPG_BOLD_FONT.fontName, 0.7f),
+    SEMI_MEDIUM(MS_PPG_BOLD_FONT.fontName, 0.9f),
+    MEDIUM(MS_PPG_BOLD_FONT.fontName, 1.15f),
+    LARGE(MS_PPG_BOLD_FONT.fontName, 1.5f);
 
     val skinKey = "Font_${this.name.lowercase()}"
     val fontPath = "fonts/${this.atlasRegionKey}.fnt"

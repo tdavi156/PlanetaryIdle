@@ -148,11 +148,11 @@ class PlanetView(
 
             // Top information area
             table { topLabelCell ->
-                this@PlanetView.availablePopulation = label("You have 10 available population. (AP)", Labels.SEMI_MEDIUM.skinKey) { cell ->
+                this@PlanetView.availablePopulation = label("You have 10 available population. (AP)", Labels.DEFAULT.skinKey) { cell ->
                     cell.center().padBottom(10f)
                 }
                 row()
-                this@PlanetView.populationGainPerSecond = label("You are gaining 0 population per second.", Labels.SEMI_MEDIUM.skinKey) { cell ->
+                this@PlanetView.populationGainPerSecond = label("You are gaining 0 population per second.", Labels.DEFAULT.skinKey) { cell ->
                     cell.center()
                 }
                 topLabelCell.expandX().top().padTop(10f).height(140f)
