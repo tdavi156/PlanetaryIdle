@@ -4,10 +4,11 @@ import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.github.jacks.planetaryIdle.components.ResourceComponent
-import com.github.jacks.planetaryIdle.events.AssignPopEvent
+import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
+import com.github.jacks.planetaryIdle.events.UpdateBuyAmountEvent
 import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.World
@@ -25,6 +26,7 @@ class PlanetModel(
     var totalPopulationAmount by propertyNotify(10)
     var availablePopulationAmount by propertyNotify(10)
     var populationGainPerSecond by propertyNotify(0f)
+    var buyAmount by propertyNotify(1f)
 
     var wheatAmount by propertyNotify(0)
     var wheatMultiplier by propertyNotify(1f)
@@ -47,7 +49,7 @@ class PlanetModel(
 
     override fun handle(event: Event?): Boolean {
         when (event) {
-            is AssignPopEvent -> {
+            is BuyResourceEvent -> {
                 val entity = getEntityByName(event.foodType) ?: gdxError("No Entity with foodType: ${event.foodType}")
                 val rscComp = resourceComponents[entity]
                 updateResourceComponent(rscComp)
@@ -57,6 +59,9 @@ class PlanetModel(
                 val rscComp = resourceComponents[event.entity]
                 availablePopulationAmount += (rscComp.baseValue.roundToInt() * rscComp.amountOwned)
                 totalPopulationAmount = (totalPopulationAmount + (rscComp.baseValue.roundToInt() * rscComp.amountOwned)).coerceAtMost(1000000000)
+            }
+            is UpdateBuyAmountEvent -> {
+                buyAmount = event.amount
             }
             is GameCompletedEvent -> {
                 gameCompleted = true
@@ -70,6 +75,7 @@ class PlanetModel(
                 totalPopulationAmount = 10
                 availablePopulationAmount = 10
                 populationGainPerSecond = 0f
+                buyAmount = 1f
                 wheatAmount = 0
                 wheatMultiplier = 1f
                 wheatCost = 10f
@@ -99,32 +105,32 @@ class PlanetModel(
     }
 
     private fun updateResourceComponent(rscComp : ResourceComponent) {
-        rscComp.amountOwned++
+        rscComp.amountOwned += buyAmount.roundToInt()
     }
 
     private fun updateModel(rscComp : ResourceComponent) {
-        availablePopulationAmount -= rscComp.cost.roundToInt()
+        availablePopulationAmount -= (rscComp.cost * buyAmount).roundToInt()
         populationGainPerSecond = getPopulationGain()
         when (rscComp.name) {
             "wheat" -> {
-                wheatAmount++
+                wheatAmount += buyAmount.roundToInt()
                 wheatMultiplier = rscComp.multiplier
-                wheatCost = rscComp.cost
+                if (wheatCost != rscComp.cost) wheatCost = rscComp.cost
             }
             "corn" -> {
-                cornAmount++
+                cornAmount += buyAmount.roundToInt()
                 cornMultiplier = rscComp.multiplier
-                cornCost = rscComp.cost
+                if (cornCost != rscComp.cost) cornCost = rscComp.cost
             }
             "cabbage" -> {
-                cabbageAmount++
+                cabbageAmount += buyAmount.roundToInt()
                 cabbageMultiplier = rscComp.multiplier
-                cabbageCost = rscComp.cost
+                if (cabbageCost != rscComp.cost) cabbageCost = rscComp.cost
             }
             "potatoes" -> {
-                potatoesAmount++
+                potatoesAmount += buyAmount.roundToInt()
                 potatoesMultiplier = rscComp.multiplier
-                potatoesCost = rscComp.cost
+                if (potatoesCost != rscComp.cost) potatoesCost = rscComp.cost
             }
         }
     }

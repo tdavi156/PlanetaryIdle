@@ -6,7 +6,7 @@ import com.github.jacks.planetaryIdle.events.InitializeGameEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.input.KeyboardInputProcessor
 import com.github.jacks.planetaryIdle.input.gdxInputProcessor
-import com.github.jacks.planetaryIdle.systems.EntityCreationSystem
+import com.github.jacks.planetaryIdle.systems.InitializeGameSystem
 import com.github.jacks.planetaryIdle.systems.RenderSystem
 import com.github.jacks.planetaryIdle.systems.ResourceUpdateSystem
 import com.github.jacks.planetaryIdle.ui.models.PlanetModel
@@ -32,8 +32,8 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
         }
 
         systems {
+            add<InitializeGameSystem>()
             add<RenderSystem>()
-            add<EntityCreationSystem>()
             add<ResourceUpdateSystem>()
         }
     }

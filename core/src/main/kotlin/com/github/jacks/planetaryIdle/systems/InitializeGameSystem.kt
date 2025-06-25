@@ -1,5 +1,7 @@
 package com.github.jacks.planetaryIdle.systems
 
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.github.jacks.planetaryIdle.components.ConfigurationComponent
@@ -13,11 +15,16 @@ import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.IteratingSystem
 import ktx.log.logger
+import ktx.preferences.flush
+import ktx.preferences.get
+import ktx.preferences.set
 
 @AllOf([ConfigurationComponent::class])
-class EntityCreationSystem(
+class InitializeGameSystem(
     private val configurationComponents : ComponentMapper<ConfigurationComponent>
 ) : EventListener, IteratingSystem() {
+
+    private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
 
     override fun onTickEntity(entity: Entity) {
         with(configurationComponents[entity]) {
@@ -56,17 +63,21 @@ class EntityCreationSystem(
     override fun handle(event: Event): Boolean {
         when (event) {
             is InitializeGameEvent -> {
-                world.entity {
-                    add<ConfigurationComponent> {
-                        configurationName = "population"
-                        configurationType = POPULATION
-                    }
-                }
-                PlanetResources.entries.forEach { resource ->
+                if (!preferences["isGameInitialized", false]) {
+                    preferences.clear()
+                    setupPreferences()
                     world.entity {
                         add<ConfigurationComponent> {
-                            configurationName = resource.resourceName
-                            configurationType = PLANET_RESOURCE
+                            configurationName = "population"
+                            configurationType = POPULATION
+                        }
+                    }
+                    PlanetResources.entries.forEach { resource ->
+                        world.entity {
+                            add<ConfigurationComponent> {
+                                configurationName = resource.resourceName
+                                configurationType = PLANET_RESOURCE
+                            }
                         }
                     }
                 }
@@ -86,8 +97,36 @@ class EntityCreationSystem(
         }
     }
 
+    private fun setupPreferences() {
+        preferences.flush {
+            this["isGameInitialized"] = true
+
+            this["totalPopulation"] = 10
+            this["availablePopulation"] = 10
+            this["populationGainRate"] = 0f
+
+            this["wheatAmount"] = 0
+            this["wheatUpdateDuration"] = 1f
+            this["wheatUnlocked"] = true
+
+            this["cornAmount"] = 0
+            this["cornUpdateDuration"] = 3f
+            this["cornUnlocked"] = false
+
+            this["cabbageAmount"] = 0
+            this["cabbageUpdateDuration"] = 7.5f
+            this["cabbageUnlocked"] = false
+
+            this["potatoesAmount"] = 0
+            this["potatoesUpdateDuration"] = 25f
+            this["potatoesUnlocked"] = false
+
+            this["buyAmount"] = 1f
+        }
+    }
+
     companion object {
-        private val log = logger<EntityCreationSystem>()
+        private val log = logger<InitializeGameSystem>()
         val POPULATION_CONFIGURATION = ResourceConfiguration(
             name = "population",
             baseAmountOwned = 10

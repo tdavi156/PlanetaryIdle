@@ -53,7 +53,7 @@ enum class Fonts(
     val scaling : Float
 ) {
     SMALL("default_16pt", 1f),
-    SMALL_BOLD("default_16pt", 1f),
+    SMALL_BOLD("default_bold_16pt", 1f),
     MEDIUM("default_20pt", 1f),
     MEDIUM_BOLD("default_bold_20pt", 1f),
     DEFAULT("default_24pt", 1f),
@@ -70,6 +70,9 @@ enum class Fonts(
 }
 
 enum class Buttons {
+    BLUE_TEXT_BUTTON_SMALL,
+    GREEN_TEXT_BUTTON_SMALL,
+    RED_TEXT_BUTTON_SMALL,
     BLUE_TEXT_BUTTON_MEDIUM,
     GREEN_TEXT_BUTTON_MEDIUM,
     RED_TEXT_BUTTON_MEDIUM,
@@ -164,6 +167,31 @@ private fun @SkinDsl Skin.loadLabels(skin : Skin) {
 }
 
 private fun @SkinDsl Skin.loadButtons(skin: Skin) {
+    textButton(Buttons.BLUE_TEXT_BUTTON_SMALL.skinKey) {
+        up = skin[Drawables.BUTTON_BLUE_UP]
+        down = skin[Drawables.BUTTON_BLUE_DOWN]
+        over = skin[Drawables.BUTTON_BLUE_OVER]
+        disabled = skin[Drawables.BUTTON_RED_UP]
+        font = skin[Fonts.SMALL]
+        fontColor = Color(1f, 1f, 1f, 1f)
+        overFontColor = Color(0f, 0f, 0f, 1f)
+    }
+    textButton(Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) {
+        up = skin[Drawables.BUTTON_GREEN_UP]
+        down = skin[Drawables.BUTTON_GREEN_DOWN]
+        over = skin[Drawables.BUTTON_GREEN_OVER]
+        disabled = skin[Drawables.BUTTON_RED_UP]
+        font = skin[Fonts.SMALL]
+        fontColor = Color(1f, 1f, 1f, 1f)
+        overFontColor = Color(0f, 0f, 0f, 1f)
+    }
+    textButton(Buttons.RED_TEXT_BUTTON_SMALL.skinKey) {
+        up = skin[Drawables.BUTTON_RED_UP]
+        over = skin[Drawables.BUTTON_RED_OVER]
+        disabled = skin[Drawables.BUTTON_RED_UP]
+        font = skin[Fonts.SMALL]
+        fontColor = Color(1f, 1f, 1f, 1f)
+    }
     textButton(Buttons.BLUE_TEXT_BUTTON_MEDIUM.skinKey) {
         up = skin[Drawables.BUTTON_BLUE_UP]
         down = skin[Drawables.BUTTON_BLUE_DOWN]

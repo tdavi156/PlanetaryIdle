@@ -17,6 +17,7 @@ import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
 import ktx.assets.disposeSafely
+import ktx.preferences.flush
 
 class PlanetaryIdle : KtxGame<KtxScreen>(), EventListener {
 
@@ -26,7 +27,9 @@ class PlanetaryIdle : KtxGame<KtxScreen>(), EventListener {
 
     override fun create() {
         Gdx.app.logLevel = Application.LOG_DEBUG
-        preferences.clear()
+        preferences.flush {
+            this.clear()
+        }
 
         loadSkin()
         stage.addListener(this)
@@ -53,6 +56,9 @@ class PlanetaryIdle : KtxGame<KtxScreen>(), EventListener {
     override fun handle(event: Event): Boolean {
         when (event) {
             is QuitGameEvent -> {
+                preferences.flush {
+                    this.clear()
+                }
                 dispose()
                 Gdx.app.exit()
             }

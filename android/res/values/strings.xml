@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">Planetary Idle</string>
+    <string name="app_name">Planetary Idle</string>
+
+    <string name="gameInitKey">isGameInitialized</string>
+
+
 </resources>
