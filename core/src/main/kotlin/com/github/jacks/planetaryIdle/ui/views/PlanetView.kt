@@ -2,11 +2,13 @@ package com.github.jacks.planetaryIdle.ui.views
 
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
+import com.badlogic.gdx.utils.Align
 import com.github.jacks.planetaryIdle.events.AssignPopEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
 import com.github.jacks.planetaryIdle.events.QuitGameEvent
@@ -17,6 +19,7 @@ import com.github.jacks.planetaryIdle.ui.Drawables
 import com.github.jacks.planetaryIdle.ui.Labels
 import com.github.jacks.planetaryIdle.ui.get
 import com.github.jacks.planetaryIdle.ui.models.PlanetModel
+import ktx.actors.centerPosition
 import ktx.actors.txt
 import ktx.log.logger
 import ktx.scene2d.*
@@ -67,6 +70,9 @@ class PlanetView(
     private var cabbageMultiplier : Label
     private var potatoesOwned : Label
     private var potatoesMultiplier : Label
+
+    // images
+    private var colonizationProgress : Image
 
     init {
         setFillParent(true)
@@ -292,10 +298,16 @@ class PlanetView(
 
             // Bottom progress bar
             table { tableCell ->
-                this@PlanetView.totalPopulation = label("Progress towards planet colonization: 10 / 1,000,000,000", Labels.DEFAULT.skinKey) { cell ->
-                    cell.expandX().center()
+                stack { stackCell ->
+                    image(skin[Drawables.BAR_GREY_THICK])
+                    this@PlanetView.colonizationProgress = image(skin[Drawables.BAR_GREEN_THICK]) { cell ->
+                        scaleX = 0f
+                    }
+                    this@PlanetView.totalPopulation = label("10 / 1,000,000,000 (0.00 %)", Labels.MEDIUM.skinKey) { cell ->
+                        setAlignment(Align.center)
+                    }
+                    stackCell.center().width(600f).height(30f)
                 }
-                // add progress bar
                 tableCell.expandX().top().height(100f)
             }
             gameTableCell.expand().fill().pad(5f)
@@ -355,7 +367,8 @@ class PlanetView(
     }
 
     private fun totalPopAmountChange(amount : Int) {
-        totalPopulation.txt = "Progress towards planet colonization: ${"%,d".format(amount)} / 1,000,000,000"
+        totalPopulation.txt = "${"%,d".format(amount.coerceAtMost(MAX_POP_AMOUNT))} / ${"%,d".format(MAX_POP_AMOUNT)} (${"%.2f".format(amount.toFloat() / MAX_POP_AMOUNT.toFloat())} %)"
+        colonizationProgress.scaleX = (amount.toFloat() / MAX_POP_AMOUNT.toFloat()).coerceAtMost(1f)
     }
     private fun popAmountChange(amount : Int) {
         availablePopulation.txt = "You have ${"%,d".format(amount)} available population. (AP)"
@@ -431,6 +444,7 @@ class PlanetView(
 
     companion object {
         private val log = logger<PlanetView>()
+        const val MAX_POP_AMOUNT = 1000000
     }
 }
 
