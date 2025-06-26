@@ -38,6 +38,9 @@ data class ResourceComponent(
     val multiplier : Float
         get() = 1.5f.pow(numHundreds)
 
+    val value : Float
+        get() = baseValue * multiplier
+
     val cost : Float
         get() = baseCost * (5 * tier).pow(numHundreds)
 

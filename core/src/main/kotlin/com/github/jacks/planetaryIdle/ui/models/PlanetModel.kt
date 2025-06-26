@@ -24,7 +24,7 @@ class PlanetModel(
     private val resourceEntities = world.family(allOf = arrayOf(ResourceComponent::class))
 
     var totalPopulationAmount by propertyNotify(10)
-    var availablePopulationAmount by propertyNotify(10)
+    var availablePopulationAmount by propertyNotify(10f)
     var populationGainPerSecond by propertyNotify(0f)
     var buyAmount by propertyNotify(1f)
 
@@ -52,14 +52,15 @@ class PlanetModel(
             is BuyResourceEvent -> {
                 val entity = getEntityByName(event.resourceType) ?: gdxError("No Entity with foodType: ${event.resourceType}")
                 val rscComp = resourceComponents[entity]
-                updateResourceComponent(rscComp)
                 updatePopulation(rscComp)
                 updateModelAmount(rscComp)
+                updateResourceComponent(rscComp)
                 updateModel()
+                updateModelPopulationRate()
             }
             is ResourceUpdateEvent -> {
                 val rscComp = resourceComponents[event.entity]
-                availablePopulationAmount += (rscComp.baseValue.roundToInt() * rscComp.amountOwned)
+                availablePopulationAmount += rscComp.value * rscComp.amountOwned.toFloat()
                 totalPopulationAmount = (totalPopulationAmount + (rscComp.baseValue.roundToInt() * rscComp.amountOwned)).coerceAtMost(1000000000)
             }
             is UpdateBuyAmountEvent -> {
@@ -76,7 +77,7 @@ class PlanetModel(
                     rscComp.currentUpdateDuration = rscComp.baseUpdateDuration
                 }
                 totalPopulationAmount = 10
-                availablePopulationAmount = 10
+                availablePopulationAmount = 10f
                 populationGainPerSecond = 0f
                 buyAmount = 1f
                 wheatAmount = 0
@@ -120,7 +121,7 @@ class PlanetModel(
      * availablePopulation given the purchased ResourceComponent
      */
     private fun updatePopulation(rscComp : ResourceComponent) {
-        availablePopulationAmount -= (rscComp.cost * buyAmount).roundToInt()
+        availablePopulationAmount -= calculateCost(rscComp)
     }
 
     /**
@@ -138,57 +139,59 @@ class PlanetModel(
 
     /**
      * Update the Model values for:
-     * multiplier and cost for each ResourceComponent, and populationGainRate,
+     * populationGainRate
      */
-    private fun updateModel() {
-        populationGainPerSecond = getPopulationGainRate()
-        resourceEntities.forEach { entity ->
-            val rscComp = resourceComponents[entity]
-            when (rscComp.name) {
-                "wheat" -> {
-                    wheatMultiplier = rscComp.multiplier
-                    wheatCost = rscComp.cost * buyAmount
-                }
-                "corn" -> {
-                    cornMultiplier = rscComp.multiplier
-                    cornCost = rscComp.cost * buyAmount
-                }
-                "cabbage" -> {
-                    cabbageMultiplier = rscComp.multiplier
-                    cabbageCost = rscComp.cost * buyAmount
-                }
-                "potatoes" -> {
-                    potatoesMultiplier = rscComp.multiplier
-                    potatoesCost = rscComp.cost * buyAmount
-                }
-            }
-        }
-    }
-
-    /*
-    (cost*(buyAmount-current)) + (nextCost*current)
-    (cost*(((((current / buyAmount).toInt())+1)*buyAmount-current))) + (nextCost*(current%buyAmount))
-    current = 40, buyAmount = 100, cost = 10, nextCost = 50 -> (10*(100-40)) + (50 * 40) = 600 + 2000 = 2600
-    current = 260, buyAmount = 100, cost = 250, nextCost = 1250 -> (250*(((((260 / 100).toInt())+1)*100-260))) + (1250*(260%100)) = 10,000 + 75,000 = 85,000
-    current = 100, buyAmount = 100, cost = 50, next = 250 -> (50*(((((25/10
-
-
-
-     */
-
-    private fun calculateCost(rscComp: ResourceComponent) : Float {
-        val cost = rscComp.cost
-        val nextCost = rscComp.nextCost
-        val amount = rscComp.amountOwned
-        return (cost * (((((amount / buyAmount).toInt()) + 1) * buyAmount - amount))) + (nextCost * (amount % buyAmount))
-    }
-
-    private fun getPopulationGainRate() : Float {
+    private fun updateModelPopulationRate() {
         var popGain = 0f
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
             popGain += ((rscComp.baseValue * rscComp.multiplier) / rscComp.baseUpdateDuration * rscComp.amountOwned)
         }
-        return popGain
+        populationGainPerSecond = popGain
+    }
+
+    /**
+     * Update the Model values for:
+     * multiplier and cost for each ResourceComponent, and populationGainRate,
+     */
+    private fun updateModel() {
+        resourceEntities.forEach { entity ->
+            val rscComp = resourceComponents[entity]
+            when (rscComp.name) {
+                "wheat" -> {
+                    wheatMultiplier = rscComp.multiplier
+                    wheatCost = calculateCost(rscComp)
+                }
+                "corn" -> {
+                    cornMultiplier = rscComp.multiplier
+                    cornCost = calculateCost(rscComp)
+                }
+                "cabbage" -> {
+                    cabbageMultiplier = rscComp.multiplier
+                    cabbageCost = calculateCost(rscComp)
+                }
+                "potatoes" -> {
+                    potatoesMultiplier = rscComp.multiplier
+                    potatoesCost = calculateCost(rscComp)
+                }
+            }
+        }
+    }
+
+    /**
+     * @param ResourceComponent
+     * Calculates the cost of a resource relative to the buyAmount and accounts
+     * for part of the purchase bridging the price increase threshold.
+     * @return Float
+     */
+    private fun calculateCost(rscComp: ResourceComponent) : Float {
+        val cost = rscComp.cost
+        val nextCost = rscComp.nextCost
+        val amount = rscComp.amountOwned
+        return if (buyAmount == 100f || (buyAmount == 10f && amount % 100 > 90)) {
+            (cost * (((((amount / 100) + 1) * 100) - amount))) + (nextCost * (amount % buyAmount))
+        } else {
+            cost * buyAmount
+        }
     }
 }
