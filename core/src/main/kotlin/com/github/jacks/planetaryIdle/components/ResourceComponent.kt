@@ -26,7 +26,7 @@ data class ResourceComponent(
     var tier : Float = 1f,
     var baseValue : Float = 0f,
     var baseCost : Float = 0f,
-    var baseUpdateDuration : Float = -1f,
+    var baseUpdateDuration : Float = -10f,
     var currentUpdateDuration : Float = 0f,
     var amountOwned : Int = 0,
     var isUnlocked : Boolean = false
@@ -40,4 +40,7 @@ data class ResourceComponent(
 
     val cost : Float
         get() = baseCost * (5 * tier).pow(numHundreds)
+
+    val nextCost : Float
+        get() = baseCost * (5 * tier).pow(numHundreds + 1f)
 }

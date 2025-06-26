@@ -36,10 +36,10 @@ class PlanetModel(
     var cornCost by propertyNotify(100f)
     var cabbageAmount by propertyNotify(0)
     var cabbageMultiplier by propertyNotify(1f)
-    var cabbageCost by propertyNotify(1000f)
+    var cabbageCost by propertyNotify(1_000f)
     var potatoesAmount by propertyNotify(0)
     var potatoesMultiplier by propertyNotify(1f)
-    var potatoesCost by propertyNotify(10000f)
+    var potatoesCost by propertyNotify(10_000f)
 
     var gameCompleted by propertyNotify(false)
 
@@ -50,10 +50,12 @@ class PlanetModel(
     override fun handle(event: Event?): Boolean {
         when (event) {
             is BuyResourceEvent -> {
-                val entity = getEntityByName(event.foodType) ?: gdxError("No Entity with foodType: ${event.foodType}")
+                val entity = getEntityByName(event.resourceType) ?: gdxError("No Entity with foodType: ${event.resourceType}")
                 val rscComp = resourceComponents[entity]
                 updateResourceComponent(rscComp)
-                updateModel(rscComp)
+                updatePopulation(rscComp)
+                updateModelAmount(rscComp)
+                updateModel()
             }
             is ResourceUpdateEvent -> {
                 val rscComp = resourceComponents[event.entity]
@@ -62,6 +64,7 @@ class PlanetModel(
             }
             is UpdateBuyAmountEvent -> {
                 buyAmount = event.amount
+                updateModel()
             }
             is GameCompletedEvent -> {
                 gameCompleted = true
@@ -104,38 +107,83 @@ class PlanetModel(
         return null
     }
 
+    /**
+     * Update the ResourceComponent value for:
+     * amount of a given ResourceComponent
+     */
     private fun updateResourceComponent(rscComp : ResourceComponent) {
         rscComp.amountOwned += buyAmount.roundToInt()
     }
 
-    private fun updateModel(rscComp : ResourceComponent) {
+    /**
+     * Update the Model value for:
+     * availablePopulation given the purchased ResourceComponent
+     */
+    private fun updatePopulation(rscComp : ResourceComponent) {
         availablePopulationAmount -= (rscComp.cost * buyAmount).roundToInt()
-        populationGainPerSecond = getPopulationGain()
+    }
+
+    /**
+     * Update the Model values for:
+     * amount of a given ResourceComponent
+     */
+    private fun updateModelAmount(rscComp: ResourceComponent) {
         when (rscComp.name) {
-            "wheat" -> {
-                wheatAmount += buyAmount.roundToInt()
-                wheatMultiplier = rscComp.multiplier
-                if (wheatCost != rscComp.cost) wheatCost = rscComp.cost
-            }
-            "corn" -> {
-                cornAmount += buyAmount.roundToInt()
-                cornMultiplier = rscComp.multiplier
-                if (cornCost != rscComp.cost) cornCost = rscComp.cost
-            }
-            "cabbage" -> {
-                cabbageAmount += buyAmount.roundToInt()
-                cabbageMultiplier = rscComp.multiplier
-                if (cabbageCost != rscComp.cost) cabbageCost = rscComp.cost
-            }
-            "potatoes" -> {
-                potatoesAmount += buyAmount.roundToInt()
-                potatoesMultiplier = rscComp.multiplier
-                if (potatoesCost != rscComp.cost) potatoesCost = rscComp.cost
+            "wheat" -> wheatAmount += buyAmount.roundToInt()
+            "corn" -> cornAmount += buyAmount.roundToInt()
+            "cabbage" -> cabbageAmount += buyAmount.roundToInt()
+            "potatoes" -> potatoesAmount += buyAmount.roundToInt()
+        }
+    }
+
+    /**
+     * Update the Model values for:
+     * multiplier and cost for each ResourceComponent, and populationGainRate,
+     */
+    private fun updateModel() {
+        populationGainPerSecond = getPopulationGainRate()
+        resourceEntities.forEach { entity ->
+            val rscComp = resourceComponents[entity]
+            when (rscComp.name) {
+                "wheat" -> {
+                    wheatMultiplier = rscComp.multiplier
+                    wheatCost = rscComp.cost * buyAmount
+                }
+                "corn" -> {
+                    cornMultiplier = rscComp.multiplier
+                    cornCost = rscComp.cost * buyAmount
+                }
+                "cabbage" -> {
+                    cabbageMultiplier = rscComp.multiplier
+                    cabbageCost = rscComp.cost * buyAmount
+                }
+                "potatoes" -> {
+                    potatoesMultiplier = rscComp.multiplier
+                    potatoesCost = rscComp.cost * buyAmount
+                }
             }
         }
     }
 
-    private fun getPopulationGain() : Float {
+    /*
+    (cost*(buyAmount-current)) + (nextCost*current)
+    (cost*(((((current / buyAmount).toInt())+1)*buyAmount-current))) + (nextCost*(current%buyAmount))
+    current = 40, buyAmount = 100, cost = 10, nextCost = 50 -> (10*(100-40)) + (50 * 40) = 600 + 2000 = 2600
+    current = 260, buyAmount = 100, cost = 250, nextCost = 1250 -> (250*(((((260 / 100).toInt())+1)*100-260))) + (1250*(260%100)) = 10,000 + 75,000 = 85,000
+    current = 100, buyAmount = 100, cost = 50, next = 250 -> (50*(((((25/10
+
+
+
+     */
+
+    private fun calculateCost(rscComp: ResourceComponent) : Float {
+        val cost = rscComp.cost
+        val nextCost = rscComp.nextCost
+        val amount = rscComp.amountOwned
+        return (cost * (((((amount / buyAmount).toInt()) + 1) * buyAmount - amount))) + (nextCost * (amount % buyAmount))
+    }
+
+    private fun getPopulationGainRate() : Float {
         var popGain = 0f
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]

@@ -19,7 +19,7 @@ class ResourceUpdateSystem(
     override fun onTickEntity(entity: Entity) {
         val rscComp  = resourceComponents[entity]
 
-        if (rscComp.baseUpdateDuration < 0f || rscComp.amountOwned == 0) {
+        if (rscComp.baseUpdateDuration < -1f || rscComp.amountOwned == 0) {
             return
         }
 
@@ -29,7 +29,7 @@ class ResourceUpdateSystem(
             stage.fire(ResourceUpdateEvent(entity))
         }
 
-        rscComp.currentUpdateDuration -= deltaTime
+        rscComp.currentUpdateDuration = (rscComp.currentUpdateDuration - deltaTime).coerceAtLeast(0f)
     }
 
     companion object {

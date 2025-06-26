@@ -15,5 +15,5 @@ class ResetGameEvent : Event()
 class GameCompletedEvent : Event()
 
 class ResourceUpdateEvent(val entity : Entity) : Event()
-class BuyResourceEvent(val foodType : String) : Event()
+class BuyResourceEvent(val resourceType : String) : Event()
 class UpdateBuyAmountEvent(val amount : Float) : Event()
