@@ -15,6 +15,7 @@ import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
 import com.github.jacks.planetaryIdle.events.QuitGameEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
+import com.github.jacks.planetaryIdle.events.SaveGameEvent
 import com.github.jacks.planetaryIdle.events.UpdateBuyAmountEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.ui.Buttons
@@ -39,12 +40,14 @@ class PlanetView(
 
     private var buyAmount : Float = preferences["buyAmount", 1f]
 
-    private var availablePopAmount = 10f
+    private var availablePopAmount = preferences["availablePopulation", 10f]
+    private var populationGainRate = preferences["populationGainRate", 0f]
 
-    private var wheatCost : Float = 10f
-    private var cornCost : Float = 100f
-    private var cabbageCost : Float = 1000f
-    private var potatoesCost : Float = 10000f
+    private var wheatCost : Float = preferences["wheat_cost", 10f]
+    private var cornCost : Float = preferences["corn_cost", 100f]
+    private var cabbageCost : Float = preferences["cabbage_cost", 1_000f]
+    private var potatoesCost : Float = preferences["potatoes_cost", 10_000f]
+
 
     // tables
 
@@ -138,7 +141,7 @@ class PlanetView(
             row()
             this@PlanetView.resetButton = textButton("Reset Game", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
                 cell.top().left().width(180f).height(50f)
-                isDisabled = true
+                isDisabled = false
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         log.debug { "Reset Game" }
@@ -151,6 +154,8 @@ class PlanetView(
                 cell.top().left().width(180f).height(50f)
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
+                        log.debug { "Save Game" }
+                        stage.fire(SaveGameEvent())
                         log.debug { "Quit Game" }
                         stage.fire(QuitGameEvent())
                     }
@@ -164,11 +169,11 @@ class PlanetView(
 
             // Top information area
             table { topLabelCell ->
-                this@PlanetView.availablePopulation = label("You have 10 available population. (AP)", Labels.DEFAULT.skinKey) { cell ->
+                this@PlanetView.availablePopulation = label("You have ${"%,d".format(this@PlanetView.availablePopAmount.roundToInt())} available population. (AP)", Labels.DEFAULT.skinKey) { cell ->
                     cell.center().padBottom(10f)
                 }
                 row()
-                this@PlanetView.populationGainPerSecond = label("You are gaining 0.00 population per second.", Labels.DEFAULT.skinKey) { cell ->
+                this@PlanetView.populationGainPerSecond = label("You are gaining ${"%,.2f".format(this@PlanetView.populationGainRate)} population per second.", Labels.DEFAULT.skinKey) { cell ->
                     cell.center()
                 }
                 topLabelCell.expandX().top().padTop(10f).height(140f)
@@ -208,16 +213,17 @@ class PlanetView(
                         label("Wheat Fields", Labels.MEDIUM.skinKey) { cell ->
                             cell.left().padRight(15f)
                         }
-                        this@PlanetView.wheatMultiplier = label("x1.00", Labels.SMALL.skinKey) { cell ->
+                        this@PlanetView.wheatMultiplier = label("x${"%.2f".format(this@PlanetView.preferences["wheat_multiplier", 1f])}", Labels.SMALL.skinKey) { cell ->
                             cell.expand().left()
                         }
                         foodTableNameCell.left().width(200f)
                     }
-                    this@PlanetView.wheatOwned = label("0", Labels.MEDIUM.skinKey) { cell ->
+                    this@PlanetView.wheatOwned = label("%,d".format(this@PlanetView.preferences["wheat_amount", 0]), Labels.MEDIUM.skinKey) { cell ->
                         cell.expandX().left()
                     }
-                    this@PlanetView.assignWheatButton = textButton(this@PlanetView.formatBuyButton(10f), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
+                    this@PlanetView.assignWheatButton = textButton(this@PlanetView.formatBuyButton(this@PlanetView.wheatCost), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
                         cell.right().width(200f).height(50f)
+                        isDisabled = this@PlanetView.availablePopAmount < this@PlanetView.wheatCost
                         this.addListener(object : ChangeListener() {
                             override fun changed(event: ChangeEvent, actor: Actor) {
                                 stage.fire(BuyResourceEvent("wheat"))
@@ -236,17 +242,17 @@ class PlanetView(
                         label("Corn Fields", Labels.MEDIUM.skinKey) { cell ->
                             cell.left().padRight(15f)
                         }
-                        this@PlanetView.cornMultiplier = label("x1.00", Labels.SMALL.skinKey) { cell ->
+                        this@PlanetView.cornMultiplier = label("x${"%.2f".format(this@PlanetView.preferences["corn_multiplier", 1f])}", Labels.SMALL.skinKey) { cell ->
                             cell.expand().left()
                         }
                         foodTableNameCell.left().width(200f)
                     }
-                    this@PlanetView.cornOwned = label("0", Labels.MEDIUM.skinKey) { cell ->
+                    this@PlanetView.cornOwned = label("%,d".format(this@PlanetView.preferences["corn_amount", 0]), Labels.MEDIUM.skinKey) { cell ->
                         cell.expandX().left()
                     }
-                    this@PlanetView.assignCornButton = textButton(this@PlanetView.formatBuyButton(100f), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
+                    this@PlanetView.assignCornButton = textButton(this@PlanetView.formatBuyButton(this@PlanetView.cornCost), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
                         cell.right().width(200f).height(50f)
-                        isDisabled = true
+                        isDisabled = this@PlanetView.availablePopAmount < this@PlanetView.cornCost
                         this.addListener(object : ChangeListener() {
                             override fun changed(event: ChangeEvent, actor: Actor) {
                                 stage.fire(BuyResourceEvent("corn"))
@@ -265,17 +271,17 @@ class PlanetView(
                         label("Cabbage Fields", Labels.MEDIUM.skinKey) { cell ->
                             cell.left().padRight(15f)
                         }
-                        this@PlanetView.cabbageMultiplier = label("x1.00", Labels.SMALL.skinKey) { cell ->
+                        this@PlanetView.cabbageMultiplier = label("x${"%.2f".format(this@PlanetView.preferences["cabbage_multiplier", 1f])}", Labels.SMALL.skinKey) { cell ->
                             cell.expand().left()
                         }
                         foodTableNameCell.left().width(200f)
                     }
-                    this@PlanetView.cabbageOwned = label("0", Labels.MEDIUM.skinKey) { cell ->
+                    this@PlanetView.cabbageOwned = label("%,d".format(this@PlanetView.preferences["cabbage_amount", 0]), Labels.MEDIUM.skinKey) { cell ->
                         cell.expandX().left()
                     }
-                    this@PlanetView.assignCabbageButton = textButton(this@PlanetView.formatBuyButton(1000f), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
+                    this@PlanetView.assignCabbageButton = textButton(this@PlanetView.formatBuyButton(this@PlanetView.cabbageCost), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
                         cell.right().width(200f).height(50f)
-                        isDisabled = true
+                        isDisabled = this@PlanetView.availablePopAmount < this@PlanetView.cabbageCost
                         this.addListener(object : ChangeListener() {
                             override fun changed(event: ChangeEvent, actor: Actor) {
                                 stage.fire(BuyResourceEvent("cabbage"))
@@ -294,17 +300,17 @@ class PlanetView(
                         label("Potato Fields", Labels.MEDIUM.skinKey) { cell ->
                             cell.left().padRight(15f)
                         }
-                        this@PlanetView.potatoesMultiplier = label("x1.00", Labels.SMALL.skinKey) { cell ->
+                        this@PlanetView.potatoesMultiplier = label("x${"%.2f".format(this@PlanetView.preferences["potatoes_multiplier", 1f])}", Labels.SMALL.skinKey) { cell ->
                             cell.expand().left()
                         }
                         foodTableNameCell.left().width(200f)
                     }
-                    this@PlanetView.potatoesOwned = label("0", Labels.MEDIUM.skinKey) { cell ->
+                    this@PlanetView.potatoesOwned = label("%,d".format(this@PlanetView.preferences["potatoes_amount", 0]), Labels.MEDIUM.skinKey) { cell ->
                         cell.expandX().left()
                     }
-                    this@PlanetView.assignPotatoesButton = textButton(this@PlanetView.formatBuyButton(10000f), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
+                    this@PlanetView.assignPotatoesButton = textButton(this@PlanetView.formatBuyButton(this@PlanetView.potatoesCost), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
                         cell.right().width(200f).height(50f)
-                        isDisabled = true
+                        isDisabled = this@PlanetView.availablePopAmount < this@PlanetView.potatoesCost
                         this.addListener(object : ChangeListener() {
                             override fun changed(event: ChangeEvent, actor: Actor) {
                                 stage.fire(BuyResourceEvent("potatoes"))
@@ -329,7 +335,12 @@ class PlanetView(
                     this@PlanetView.colonizationProgress = image(skin[Drawables.BAR_GREEN_THICK]) { cell ->
                         scaleX = 0f
                     }
-                    this@PlanetView.totalPopulation = label("10 / 1,000,000,000 (0.00 %)", Labels.MEDIUM.skinKey) { cell ->
+                    this@PlanetView.totalPopulation = label(
+                        "${"%,d".format(this@PlanetView.preferences["totalPopulation", 10].coerceAtMost(MAX_POP_AMOUNT))} " +
+                            "/ ${"%,d".format(MAX_POP_AMOUNT)} " +
+                            "(${"%.2f".format(this@PlanetView.preferences["totalPopulation", 10].toFloat() / MAX_POP_AMOUNT.toFloat())} %)",
+                        Labels.MEDIUM.skinKey
+                    ) { cell ->
                         setAlignment(Align.center)
                     }
                     stackCell.center().width(600f).height(30f)
@@ -470,10 +481,9 @@ class PlanetView(
         }
     }
     private fun popupGameCompleted(completed : Boolean) {
-        log.debug { "popupGameCompleted" }
-        this@PlanetView.gameCompleted.isVisible = completed
+        //log.debug { "popupGameCompleted" }
+        //this@PlanetView.gameCompleted.isVisible = completed
         //menuTable.invalidateHierarchy()
-        this@PlanetView.resetButton.isDisabled = !completed
     }
 
     companion object {

@@ -9,6 +9,8 @@ fun Stage.fire(event : Event) {
 }
 
 class InitializeGameEvent : Event()
+class SaveGameEvent : Event()
+class LoadGameEvent : Event()
 class QuitGameEvent : Event()
 class ResetGameEvent : Event()
 

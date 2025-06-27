@@ -1,5 +1,7 @@
 package com.github.jacks.planetaryIdle.ui.models
 
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
@@ -8,11 +10,15 @@ import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
+import com.github.jacks.planetaryIdle.events.SaveGameEvent
 import com.github.jacks.planetaryIdle.events.UpdateBuyAmountEvent
 import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.World
 import ktx.app.gdxError
+import ktx.preferences.flush
+import ktx.preferences.get
+import ktx.preferences.set
 import kotlin.math.roundToInt
 
 class PlanetModel(
@@ -20,26 +26,27 @@ class PlanetModel(
     stage : Stage
 ) : PropertyChangeSource(), EventListener {
 
+    private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
     private val resourceComponents : ComponentMapper<ResourceComponent> = world.mapper()
     private val resourceEntities = world.family(allOf = arrayOf(ResourceComponent::class))
 
-    var totalPopulationAmount by propertyNotify(10)
-    var availablePopulationAmount by propertyNotify(10f)
-    var populationGainPerSecond by propertyNotify(0f)
-    var buyAmount by propertyNotify(1f)
+    var totalPopulationAmount by propertyNotify(preferences["totalPopulation", 10])
+    var availablePopulationAmount by propertyNotify(preferences["availablePopulation", 10f])
+    var populationGainPerSecond by propertyNotify(preferences["populationGainRate", 0f])
+    var buyAmount by propertyNotify(preferences["buyAmount", 1f])
 
-    var wheatAmount by propertyNotify(0)
-    var wheatMultiplier by propertyNotify(1f)
-    var wheatCost by propertyNotify(10f)
-    var cornAmount by propertyNotify(0)
-    var cornMultiplier by propertyNotify(1f)
-    var cornCost by propertyNotify(100f)
-    var cabbageAmount by propertyNotify(0)
-    var cabbageMultiplier by propertyNotify(1f)
-    var cabbageCost by propertyNotify(1_000f)
-    var potatoesAmount by propertyNotify(0)
-    var potatoesMultiplier by propertyNotify(1f)
-    var potatoesCost by propertyNotify(10_000f)
+    var wheatAmount by propertyNotify(preferences["wheat_amount", 0])
+    var wheatMultiplier by propertyNotify(preferences["wheat_multiplier", 1f])
+    var wheatCost by propertyNotify(preferences["wheat_cost", 10f])
+    var cornAmount by propertyNotify(preferences["corn_amount", 0])
+    var cornMultiplier by propertyNotify(preferences["corn_multiplier", 1f])
+    var cornCost by propertyNotify(preferences["corn_cost", 100f])
+    var cabbageAmount by propertyNotify(preferences["cabbage_amount", 0])
+    var cabbageMultiplier by propertyNotify(preferences["cabbage_multiplier", 1f])
+    var cabbageCost by propertyNotify(preferences["cabbage_cost", 1_000f])
+    var potatoesAmount by propertyNotify(preferences["potatoes_amount", 0])
+    var potatoesMultiplier by propertyNotify(preferences["potatoes_multiplier", 1f])
+    var potatoesCost by propertyNotify(preferences["potatoes_cost", 10_000f])
 
     var gameCompleted by propertyNotify(false)
 
@@ -55,20 +62,25 @@ class PlanetModel(
                 updatePopulation(rscComp)
                 updateModelAmount(rscComp)
                 updateResourceComponent(rscComp)
-                updateModel()
+                updateModel(rscComp)
                 updateModelPopulationRate()
             }
             is ResourceUpdateEvent -> {
                 val rscComp = resourceComponents[event.entity]
                 availablePopulationAmount += rscComp.value * rscComp.amountOwned.toFloat()
                 totalPopulationAmount = (totalPopulationAmount + (rscComp.baseValue.roundToInt() * rscComp.amountOwned)).coerceAtMost(1000000000)
+                preferences.flush {
+                    this["availablePopulation"] = availablePopulationAmount
+                    this["totalPopulation"] = totalPopulationAmount
+                }
             }
             is UpdateBuyAmountEvent -> {
                 buyAmount = event.amount
+                preferences.flush { this["buyAmount"] = buyAmount }
                 updateModel()
             }
-            is GameCompletedEvent -> {
-                gameCompleted = true
+            is SaveGameEvent -> {
+
             }
             is ResetGameEvent -> {
                 resourceEntities.forEach { entity ->
@@ -93,6 +105,12 @@ class PlanetModel(
                 potatoesMultiplier = 1f
                 potatoesCost = 10000f
                 gameCompleted = false
+                preferences.flush {
+                    preferences.clear()
+                }
+            }
+            is GameCompletedEvent -> {
+                gameCompleted = true
             }
             else -> return false
         }
@@ -122,6 +140,7 @@ class PlanetModel(
      */
     private fun updatePopulation(rscComp : ResourceComponent) {
         availablePopulationAmount -= calculateCost(rscComp)
+        preferences.flush { this["availablePopulation"] = availablePopulationAmount }
     }
 
     /**
@@ -130,10 +149,22 @@ class PlanetModel(
      */
     private fun updateModelAmount(rscComp: ResourceComponent) {
         when (rscComp.name) {
-            "wheat" -> wheatAmount += buyAmount.roundToInt()
-            "corn" -> cornAmount += buyAmount.roundToInt()
-            "cabbage" -> cabbageAmount += buyAmount.roundToInt()
-            "potatoes" -> potatoesAmount += buyAmount.roundToInt()
+            "wheat" -> {
+                wheatAmount += buyAmount.roundToInt()
+                preferences.flush { this["wheat_amount"] = wheatAmount }
+            }
+            "corn" -> {
+                cornAmount += buyAmount.roundToInt()
+                preferences.flush { this["corn_amount"] = cornAmount }
+            }
+            "cabbage" -> {
+                cabbageAmount += buyAmount.roundToInt()
+                preferences.flush { this["cabbage_amount"] = cabbageAmount }
+            }
+            "potatoes" -> {
+                potatoesAmount += buyAmount.roundToInt()
+                preferences.flush { this["potatoes_amount"] = potatoesAmount }
+            }
         }
     }
 
@@ -148,31 +179,56 @@ class PlanetModel(
             popGain += ((rscComp.baseValue * rscComp.multiplier) / rscComp.baseUpdateDuration * rscComp.amountOwned)
         }
         populationGainPerSecond = popGain
+        preferences.flush { this["populationGainRate"] = populationGainPerSecond }
     }
 
     /**
      * Update the Model values for:
-     * multiplier and cost for each ResourceComponent, and populationGainRate,
+     * multiplier and cost for each ResourceComponent
      */
     private fun updateModel() {
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
-            when (rscComp.name) {
-                "wheat" -> {
-                    wheatMultiplier = rscComp.multiplier
-                    wheatCost = calculateCost(rscComp)
+            updateModel(rscComp)
+        }
+    }
+
+    /**
+     * Update the Model values for:
+     * multiplier and cost for each ResourceComponent
+     */
+    private fun updateModel(rscComp : ResourceComponent) {
+        when (rscComp.name) {
+            "wheat" -> {
+                wheatMultiplier = rscComp.multiplier
+                wheatCost = calculateCost(rscComp)
+                preferences.flush {
+                    this["wheat_multiplier"] = wheatMultiplier
+                    this["wheat_cost"] = wheatCost
                 }
-                "corn" -> {
-                    cornMultiplier = rscComp.multiplier
-                    cornCost = calculateCost(rscComp)
+            }
+            "corn" -> {
+                cornMultiplier = rscComp.multiplier
+                cornCost = calculateCost(rscComp)
+                preferences.flush {
+                    this["corn_multiplier"] = cornMultiplier
+                    this["corn_cost"] = cornCost
                 }
-                "cabbage" -> {
-                    cabbageMultiplier = rscComp.multiplier
-                    cabbageCost = calculateCost(rscComp)
+            }
+            "cabbage" -> {
+                cabbageMultiplier = rscComp.multiplier
+                cabbageCost = calculateCost(rscComp)
+                preferences.flush {
+                    this["cabbage_multiplier"] = cabbageMultiplier
+                    this["cabbage_cost"] = cabbageCost
                 }
-                "potatoes" -> {
-                    potatoesMultiplier = rscComp.multiplier
-                    potatoesCost = calculateCost(rscComp)
+            }
+            "potatoes" -> {
+                potatoesMultiplier = rscComp.multiplier
+                potatoesCost = calculateCost(rscComp)
+                preferences.flush {
+                    this["potatoes_multiplier"] = potatoesMultiplier
+                    this["potatoes_cost"] = potatoesCost
                 }
             }
         }

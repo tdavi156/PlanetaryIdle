@@ -17,7 +17,8 @@ data class ResourceConfiguration(
     val baseCost : Float = 0f,
     val baseValue : Float = 0f,
     val baseUpdateDuration : Float = -10f,
-    val baseAmountOwned : Int = 0,
+    val currentUpdateDuration : Float = 0f,
+    val amountOwned : Int = 0,
     val isUnlocked : Boolean = false
 )
 

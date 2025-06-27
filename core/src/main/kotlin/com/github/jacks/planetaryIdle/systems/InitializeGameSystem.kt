@@ -10,6 +10,8 @@ import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.components.ResourceConfiguration
 import com.github.jacks.planetaryIdle.events.InitializeGameEvent
+import com.github.jacks.planetaryIdle.events.LoadGameEvent
+import com.github.jacks.planetaryIdle.systems.InitializeGameSystem.Companion.preferences
 import com.github.quillraven.fleks.AllOf
 import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.Entity
@@ -34,7 +36,7 @@ class InitializeGameSystem(
                     world.entity {
                         add<ResourceComponent> {
                             name = config.name
-                            amountOwned = config.baseAmountOwned
+                            amountOwned = config.amountOwned
                         }
                     }
                 }
@@ -47,6 +49,7 @@ class InitializeGameSystem(
                             baseValue = config.baseValue
                             baseCost = config.baseCost
                             baseUpdateDuration = config.baseUpdateDuration
+                            amountOwned = config.amountOwned
                             isUnlocked = config.isUnlocked
                         }
                     }
@@ -66,21 +69,24 @@ class InitializeGameSystem(
                 if (!preferences["isGameInitialized", false]) {
                     preferences.clear()
                     setupPreferences()
+                }
+                world.entity {
+                    add<ConfigurationComponent> {
+                        configurationName = "population"
+                        configurationType = POPULATION
+                    }
+                }
+                PlanetResources.entries.forEach { resource ->
                     world.entity {
                         add<ConfigurationComponent> {
-                            configurationName = "population"
-                            configurationType = POPULATION
-                        }
-                    }
-                    PlanetResources.entries.forEach { resource ->
-                        world.entity {
-                            add<ConfigurationComponent> {
-                                configurationName = resource.resourceName
-                                configurationType = PLANET_RESOURCE
-                            }
+                            configurationName = resource.resourceName
+                            configurationType = PLANET_RESOURCE
                         }
                     }
                 }
+            }
+            is LoadGameEvent -> {
+
             }
             else -> return false
         }
@@ -102,34 +108,42 @@ class InitializeGameSystem(
             this["isGameInitialized"] = true
 
             this["totalPopulation"] = 10
-            this["availablePopulation"] = 10
+            this["availablePopulation"] = 10f
             this["populationGainRate"] = 0f
-
-            this["wheatAmount"] = 0
-            this["wheatUpdateDuration"] = 1f
-            this["wheatUnlocked"] = true
-
-            this["cornAmount"] = 0
-            this["cornUpdateDuration"] = 3f
-            this["cornUnlocked"] = false
-
-            this["cabbageAmount"] = 0
-            this["cabbageUpdateDuration"] = 7.5f
-            this["cabbageUnlocked"] = false
-
-            this["potatoesAmount"] = 0
-            this["potatoesUpdateDuration"] = 25f
-            this["potatoesUnlocked"] = false
-
             this["buyAmount"] = 1f
+
+            this["wheat_amount"] = 0
+            this["wheat_multiplier"] = 1f
+            this["wheat_cost"] = 10f
+            this["wheat_updateDuration"] = 1f
+            this["wheat_unlocked"] = true
+
+            this["corn_amount"] = 0
+            this["corn_multiplier"] = 1f
+            this["corn_cost"] = 100f
+            this["corn_updateDuration"] = 3f
+            this["corn_unlocked"] = false
+
+            this["cabbage_Amount"] = 0
+            this["cabbage_multiplier"] = 1f
+            this["cabbage_cost"] = 1_000f
+            this["cabbage_updateDuration"] = 7.5f
+            this["cabbage_unlocked"] = false
+
+            this["potatoes_amount"] = 0
+            this["potatoes_multiplier"] = 1f
+            this["potatoes_cost"] = 10_000f
+            this["potatoes_updateDuration"] = 25f
+            this["potatoes_unlocked"] = false
         }
     }
 
     companion object {
         private val log = logger<InitializeGameSystem>()
+        private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
         val POPULATION_CONFIGURATION = ResourceConfiguration(
             name = "population",
-            baseAmountOwned = 10
+            amountOwned = preferences["totalPopulation", 10]
         )
         val WHEAT_CONFIGURATION = ResourceConfiguration(
             name = "wheat",
@@ -137,28 +151,39 @@ class InitializeGameSystem(
             baseCost = 10f,
             baseValue = 1f,
             baseUpdateDuration = 1f,
-            isUnlocked = true
+            currentUpdateDuration = preferences["wheat_updateDuration", 1f],
+            amountOwned = preferences["wheat_amount", 0],
+            isUnlocked = preferences["wheat_unlocked", true]
         )
         val CORN_CONFIGURATION = ResourceConfiguration(
             name = "corn",
             tier = 2f,
             baseCost = 100f,
             baseValue = 25f,
-            baseUpdateDuration = 3f
+            baseUpdateDuration = 3f,
+            currentUpdateDuration = preferences["corn_updateDuration", 3f],
+            amountOwned = preferences["corn_amount", 0],
+            isUnlocked = preferences["corn_unlocked", false]
         )
         val CABBAGE_CONFIGURATION = ResourceConfiguration(
             name = "cabbage",
             tier = 3f,
-            baseCost = 1000f,
+            baseCost = 1_000f,
             baseValue = 350f,
-            baseUpdateDuration = 7.5f
+            baseUpdateDuration = 7.5f,
+            currentUpdateDuration = preferences["cabbage_updateDuration", 7.5f],
+            amountOwned = preferences["cabbage_amount", 0],
+            isUnlocked = preferences["cabbage_unlocked", false]
         )
         val POTATOES_CONFIGURATION = ResourceConfiguration(
             name = "potatoes",
             tier = 4f,
-            baseCost = 10000f,
-            baseValue = 4250f,
-            baseUpdateDuration = 25f
+            baseCost = 10_000f,
+            baseValue = 4_250f,
+            baseUpdateDuration = 25f,
+            currentUpdateDuration = preferences["potatoes_updateDuration", 25f],
+            amountOwned = preferences["potatoes_amount", 0],
+            isUnlocked = preferences["potatoes_unlocked", false]
         )
     }
 }
