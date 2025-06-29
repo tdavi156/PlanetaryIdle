@@ -11,7 +11,6 @@ import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.components.ResourceConfiguration
 import com.github.jacks.planetaryIdle.events.InitializeGameEvent
 import com.github.jacks.planetaryIdle.events.LoadGameEvent
-import com.github.jacks.planetaryIdle.systems.InitializeGameSystem.Companion.preferences
 import com.github.quillraven.fleks.AllOf
 import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.Entity
@@ -20,6 +19,7 @@ import ktx.log.logger
 import ktx.preferences.flush
 import ktx.preferences.get
 import ktx.preferences.set
+import java.math.*
 
 @AllOf([ConfigurationComponent::class])
 class InitializeGameSystem(
@@ -49,6 +49,7 @@ class InitializeGameSystem(
                             baseValue = config.baseValue
                             baseCost = config.baseCost
                             baseUpdateDuration = config.baseUpdateDuration
+                            currentUpdateDuration = config.currentUpdateDuration
                             amountOwned = config.amountOwned
                             isUnlocked = config.isUnlocked
                         }
@@ -97,7 +98,11 @@ class InitializeGameSystem(
         return when (configName) {
             PlanetResources.WHEAT.resourceName -> WHEAT_CONFIGURATION
             PlanetResources.CORN.resourceName -> CORN_CONFIGURATION
-            PlanetResources.CABBAGE.resourceName -> CABBAGE_CONFIGURATION
+            PlanetResources.LETTUCE.resourceName -> LETTUCE_CONFIGURATION
+            PlanetResources.CARROTS.resourceName -> CARROTS_CONFIGURATION
+            PlanetResources.TOMATOES.resourceName -> TOMATOES_CONFIGURATION
+            PlanetResources.BROCCOLI.resourceName -> BROCCOLI_CONFIGURATION
+            PlanetResources.ONIONS.resourceName -> ONIONS_CONFIGURATION
             PlanetResources.POTATOES.resourceName -> POTATOES_CONFIGURATION
             else -> ResourceConfiguration()
         }
@@ -107,33 +112,57 @@ class InitializeGameSystem(
         preferences.flush {
             this["isGameInitialized"] = true
 
-            this["totalPopulation"] = 10
-            this["availablePopulation"] = 10f
-            this["populationGainRate"] = 0f
-            this["buyAmount"] = 1f
+            this["totalPopulation"] = "10"
+            this["availablePopulation"] = "10"
+            this["populationGainRate"] = "0"
+            this["buyAmount"] = 1
 
-            this["wheat_amount"] = 0
-            this["wheat_multiplier"] = 1f
-            this["wheat_cost"] = 10f
+            this["wheat_amount"] = "0"
+            this["wheat_multiplier"] = "1"
+            this["wheat_cost"] = "10"
             this["wheat_updateDuration"] = 1f
             this["wheat_unlocked"] = true
 
-            this["corn_amount"] = 0
-            this["corn_multiplier"] = 1f
-            this["corn_cost"] = 100f
-            this["corn_updateDuration"] = 3f
+            this["corn_amount"] = "0"
+            this["corn_multiplier"] = "1"
+            this["corn_cost"] = "100"
+            this["corn_updateDuration"] = 3.2f
             this["corn_unlocked"] = false
 
-            this["cabbage_Amount"] = 0
-            this["cabbage_multiplier"] = 1f
-            this["cabbage_cost"] = 1_000f
-            this["cabbage_updateDuration"] = 7.5f
-            this["cabbage_unlocked"] = false
+            this["lettuce_amount"] = "0"
+            this["lettuce_multiplier"] = "1"
+            this["lettuce_cost"] = "1000"
+            this["lettuce_updateDuration"] = 6.4f
+            this["lettuce_unlocked"] = false
 
-            this["potatoes_amount"] = 0
-            this["potatoes_multiplier"] = 1f
-            this["potatoes_cost"] = 10_000f
-            this["potatoes_updateDuration"] = 25f
+            this["carrots_amount"] = "0"
+            this["carrots_multiplier"] = "1"
+            this["carrots_cost"] = "10000"
+            this["carrots_updateDuration"] = 12.8f
+            this["carrots_unlocked"] = false
+
+            this["tomatoes_amount"] = "0"
+            this["tomatoes_multiplier"] = "1"
+            this["tomatoes_cost"] = "100000"
+            this["tomatoes_updateDuration"] = 25.6f
+            this["tomatoes_unlocked"] = false
+
+            this["broccoli_amount"] = "0"
+            this["broccoli_multiplier"] = "1"
+            this["broccoli_cost"] = "1000000"
+            this["broccoli_updateDuration"] = 51.2f
+            this["broccoli_unlocked"] = false
+
+            this["onions_amount"] = "0"
+            this["onions_multiplier"] = "1"
+            this["onions_cost"] = "10000000"
+            this["onions_updateDuration"] = 102.4f
+            this["onions_unlocked"] = false
+
+            this["potatoes_amount"] = "0"
+            this["potatoes_multiplier"] = "1"
+            this["potatoes_cost"] = "100000000"
+            this["potatoes_updateDuration"] = 204.8f
             this["potatoes_unlocked"] = false
         }
     }
@@ -143,46 +172,86 @@ class InitializeGameSystem(
         private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
         val POPULATION_CONFIGURATION = ResourceConfiguration(
             name = "population",
-            amountOwned = preferences["totalPopulation", 10]
+            amountOwned = BigInteger(preferences["totalPopulation", "10"])
         )
         val WHEAT_CONFIGURATION = ResourceConfiguration(
             name = "wheat",
-            tier = 1f,
-            baseCost = 10f,
-            baseValue = 1f,
+            tier = 1,
+            baseCost = BigDecimal("10"),
+            baseValue = BigDecimal("1"),
             baseUpdateDuration = 1f,
             currentUpdateDuration = preferences["wheat_updateDuration", 1f],
-            amountOwned = preferences["wheat_amount", 0],
+            amountOwned = BigInteger(preferences["wheat_amount", "0"]),
             isUnlocked = preferences["wheat_unlocked", true]
         )
         val CORN_CONFIGURATION = ResourceConfiguration(
             name = "corn",
-            tier = 2f,
-            baseCost = 100f,
-            baseValue = 25f,
-            baseUpdateDuration = 3f,
-            currentUpdateDuration = preferences["corn_updateDuration", 3f],
-            amountOwned = preferences["corn_amount", 0],
+            tier = 2,
+            baseCost = BigDecimal("100"),
+            baseValue = BigDecimal("25"),
+            baseUpdateDuration = 3.2f,
+            currentUpdateDuration = preferences["corn_updateDuration", 3.2f],
+            amountOwned = BigInteger(preferences["corn_amount", "0"]),
             isUnlocked = preferences["corn_unlocked", false]
         )
-        val CABBAGE_CONFIGURATION = ResourceConfiguration(
-            name = "cabbage",
-            tier = 3f,
-            baseCost = 1_000f,
-            baseValue = 350f,
-            baseUpdateDuration = 7.5f,
-            currentUpdateDuration = preferences["cabbage_updateDuration", 7.5f],
-            amountOwned = preferences["cabbage_amount", 0],
-            isUnlocked = preferences["cabbage_unlocked", false]
+        val LETTUCE_CONFIGURATION = ResourceConfiguration(
+            name = "lettuce",
+            tier = 3,
+            baseCost = BigDecimal("1000"),
+            baseValue = BigDecimal("625"),
+            baseUpdateDuration = 6.4f,
+            currentUpdateDuration = preferences["lettuce_updateDuration", 6.4f],
+            amountOwned = BigInteger(preferences["lettuce_amount", "0"]),
+            isUnlocked = preferences["lettuce_unlocked", false]
+        )
+        val CARROTS_CONFIGURATION = ResourceConfiguration(
+            name = "carrots",
+            tier = 4,
+            baseCost = BigDecimal("10000"),
+            baseValue = BigDecimal("15625"),
+            baseUpdateDuration = 12.8f,
+            currentUpdateDuration = preferences["carrots_updateDuration", 12.8f],
+            amountOwned = BigInteger(preferences["carrots_amount", "0"]),
+            isUnlocked = preferences["carrots_unlocked", false]
+        )
+        val TOMATOES_CONFIGURATION = ResourceConfiguration(
+            name = "tomatoes",
+            tier = 5,
+            baseCost = BigDecimal("100000"),
+            baseValue = BigDecimal("390625"),
+            baseUpdateDuration = 25.6f,
+            currentUpdateDuration = preferences["tomatoes_updateDuration", 25.6f],
+            amountOwned = BigInteger(preferences["tomatoes_amount", "0"]),
+            isUnlocked = preferences["tomatoes_unlocked", false]
+        )
+        val BROCCOLI_CONFIGURATION = ResourceConfiguration(
+            name = "broccoli",
+            tier = 6,
+            baseCost = BigDecimal("1000000"),
+            baseValue = BigDecimal("9765625"),
+            baseUpdateDuration = 51.2f,
+            currentUpdateDuration = preferences["broccoli_updateDuration", 51.2f],
+            amountOwned = BigInteger(preferences["broccoli_amount", "0"]),
+            isUnlocked = preferences["broccoli_unlocked", false]
+        )
+        val ONIONS_CONFIGURATION = ResourceConfiguration(
+            name = "onions",
+            tier = 7,
+            baseCost = BigDecimal("10000000"),
+            baseValue = BigDecimal("244140625"),
+            baseUpdateDuration = 102.4f,
+            currentUpdateDuration = preferences["onions_updateDuration", 102.4f],
+            amountOwned = BigInteger(preferences["onions_amount", "0"]),
+            isUnlocked = preferences["onions_unlocked", false]
         )
         val POTATOES_CONFIGURATION = ResourceConfiguration(
             name = "potatoes",
-            tier = 4f,
-            baseCost = 10_000f,
-            baseValue = 4_250f,
-            baseUpdateDuration = 25f,
-            currentUpdateDuration = preferences["potatoes_updateDuration", 25f],
-            amountOwned = preferences["potatoes_amount", 0],
+            tier = 8,
+            baseCost = BigDecimal("100000000"),
+            baseValue = BigDecimal("6103515625"),
+            baseUpdateDuration = 204.8f,
+            currentUpdateDuration = preferences["potatoes_updateDuration", 204.8f],
+            amountOwned = BigInteger(preferences["potatoes_amount", "0"]),
             isUnlocked = preferences["potatoes_unlocked", false]
         )
     }

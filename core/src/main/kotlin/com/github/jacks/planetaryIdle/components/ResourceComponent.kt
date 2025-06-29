@@ -1,50 +1,54 @@
 package com.github.jacks.planetaryIdle.components
 
-import kotlin.math.*
+import java.math.*
 
 enum class PlanetResources(
     val resourceName : String
 ) {
     WHEAT("wheat"),
     CORN("corn"),
-    CABBAGE("cabbage"),
+    LETTUCE("lettuce"),
+    CARROTS("carrots"),
+    TOMATOES("tomatoes"),
+    BROCCOLI("broccoli"),
+    ONIONS("onions"),
     POTATOES("potatoes");
 }
 
 data class ResourceConfiguration(
-    val name : String = "",
-    val tier : Float = 1f,
-    val baseCost : Float = 0f,
-    val baseValue : Float = 0f,
-    val baseUpdateDuration : Float = -10f,
-    val currentUpdateDuration : Float = 0f,
-    val amountOwned : Int = 0,
-    val isUnlocked : Boolean = false
+    val name: String = "",
+    val tier: Int = 1,
+    val baseCost: BigDecimal = BigDecimal("0"),
+    val baseValue: BigDecimal = BigDecimal("0"),
+    val amountOwned: BigInteger = BigInteger("0"),
+    val baseUpdateDuration: Float = -10f,
+    val currentUpdateDuration: Float = 0f,
+    val isUnlocked: Boolean = false
 )
 
 data class ResourceComponent(
     var name : String = "",
-    var tier : Float = 1f,
-    var baseValue : Float = 0f,
-    var baseCost : Float = 0f,
+    var tier : Int = 1,
+    var baseCost: BigDecimal = BigDecimal("0"),
+    var baseValue: BigDecimal = BigDecimal("0"),
+    var amountOwned: BigInteger = BigInteger("0"),
     var baseUpdateDuration : Float = -10f,
     var currentUpdateDuration : Float = 0f,
-    var amountOwned : Int = 0,
     var isUnlocked : Boolean = false
 ) {
 
-    private val numHundreds : Float
-        get() = (amountOwned / 100).toFloat()
+    private val numHundreds : Int
+        get() = amountOwned.divide(BigInteger("100")).toInt()
 
-    val multiplier : Float
-        get() = 1.5f.pow(numHundreds)
+    val multiplier : BigDecimal
+        get() = BigDecimal("2").pow(numHundreds)
 
-    val value : Float
+    val value : BigDecimal
         get() = baseValue * multiplier
 
-    val cost : Float
-        get() = baseCost * (5 * tier).pow(numHundreds)
+    val cost : BigDecimal
+        get() = baseCost * BigDecimal(10).pow(numHundreds * tier)
 
-    val nextCost : Float
-        get() = baseCost * (5 * tier).pow(numHundreds + 1f)
+    val nextCost : BigDecimal
+        get() = baseCost * BigDecimal(10).pow((numHundreds + 1) * tier)
 }

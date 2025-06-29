@@ -24,10 +24,15 @@ class PlanetaryIdle : KtxGame<KtxScreen>(), EventListener {
     private val batch : Batch by lazy { SpriteBatch() }
     val stage : Stage by lazy { Stage(ScreenViewport(), batch) }
     private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
+    private val resetOnStart : Boolean = true
 
     override fun create() {
         Gdx.app.logLevel = Application.LOG_DEBUG
-
+        if (resetOnStart) {
+            preferences.flush {
+                this.clear()
+            }
+        }
         loadSkin()
 
         stage.addListener(this)
@@ -54,9 +59,6 @@ class PlanetaryIdle : KtxGame<KtxScreen>(), EventListener {
     override fun handle(event: Event): Boolean {
         when (event) {
             is QuitGameEvent -> {
-//                preferences.flush {
-//                    this.clear()
-//                }
                 dispose()
                 Gdx.app.exit()
             }

@@ -9,6 +9,7 @@ import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.IteratingSystem
 import ktx.log.logger
+import java.math.BigInteger
 
 @AllOf([ResourceComponent::class])
 class ResourceUpdateSystem(
@@ -19,7 +20,7 @@ class ResourceUpdateSystem(
     override fun onTickEntity(entity: Entity) {
         val rscComp  = resourceComponents[entity]
 
-        if (rscComp.baseUpdateDuration < -1f || rscComp.amountOwned == 0) {
+        if (rscComp.baseUpdateDuration < -1f || rscComp.amountOwned == BigInteger("0")) {
             return
         }
 

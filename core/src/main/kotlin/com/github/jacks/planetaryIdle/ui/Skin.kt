@@ -19,6 +19,7 @@ enum class Drawables(
 ) {
     BAR_GREEN_THIN("bar_green_thin"),
     BAR_GREEN_THICK("bar_green_thick"),
+    BAR_GREEN_THICK_A25("bar_green_thick_a25"),
     BAR_GREY_THICK("bar_grey_thick"),
 
     BUTTON_BLUE_UP("button_blue_up"),
