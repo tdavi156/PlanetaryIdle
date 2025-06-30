@@ -43,7 +43,8 @@ class PlanetView(
     private var currentView : String = "planetView"
     private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
 
-    private val smallNumberFormat : NumberFormat = NumberFormat.getInstance()
+    private val decimalFormat : NumberFormat = NumberFormat.getInstance()
+    private val noDecimalFormat : NumberFormat = NumberFormat.getInstance()
     private val expNumberFormat : NumberFormat = DecimalFormat("0.##E0", DecimalFormatSymbols.getInstance())
     private val multNumFormat : NumberFormat = NumberFormat.getInstance()
     private val rateNumFormat : NumberFormat = NumberFormat.getInstance()
@@ -51,7 +52,7 @@ class PlanetView(
     private val costNumFormat : NumberFormat = NumberFormat.getInstance()
 
     // initial values from preferences
-    private var totalPopulation = BigInteger(preferences["totalPopulation", "10"])
+    private var totalPopulation = BigDecimal(preferences["totalPopulation", "10"])
     private var availablePopulation = BigDecimal(preferences["availablePopulation", "10"])
     private var populationGainRate = BigDecimal(preferences["populationGainRate", "0"])
     private var buyAmount : Float = preferences["buyAmount", 1f]
@@ -485,7 +486,7 @@ class PlanetView(
                         scaleX = 0f
                     }
                     this@PlanetView.totalPopulationLabel = label(
-                        "${"%.2f".format((this@PlanetView.totalPopulation.toBigDecimal() / MAX_POP_AMOUNT.toBigDecimal()).toFloat().coerceAtMost(1f) * 100f)} %"
+                        "${"%.2f".format((this@PlanetView.totalPopulation / MAX_POP_AMOUNT.toBigDecimal()).toFloat().coerceAtMost(1f) * 100f)} %"
                         , Labels.MEDIUM.skinKey
                     ) { cell ->
                         setAlignment(Align.center)
@@ -533,8 +534,8 @@ class PlanetView(
         model.onPropertyChange(PlanetModel::gameCompleted) { completed -> popupGameCompleted(completed) }
     }
 
-    private fun totalPopAmountChange(amount : BigInteger) {
-        val popPercent = (amount.toBigDecimal() / MAX_POP_AMOUNT.toBigDecimal()).toFloat().coerceAtMost(1f)
+    private fun totalPopAmountChange(amount : BigDecimal) {
+        val popPercent = (amount / MAX_POP_AMOUNT.toBigDecimal()).toFloat().coerceAtMost(1f)
         totalPopulationLabel.txt = "${"%.2f".format(popPercent * 100f)} %"
         colonizationProgress.scaleX = popPercent
         checkForGameEnd(amount)
@@ -542,7 +543,7 @@ class PlanetView(
     private fun availablePopAmountChange(amount : BigDecimal) {
         availablePopulation = amount
         if (amount < BigDecimal("1000")) {
-            availablePopulationLabel.txt = "You have ${formatSmallNumber(amount)} available population. (AP)"
+            availablePopulationLabel.txt = "You have ${formatNumberWithDecimal(amount)} available population. (AP)"
         } else {
             availablePopulationLabel.txt = "You have ${formatExponent(amount)} available population. (AP)"
         }
@@ -550,7 +551,7 @@ class PlanetView(
     }
     private fun popGainRateChange(amount : BigDecimal) {
         if (amount < BigDecimal("1000")) {
-            populationGainPerSecondLabel.txt = "You are gaining ${formatSmallNumber(amount)} population per second."
+            populationGainPerSecondLabel.txt = "You are gaining ${formatNumberWithDecimal(amount)} population per second."
         } else {
             populationGainPerSecondLabel.txt = "You are gaining ${formatExponent(amount)} population per second."
         }
@@ -669,18 +670,21 @@ class PlanetView(
         return if (cost > BigDecimal(999)) {
             "Buy ${buyAmount.roundToInt()}\nAssign: ${formatExponent(cost)} AP"
         } else {
-            "Buy ${buyAmount.roundToInt()}\nAssign: ${formatSmallNumber(cost)} AP"
+            "Buy ${buyAmount.roundToInt()}\nAssign: ${formatNumberNoDecimal(cost)} AP"
         }
     }
-    private fun formatSmallNumber(number : BigDecimal) : String {
-        return smallNumberFormat.format(number)
+    private fun formatNumberWithDecimal(number : BigDecimal) : String {
+        return decimalFormat.format(number)
+    }
+    private fun formatNumberNoDecimal(number : BigDecimal) : String {
+        return noDecimalFormat.format(number)
     }
     private fun formatExponent(number : BigDecimal) : String {
         return expNumberFormat.format(number).replace('E', 'e')
     }
-    private fun checkForGameEnd(amount : BigInteger) {
+    private fun checkForGameEnd(amount : BigDecimal) {
         // check that the game is not already ended so we dont call multiple times
-        if (amount >= MAX_POP_AMOUNT) {
+        if (amount >= MAX_POP_AMOUNT.toBigDecimal()) {
             fire(GameCompletedEvent())
         }
     }
@@ -689,7 +693,11 @@ class PlanetView(
     }
 
     private fun setupNumberFormating() {
-        smallNumberFormat.maximumFractionDigits = 0
+        decimalFormat.maximumFractionDigits = 2
+        decimalFormat.minimumFractionDigits = 2
+        expNumberFormat.maximumFractionDigits = 2
+        expNumberFormat.minimumFractionDigits = 2
+        noDecimalFormat.maximumFractionDigits = 0
         multNumFormat.maximumFractionDigits = 2
         rateNumFormat.maximumFractionDigits = 2
         amtNumFormat.maximumFractionDigits = 2

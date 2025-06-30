@@ -3,6 +3,7 @@ package com.github.jacks.planetaryIdle.events
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.github.quillraven.fleks.Entity
+import java.math.BigDecimal
 
 fun Stage.fire(event : Event) {
     this.root.fire(event)
@@ -16,6 +17,6 @@ class ResetGameEvent : Event()
 
 class GameCompletedEvent : Event()
 
-class ResourceUpdateEvent(val entity : Entity) : Event()
+class ResourceUpdateEvent(val amount : BigDecimal) : Event()
 class BuyResourceEvent(val resourceType : String) : Event()
 class UpdateBuyAmountEvent(val amount : Float) : Event()

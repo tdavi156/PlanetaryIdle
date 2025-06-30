@@ -31,7 +31,7 @@ class PlanetModel(
     private val resourceComponents : ComponentMapper<ResourceComponent> = world.mapper()
     private val resourceEntities = world.family(allOf = arrayOf(ResourceComponent::class))
 
-    var totalPopulationAmount by propertyNotify(BigInteger(preferences["totalPopulation", "10"]))
+    var totalPopulationAmount by propertyNotify(BigDecimal(preferences["totalPopulation", "10"]))
     var availablePopulationAmount by propertyNotify(BigDecimal(preferences["availablePopulation", "10"]))
     var populationGainPerSecond by propertyNotify(BigDecimal(preferences["populationGainRate", "0"]))
     var buyAmount by propertyNotify(preferences["buyAmount", 1f])
@@ -81,9 +81,9 @@ class PlanetModel(
                 updateModelPopulationRate()
             }
             is ResourceUpdateEvent -> {
-                val rscComp = resourceComponents[event.entity]
-                availablePopulationAmount += rscComp.value * rscComp.amountOwned.toBigDecimal()
-                totalPopulationAmount = (totalPopulationAmount + (rscComp.baseValue * rscComp.amountOwned.toBigDecimal()).toBigInteger()).coerceAtMost(BigDecimal("1E308").toBigInteger())
+                val amount = event.amount
+                availablePopulationAmount += amount
+                totalPopulationAmount = (totalPopulationAmount + amount).coerceAtMost(BigDecimal("1E308"))
                 preferences.flush {
                     this["availablePopulation"] = availablePopulationAmount.toString()
                     this["totalPopulation"] = totalPopulationAmount.toString()
@@ -299,7 +299,7 @@ class PlanetModel(
             rscComp.amountOwned = BigInteger("0")
             rscComp.currentUpdateDuration = rscComp.baseUpdateDuration
         }
-        totalPopulationAmount = BigInteger("10")
+        totalPopulationAmount = BigDecimal("10")
         availablePopulationAmount = BigDecimal("10")
         populationGainPerSecond = BigDecimal("0")
         buyAmount = 1f
