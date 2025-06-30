@@ -48,8 +48,6 @@ class InitializeGameSystem(
                             tier = config.tier
                             baseValue = config.baseValue
                             baseCost = config.baseCost
-                            baseUpdateDuration = config.baseUpdateDuration
-                            currentUpdateDuration = config.currentUpdateDuration
                             amountOwned = config.amountOwned
                             isUnlocked = config.isUnlocked
                         }
@@ -120,49 +118,41 @@ class InitializeGameSystem(
             this["wheat_amount"] = "0"
             this["wheat_multiplier"] = "1"
             this["wheat_cost"] = "10"
-            this["wheat_updateDuration"] = 1f
             this["wheat_unlocked"] = true
 
             this["corn_amount"] = "0"
             this["corn_multiplier"] = "1"
             this["corn_cost"] = "100"
-            this["corn_updateDuration"] = 3.2f
             this["corn_unlocked"] = false
 
             this["lettuce_amount"] = "0"
             this["lettuce_multiplier"] = "1"
             this["lettuce_cost"] = "1000"
-            this["lettuce_updateDuration"] = 6.4f
             this["lettuce_unlocked"] = false
 
             this["carrots_amount"] = "0"
             this["carrots_multiplier"] = "1"
             this["carrots_cost"] = "10000"
-            this["carrots_updateDuration"] = 12.8f
             this["carrots_unlocked"] = false
 
             this["tomatoes_amount"] = "0"
             this["tomatoes_multiplier"] = "1"
             this["tomatoes_cost"] = "100000"
-            this["tomatoes_updateDuration"] = 25.6f
             this["tomatoes_unlocked"] = false
 
             this["broccoli_amount"] = "0"
             this["broccoli_multiplier"] = "1"
             this["broccoli_cost"] = "1000000"
-            this["broccoli_updateDuration"] = 51.2f
             this["broccoli_unlocked"] = false
 
             this["onions_amount"] = "0"
             this["onions_multiplier"] = "1"
             this["onions_cost"] = "10000000"
-            this["onions_updateDuration"] = 102.4f
             this["onions_unlocked"] = false
 
             this["potatoes_amount"] = "0"
             this["potatoes_multiplier"] = "1"
             this["potatoes_cost"] = "100000000"
-            this["potatoes_updateDuration"] = 204.8f
             this["potatoes_unlocked"] = false
         }
     }
@@ -179,8 +169,6 @@ class InitializeGameSystem(
             tier = 1,
             baseCost = BigDecimal("10"),
             baseValue = BigDecimal("1"),
-            baseUpdateDuration = 1f,
-            currentUpdateDuration = preferences["wheat_updateDuration", 1f],
             amountOwned = BigInteger(preferences["wheat_amount", "0"]),
             isUnlocked = preferences["wheat_unlocked", true]
         )
@@ -188,9 +176,7 @@ class InitializeGameSystem(
             name = "corn",
             tier = 2,
             baseCost = BigDecimal("100"),
-            baseValue = BigDecimal("25"),
-            baseUpdateDuration = 3.2f,
-            currentUpdateDuration = preferences["corn_updateDuration", 3.2f],
+            baseValue = BigDecimal("6.25"),
             amountOwned = BigInteger(preferences["corn_amount", "0"]),
             isUnlocked = preferences["corn_unlocked", false]
         )
@@ -198,9 +184,7 @@ class InitializeGameSystem(
             name = "lettuce",
             tier = 3,
             baseCost = BigDecimal("1000"),
-            baseValue = BigDecimal("625"),
-            baseUpdateDuration = 6.4f,
-            currentUpdateDuration = preferences["lettuce_updateDuration", 6.4f],
+            baseValue = BigDecimal("13.61"),
             amountOwned = BigInteger(preferences["lettuce_amount", "0"]),
             isUnlocked = preferences["lettuce_unlocked", false]
         )
@@ -208,9 +192,7 @@ class InitializeGameSystem(
             name = "carrots",
             tier = 4,
             baseCost = BigDecimal("10000"),
-            baseValue = BigDecimal("15625"),
-            baseUpdateDuration = 12.8f,
-            currentUpdateDuration = preferences["carrots_updateDuration", 12.8f],
+            baseValue = BigDecimal("41.31"),
             amountOwned = BigInteger(preferences["carrots_amount", "0"]),
             isUnlocked = preferences["carrots_unlocked", false]
         )
@@ -218,9 +200,7 @@ class InitializeGameSystem(
             name = "tomatoes",
             tier = 5,
             baseCost = BigDecimal("100000"),
-            baseValue = BigDecimal("390625"),
-            baseUpdateDuration = 25.6f,
-            currentUpdateDuration = preferences["tomatoes_updateDuration", 25.6f],
+            baseValue = BigDecimal("200.91"),
             amountOwned = BigInteger(preferences["tomatoes_amount", "0"]),
             isUnlocked = preferences["tomatoes_unlocked", false]
         )
@@ -228,9 +208,7 @@ class InitializeGameSystem(
             name = "broccoli",
             tier = 6,
             baseCost = BigDecimal("1000000"),
-            baseValue = BigDecimal("9765625"),
-            baseUpdateDuration = 51.2f,
-            currentUpdateDuration = preferences["broccoli_updateDuration", 51.2f],
+            baseValue = BigDecimal("1913.21"),
             amountOwned = BigInteger(preferences["broccoli_amount", "0"]),
             isUnlocked = preferences["broccoli_unlocked", false]
         )
@@ -238,9 +216,7 @@ class InitializeGameSystem(
             name = "onions",
             tier = 7,
             baseCost = BigDecimal("10000000"),
-            baseValue = BigDecimal("244140625"),
-            baseUpdateDuration = 102.4f,
-            currentUpdateDuration = preferences["onions_updateDuration", 102.4f],
+            baseValue = BigDecimal("47479.98"),
             amountOwned = BigInteger(preferences["onions_amount", "0"]),
             isUnlocked = preferences["onions_unlocked", false]
         )
@@ -248,9 +224,7 @@ class InitializeGameSystem(
             name = "potatoes",
             tier = 8,
             baseCost = BigDecimal("100000000"),
-            baseValue = BigDecimal("6103515625"),
-            baseUpdateDuration = 204.8f,
-            currentUpdateDuration = preferences["potatoes_updateDuration", 204.8f],
+            baseValue = BigDecimal("4613468.88"),
             amountOwned = BigInteger(preferences["potatoes_amount", "0"]),
             isUnlocked = preferences["potatoes_unlocked", false]
         )

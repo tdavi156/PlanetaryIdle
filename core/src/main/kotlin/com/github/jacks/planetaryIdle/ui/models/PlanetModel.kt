@@ -185,7 +185,7 @@ class PlanetModel(
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
             if (rscComp.name == "population") return@forEach
-            popGain += ((rscComp.baseValue * rscComp.multiplier) / rscComp.baseUpdateDuration.toBigDecimal() * rscComp.amountOwned.toBigDecimal())
+            popGain += (rscComp.baseValue * rscComp.multiplier * rscComp.amountOwned.toBigDecimal())
         }
         populationGainPerSecond = popGain
         preferences.flush { this["populationGainRate"] = populationGainPerSecond.toString() }
@@ -297,7 +297,6 @@ class PlanetModel(
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
             rscComp.amountOwned = BigInteger("0")
-            rscComp.currentUpdateDuration = rscComp.baseUpdateDuration
         }
         totalPopulationAmount = BigDecimal("10")
         availablePopulationAmount = BigDecimal("10")

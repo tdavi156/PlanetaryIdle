@@ -18,24 +18,9 @@ import java.math.RoundingMode
 class ResourceUpdateSystem(
     private val stage : Stage,
     private val resourceComponents : ComponentMapper<ResourceComponent>,
-) : IntervalSystem(interval = Fixed(1 / 15f)) {
+) : IntervalSystem(interval = Fixed(1 / 20f)) {
 
-    val resourceEntities =  world.family(allOf = arrayOf(ResourceComponent::class))
-
-//    override fun onTickEntity(entity: Entity) {
-//        val rscComp  = resourceComponents[entity]
-//
-//        if (rscComp.baseUpdateDuration < -1f || rscComp.amountOwned == BigInteger("0")) {
-//            return
-//        }
-//
-//        if (rscComp.currentUpdateDuration <= 0f) {
-//            rscComp.currentUpdateDuration = rscComp.baseUpdateDuration
-//            stage.fire(ResourceUpdateEvent(entity))
-//        }
-//
-//        rscComp.currentUpdateDuration = (rscComp.currentUpdateDuration - deltaTime).coerceAtLeast(0f)
-//    }
+    private val resourceEntities =  world.family(allOf = arrayOf(ResourceComponent::class))
 
     override fun onTick() {
         var popGain = BigDecimal(0)
@@ -43,7 +28,7 @@ class ResourceUpdateSystem(
             val rscComp = resourceComponents[entity]
             if (rscComp.name == "population") return@forEach
             if (rscComp.amountOwned.toInt() < 1) return@forEach
-            popGain += ((rscComp.baseValue * rscComp.multiplier * rscComp.amountOwned.toBigDecimal()).divide(BigDecimal(15), 2, RoundingMode.HALF_UP))
+            popGain += (rscComp.baseValue * rscComp.multiplier * rscComp.amountOwned.toBigDecimal()).divide(BigDecimal(20), 2, RoundingMode.HALF_UP)
         }
         stage.fire(ResourceUpdateEvent(popGain))
     }

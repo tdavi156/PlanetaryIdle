@@ -21,8 +21,6 @@ data class ResourceConfiguration(
     val baseCost: BigDecimal = BigDecimal("0"),
     val baseValue: BigDecimal = BigDecimal("0"),
     val amountOwned: BigInteger = BigInteger("0"),
-    val baseUpdateDuration: Float = -10f,
-    val currentUpdateDuration: Float = 0f,
     val isUnlocked: Boolean = false
 )
 
@@ -32,8 +30,6 @@ data class ResourceComponent(
     var baseCost: BigDecimal = BigDecimal("0"),
     var baseValue: BigDecimal = BigDecimal("0"),
     var amountOwned: BigInteger = BigInteger("0"),
-    var baseUpdateDuration : Float = -10f,
-    var currentUpdateDuration : Float = 0f,
     var isUnlocked : Boolean = false
 ) {
 

@@ -45,7 +45,9 @@ class PlanetView(
 
     private val decimalFormat : NumberFormat = NumberFormat.getInstance()
     private val noDecimalFormat : NumberFormat = NumberFormat.getInstance()
-    private val expNumberFormat : NumberFormat = DecimalFormat("0.##E0", DecimalFormatSymbols.getInstance())
+    private val expNoDecimalFormat : NumberFormat = DecimalFormat("0E0", DecimalFormatSymbols.getInstance())
+    private val exp1DecimalFormat : NumberFormat = DecimalFormat("0.#E0", DecimalFormatSymbols.getInstance())
+    private val exp2DecimalFormat : NumberFormat = DecimalFormat("0.##E0", DecimalFormatSymbols.getInstance())
     private val multNumFormat : NumberFormat = NumberFormat.getInstance()
     private val rateNumFormat : NumberFormat = NumberFormat.getInstance()
     private val amtNumFormat : NumberFormat = NumberFormat.getInstance()
@@ -150,7 +152,7 @@ class PlanetView(
         // Left side menu buttons
         table { menuTableCell ->
             this@PlanetView.planetButton = textButton("Planet", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(50f)
+                cell.top().left().width(180f).height(40f)
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         this@PlanetView.currentView = "planetView"
@@ -160,7 +162,7 @@ class PlanetView(
             }
             row()
             this@PlanetView.galaxyButton = textButton("Galaxy", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(50f)
+                cell.top().left().width(180f).height(40f)
                 isDisabled = true
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
@@ -171,32 +173,32 @@ class PlanetView(
             }
             row()
             this@PlanetView.automationButton = textButton("Automation", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(50f)
+                cell.top().left().width(180f).height(40f)
                 isDisabled = true
             }
             row()
             this@PlanetView.challengesButton = textButton("Challenges", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(50f)
+                cell.top().left().width(180f).height(40f)
                 isDisabled = true
             }
             row()
             this@PlanetView.achievementsButton = textButton("Achievements", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(50f)
+                cell.top().left().width(180f).height(40f)
                 isDisabled = true
             }
             row()
             this@PlanetView.statisticsButton = textButton("Statistics", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(50f)
+                cell.top().left().width(180f).height(40f)
                 isDisabled = true
             }
             row()
             this@PlanetView.settingsButton = textButton("Settings", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(50f)
+                cell.top().left().width(180f).height(40f)
                 isDisabled = true
             }
             row()
             this@PlanetView.resetButton = textButton("Reset Game", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(50f)
+                cell.top().left().width(180f).height(40f)
                 isDisabled = false
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
@@ -207,7 +209,7 @@ class PlanetView(
             }
             row()
             this@PlanetView.quitButton = textButton("Quit Game", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(50f)
+                cell.top().left().width(180f).height(40f)
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         log.debug { "Save Game" }
@@ -228,10 +230,10 @@ class PlanetView(
                     cell.center().padBottom(10f)
                 }
                 row()
-                this@PlanetView.populationGainPerSecondLabel = label("You are gaining ${this@PlanetView.populationGainRate} population per second.", Labels.DEFAULT.skinKey) { cell ->
+                this@PlanetView.populationGainPerSecondLabel = label("You are gaining ${this@PlanetView.formatNumberWithDecimal(this@PlanetView.populationGainRate)} population per second.", Labels.DEFAULT.skinKey) { cell ->
                     cell.center()
                 }
-                tableCell.expandX().top().padTop(10f).height(120f)
+                tableCell.expandX().top().padTop(10f).height(100f)
             }
 
             row()
@@ -243,7 +245,7 @@ class PlanetView(
             // 2nd row table
             table { tableCell ->
                 this@PlanetView.setBuyAmountButton = textButton("Buy ${this@PlanetView.buyAmount.roundToInt()}", Buttons.BLUE_TEXT_BUTTON_SMALL.skinKey) { cell ->
-                    cell.expandX().top().right().width(90f).height(30f).pad(10f, 10f, 40f, 10f)
+                    cell.expandX().top().right().width(90f).height(30f).pad(10f, 10f, 20f, 10f)
                     this.addListener(object : ChangeListener() {
                         override fun changed(event: ChangeEvent, actor: Actor) {
                             when (this@PlanetView.buyAmount) {
@@ -257,7 +259,7 @@ class PlanetView(
                         }
                     })
                 }
-                tableCell.expandX().top().right().padTop(10f).height(120f)
+                tableCell.expandX().top().right().padTop(10f).height(40f)
             }
 
             row()
@@ -493,7 +495,7 @@ class PlanetView(
                     }
                     stackCell.center().width(600f).height(30f)
                 }
-                tableCell.expandX().top().height(40f)
+                tableCell.expandX().top().height(40f).padTop(15f)
             }
             gameTableCell.expand().fill().pad(5f)
         }
@@ -545,7 +547,7 @@ class PlanetView(
         if (amount < BigDecimal("1000")) {
             availablePopulationLabel.txt = "You have ${formatNumberWithDecimal(amount)} available population. (AP)"
         } else {
-            availablePopulationLabel.txt = "You have ${formatExponent(amount)} available population. (AP)"
+            availablePopulationLabel.txt = "You have ${formatExponent2Dec(amount)} available population. (AP)"
         }
         updateAvailable(amount)
     }
@@ -553,7 +555,7 @@ class PlanetView(
         if (amount < BigDecimal("1000")) {
             populationGainPerSecondLabel.txt = "You are gaining ${formatNumberWithDecimal(amount)} population per second."
         } else {
-            populationGainPerSecondLabel.txt = "You are gaining ${formatExponent(amount)} population per second."
+            populationGainPerSecondLabel.txt = "You are gaining ${formatExponent2Dec(amount)} population per second."
         }
     }
     private fun buyAmountChange(amount : Float) {
@@ -668,7 +670,7 @@ class PlanetView(
     }
     private fun formatBuyButton(cost : BigDecimal) : String {
         return if (cost > BigDecimal(999)) {
-            "Buy ${buyAmount.roundToInt()}\nAssign: ${formatExponent(cost)} AP"
+            "Buy ${buyAmount.roundToInt()}\nAssign: ${formatExponentNoDec(cost)} AP"
         } else {
             "Buy ${buyAmount.roundToInt()}\nAssign: ${formatNumberNoDecimal(cost)} AP"
         }
@@ -679,9 +681,10 @@ class PlanetView(
     private fun formatNumberNoDecimal(number : BigDecimal) : String {
         return noDecimalFormat.format(number)
     }
-    private fun formatExponent(number : BigDecimal) : String {
-        return expNumberFormat.format(number).replace('E', 'e')
-    }
+    private fun formatExponentNoDec(number : BigDecimal) : String { return expNoDecimalFormat.format(number).replace('E', 'e') }
+    private fun formatExponent1Dec(number : BigDecimal) : String { return exp1DecimalFormat.format(number).replace('E', 'e') }
+    private fun formatExponent2Dec(number : BigDecimal) : String { return exp2DecimalFormat.format(number).replace('E', 'e') }
+
     private fun checkForGameEnd(amount : BigDecimal) {
         // check that the game is not already ended so we dont call multiple times
         if (amount >= MAX_POP_AMOUNT.toBigDecimal()) {
@@ -693,11 +696,14 @@ class PlanetView(
     }
 
     private fun setupNumberFormating() {
-        decimalFormat.maximumFractionDigits = 2
-        decimalFormat.minimumFractionDigits = 2
-        expNumberFormat.maximumFractionDigits = 2
-        expNumberFormat.minimumFractionDigits = 2
         noDecimalFormat.maximumFractionDigits = 0
+        decimalFormat.minimumFractionDigits = 2
+        decimalFormat.maximumFractionDigits = 2
+        expNoDecimalFormat.maximumFractionDigits = 0
+        exp1DecimalFormat.minimumFractionDigits = 1
+        exp1DecimalFormat.maximumFractionDigits = 1
+        exp2DecimalFormat.minimumFractionDigits = 2
+        exp2DecimalFormat.maximumFractionDigits = 2
         multNumFormat.maximumFractionDigits = 2
         rateNumFormat.maximumFractionDigits = 2
         amtNumFormat.maximumFractionDigits = 2
