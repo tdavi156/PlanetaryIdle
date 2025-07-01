@@ -6,12 +6,10 @@ import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.quillraven.fleks.AllOf
 import com.github.quillraven.fleks.ComponentMapper
-import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.Fixed
 import com.github.quillraven.fleks.IntervalSystem
 import ktx.log.logger
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.math.RoundingMode
 
 @AllOf([ResourceComponent::class])

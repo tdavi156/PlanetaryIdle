@@ -17,7 +17,7 @@ enum class PlanetResources(
 
 data class ResourceConfiguration(
     val name: String = "",
-    val tier: Int = 1,
+    val tier: Int = 0,
     val baseCost: BigDecimal = BigDecimal("0"),
     val baseValue: BigDecimal = BigDecimal("0"),
     val amountOwned: BigInteger = BigInteger("0"),
@@ -26,7 +26,7 @@ data class ResourceConfiguration(
 
 data class ResourceComponent(
     var name : String = "",
-    var tier : Int = 1,
+    var tier : Int = 0,
     var baseCost: BigDecimal = BigDecimal("0"),
     var baseValue: BigDecimal = BigDecimal("0"),
     var amountOwned: BigInteger = BigInteger("0"),
@@ -43,8 +43,8 @@ data class ResourceComponent(
         get() = baseValue * multiplier
 
     val cost : BigDecimal
-        get() = baseCost * BigDecimal(10).pow(numHundreds * tier)
+        get() = baseCost * BigDecimal(10).pow((numHundreds * (tier + 1)) + tier)
 
     val nextCost : BigDecimal
-        get() = baseCost * BigDecimal(10).pow((numHundreds + 1) * tier)
+        get() = baseCost * BigDecimal(10).pow(((numHundreds + 1) * (tier + 1)) + tier)
 }
