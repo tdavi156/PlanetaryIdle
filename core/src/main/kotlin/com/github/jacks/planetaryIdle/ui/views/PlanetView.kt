@@ -108,6 +108,8 @@ class PlanetView(
     private var onionsButton : TextButton
     private var potatoesButton : TextButton
 
+    private var soilButton : TextButton
+
     // labels
     private var totalPopulationLabel : Label
     private var availablePopulationLabel : Label
@@ -130,6 +132,8 @@ class PlanetView(
     private var broccoliMultiplierLabel : Label
     private var onionsMultiplierLabel : Label
     private var potatoesMultiplierLabel : Label
+
+    private var soilLabel : Label
 
     // images
     private var colonizationProgress : Image
@@ -161,8 +165,28 @@ class PlanetView(
 
             // 2nd row buttons area
             table { tableCell ->
+                table { innerTableCell ->
+                    this@PlanetView.soilLabel = label("Improved Soil (0)", Labels.SMALL.skinKey) { cell ->
+
+                    }
+                    row()
+                    this@PlanetView.soilButton = textButton(
+                        "Reset all crops and\n" +
+                            "start over with better soil.\n" +
+                            "Unlock the next crop.",
+                        Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey
+                    ) { cell ->
+                        cell.left().width(160f).height(80f).pad(5f)
+                        isDisabled = false
+                        this.addListener(object : ChangeListener() {
+                            override fun changed(event: ChangeEvent, actor: Actor) {
+
+                            }
+                        })
+                    }
+                    innerTableCell.expandX().left().width(180f).height(90f)
+                }
                 this@PlanetView.setBuyAmountButton = textButton("Buy ${this@PlanetView.buyAmount.roundToInt()}", Buttons.BLUE_TEXT_BUTTON_SMALL.skinKey) { cell ->
-                    cell.expandX().top().right().width(90f).height(30f).pad(10f, 10f, 20f, 10f)
                     this.addListener(object : ChangeListener() {
                         override fun changed(event: ChangeEvent, actor: Actor) {
                             when (this@PlanetView.buyAmount) {
@@ -175,10 +199,10 @@ class PlanetView(
                             stage.fire(UpdateBuyAmountEvent(this@PlanetView.buyAmount))
                         }
                     })
+                    cell.expandX().top().right().width(90f).height(30f).pad(10f, 10f, 20f, 10f)
                 }
-                tableCell.expandX().top().right().padTop(10f).height(40f)
+                tableCell.expandX().fillX().top().padTop(10f).height(80f)
             }
-
             row()
 
             // Middle actionable area
