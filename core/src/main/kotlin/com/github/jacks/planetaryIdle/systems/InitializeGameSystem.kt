@@ -4,11 +4,13 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
+import com.github.jacks.planetaryIdle.components.AchievementComponent
 import com.github.jacks.planetaryIdle.components.ConfigurationComponent
 import com.github.jacks.planetaryIdle.components.ConfigurationType.*
 import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.components.ResourceConfiguration
+import com.github.jacks.planetaryIdle.components.UpgradeComponent
 import com.github.jacks.planetaryIdle.events.InitializeGameEvent
 import com.github.jacks.planetaryIdle.events.LoadGameEvent
 import com.github.quillraven.fleks.AllOf
@@ -53,6 +55,16 @@ class InitializeGameSystem(
                         }
                     }
                 }
+                MULTIPLIER -> {
+                    world.entity {
+                        add<AchievementComponent> {
+                            // load completed achievements
+                        }
+                        add<UpgradeComponent> {
+                            // load upgrade counts and scaling
+                        }
+                    }
+                }
                 UNDEFINED -> {
                     log.debug { "$configurationName has an UNDEFINED type." }
                     return@with
@@ -81,6 +93,12 @@ class InitializeGameSystem(
                             configurationName = resource.resourceName
                             configurationType = PLANET_RESOURCE
                         }
+                    }
+                }
+                world.entity {
+                    add<ConfigurationComponent> {
+                        configurationName = "multiplier"
+                        configurationType = MULTIPLIER
                     }
                 }
             }

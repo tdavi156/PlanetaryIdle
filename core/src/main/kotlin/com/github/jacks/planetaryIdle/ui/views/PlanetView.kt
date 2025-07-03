@@ -17,6 +17,7 @@ import com.github.jacks.planetaryIdle.events.QuitGameEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.SaveGameEvent
 import com.github.jacks.planetaryIdle.events.UpdateBuyAmountEvent
+import com.github.jacks.planetaryIdle.events.UpgradeSoilEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.ui.Buttons
 import com.github.jacks.planetaryIdle.ui.Drawables
@@ -180,7 +181,7 @@ class PlanetView(
                         isDisabled = false
                         this.addListener(object : ChangeListener() {
                             override fun changed(event: ChangeEvent, actor: Actor) {
-
+                                stage.fire(UpgradeSoilEvent())
                             }
                         })
                     }

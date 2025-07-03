@@ -33,18 +33,18 @@ data class ResourceComponent(
     var isUnlocked : Boolean = false
 ) {
 
-    private val numHundreds : Int
-        get() = amountOwned.divide(BigInteger("100")).toInt()
+    private val numTens : Int
+        get() = amountOwned.divide(BigInteger("10")).toInt()
 
     val multiplier : BigDecimal
-        get() = BigDecimal("2").pow(numHundreds)
+        get() = BigDecimal("2").pow(numTens)
 
     val value : BigDecimal
         get() = baseValue * multiplier
 
     val cost : BigDecimal
-        get() = baseCost * BigDecimal(10).pow((numHundreds * (tier + 1)) + tier)
+        get() = baseCost * BigDecimal(10).pow((numTens * (tier + 1)) + tier)
 
     val nextCost : BigDecimal
-        get() = baseCost * BigDecimal(10).pow(((numHundreds + 1) * (tier + 1)) + tier)
+        get() = baseCost * BigDecimal(10).pow(((numTens + 1) * (tier + 1)) + tier)
 }

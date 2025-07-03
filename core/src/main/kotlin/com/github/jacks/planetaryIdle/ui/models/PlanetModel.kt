@@ -5,13 +5,16 @@ import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.github.jacks.planetaryIdle.components.AchievementComponent
 import com.github.jacks.planetaryIdle.components.ResourceComponent
+import com.github.jacks.planetaryIdle.components.UpgradeComponent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
 import com.github.jacks.planetaryIdle.events.SaveGameEvent
 import com.github.jacks.planetaryIdle.events.UpdateBuyAmountEvent
+import com.github.jacks.planetaryIdle.events.UpgradeSoilEvent
 import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.World
@@ -29,12 +32,16 @@ class PlanetModel(
 
     private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
     private val resourceComponents : ComponentMapper<ResourceComponent> = world.mapper()
+    private val upgradeComponents : ComponentMapper<UpgradeComponent> = world.mapper()
+    private val achievementComponents : ComponentMapper<AchievementComponent> = world.mapper()
     private val resourceEntities = world.family(allOf = arrayOf(ResourceComponent::class))
+    private val multiplierEntity = world.family(allOf = arrayOf(UpgradeComponent::class, AchievementComponent::class)).first()
 
     var totalPopulationAmount by propertyNotify(BigDecimal(preferences["totalPopulation", "10"]))
     var availablePopulationAmount by propertyNotify(BigDecimal(preferences["availablePopulation", "10"]))
     var populationGainPerSecond by propertyNotify(BigDecimal(preferences["populationGainRate", "0"]))
     var buyAmount by propertyNotify(preferences["buyAmount", 1f])
+    var soilUpgrades by propertyNotify(preferences["soilUpgrades", 0])
 
     var wheatAmount by propertyNotify(BigInteger(preferences["wheat_amount", "0"]))
     var cornAmount by propertyNotify(BigInteger(preferences["corn_amount", "0"]))
@@ -72,7 +79,7 @@ class PlanetModel(
     override fun handle(event: Event?): Boolean {
         when (event) {
             is BuyResourceEvent -> {
-                val entity = getEntityByName(event.resourceType) ?: gdxError("No Entity with foodType: ${event.resourceType}")
+                val entity = getResourceEntityByName(event.resourceType) ?: gdxError("No Entity with foodType: ${event.resourceType}")
                 val rscComp = resourceComponents[entity]
                 updatePopulation(rscComp)
                 updateModelAmount(rscComp)
@@ -88,6 +95,14 @@ class PlanetModel(
                     this["availablePopulation"] = availablePopulationAmount.toString()
                     this["totalPopulation"] = totalPopulationAmount.toString()
                 }
+            }
+            is UpgradeSoilEvent -> {
+                soilUpgrades += event.amount
+                upgradeComponents[multiplierEntity].soilUpgrades += event.amount
+                // reset all crops amounts
+                // reset AP
+                // reset total AP
+
             }
             is UpdateBuyAmountEvent -> {
                 buyAmount = event.amount
@@ -108,7 +123,7 @@ class PlanetModel(
         return true
     }
 
-    private fun getEntityByName(name : String) : Entity? {
+    private fun getResourceEntityByName(name : String) : Entity? {
         resourceEntities.forEach { entity ->
             if (resourceComponents[entity].name == name) {
                 return entity
