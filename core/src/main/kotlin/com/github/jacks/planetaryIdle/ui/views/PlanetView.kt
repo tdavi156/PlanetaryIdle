@@ -17,6 +17,7 @@ import com.github.jacks.planetaryIdle.events.QuitGameEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.SaveGameEvent
 import com.github.jacks.planetaryIdle.events.UpdateBuyAmountEvent
+import com.github.jacks.planetaryIdle.events.UpgradeSoilEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.ui.Buttons
 import com.github.jacks.planetaryIdle.ui.Drawables
@@ -97,16 +98,6 @@ class PlanetView(
     private val potatoesTable : Table
 
     // buttons
-    private val planetButton : TextButton
-    private val galaxyButton : TextButton
-    private val automationButton : TextButton
-    private val challengesButton : TextButton
-    private val achievementsButton : TextButton
-    private val statisticsButton : TextButton
-    private val settingsButton : TextButton
-    private val resetButton : TextButton
-    private val quitButton : TextButton
-
     private val setBuyAmountButton : TextButton
 
     private var wheatButton : TextButton
@@ -117,6 +108,8 @@ class PlanetView(
     private var broccoliButton : TextButton
     private var onionsButton : TextButton
     private var potatoesButton : TextButton
+
+    private var soilButton : TextButton
 
     // labels
     private var totalPopulationLabel : Label
@@ -141,6 +134,8 @@ class PlanetView(
     private var onionsMultiplierLabel : Label
     private var potatoesMultiplierLabel : Label
 
+    private var soilLabel : Label
+
     // images
     private var colonizationProgress : Image
 
@@ -149,82 +144,9 @@ class PlanetView(
         stage = getStage()
         setupNumberFormating()
 
-        // Left side menu buttons
-        table { menuTableCell ->
-            this@PlanetView.planetButton = textButton("Planet", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
-                this.addListener(object : ChangeListener() {
-                    override fun changed(event: ChangeEvent, actor: Actor) {
-                        this@PlanetView.currentView = "planetView"
-                        log.debug { "currentView -> ${this@PlanetView.currentView}" }
-                    }
-                })
-            }
-            row()
-            this@PlanetView.galaxyButton = textButton("Galaxy", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
-                isDisabled = true
-                this.addListener(object : ChangeListener() {
-                    override fun changed(event: ChangeEvent, actor: Actor) {
-                        this@PlanetView.currentView = "galaxyView"
-                        log.debug { "currentView -> ${this@PlanetView.currentView}" }
-                    }
-                })
-            }
-            row()
-            this@PlanetView.automationButton = textButton("Automation", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
-                isDisabled = true
-            }
-            row()
-            this@PlanetView.challengesButton = textButton("Challenges", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
-                isDisabled = true
-            }
-            row()
-            this@PlanetView.achievementsButton = textButton("Achievements", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
-                isDisabled = true
-            }
-            row()
-            this@PlanetView.statisticsButton = textButton("Statistics", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
-                isDisabled = true
-            }
-            row()
-            this@PlanetView.settingsButton = textButton("Settings", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
-                isDisabled = true
-            }
-            row()
-            this@PlanetView.resetButton = textButton("Reset Game", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
-                isDisabled = false
-                this.addListener(object : ChangeListener() {
-                    override fun changed(event: ChangeEvent, actor: Actor) {
-                        log.debug { "Reset Game" }
-                        stage.fire(ResetGameEvent())
-                    }
-                })
-            }
-            row()
-            this@PlanetView.quitButton = textButton("Quit Game", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
-                this.addListener(object : ChangeListener() {
-                    override fun changed(event: ChangeEvent, actor: Actor) {
-                        log.debug { "Save Game" }
-                        stage.fire(SaveGameEvent())
-                        log.debug { "Quit Game" }
-                        stage.fire(QuitGameEvent())
-                    }
-                })
-            }
-            menuTableCell.fillX().top().width(180f)
-        }
-
-        // Right side game play table
+        // Game play table
         table { gameTableCell ->
-            // 1st row table
+            // 1st row information area
             table { tableCell ->
                 this@PlanetView.availablePopulationLabel = label("You have ${this@PlanetView.availablePopulation} available population. (AP)", Labels.DEFAULT.skinKey) { cell ->
                     cell.center().padBottom(10f)
@@ -242,10 +164,30 @@ class PlanetView(
             }
             row()
 
-            // 2nd row table
+            // 2nd row buttons area
             table { tableCell ->
+                table { innerTableCell ->
+                    this@PlanetView.soilLabel = label("Improved Soil (0)", Labels.SMALL.skinKey) { cell ->
+
+                    }
+                    row()
+                    this@PlanetView.soilButton = textButton(
+                        "Reset all crops and\n" +
+                            "start over with better soil.\n" +
+                            "Unlock the next crop.",
+                        Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey
+                    ) { cell ->
+                        cell.left().width(160f).height(80f).pad(5f)
+                        isDisabled = false
+                        this.addListener(object : ChangeListener() {
+                            override fun changed(event: ChangeEvent, actor: Actor) {
+                                stage.fire(UpgradeSoilEvent())
+                            }
+                        })
+                    }
+                    innerTableCell.expandX().left().width(180f).height(90f)
+                }
                 this@PlanetView.setBuyAmountButton = textButton("Buy ${this@PlanetView.buyAmount.roundToInt()}", Buttons.BLUE_TEXT_BUTTON_SMALL.skinKey) { cell ->
-                    cell.expandX().top().right().width(90f).height(30f).pad(10f, 10f, 20f, 10f)
                     this.addListener(object : ChangeListener() {
                         override fun changed(event: ChangeEvent, actor: Actor) {
                             when (this@PlanetView.buyAmount) {
@@ -258,10 +200,10 @@ class PlanetView(
                             stage.fire(UpdateBuyAmountEvent(this@PlanetView.buyAmount))
                         }
                     })
+                    cell.expandX().top().right().width(90f).height(30f).pad(10f, 10f, 20f, 10f)
                 }
-                tableCell.expandX().top().right().padTop(10f).height(40f)
+                tableCell.expandX().fillX().top().padTop(10f).height(80f)
             }
-
             row()
 
             // Middle actionable area
@@ -497,7 +439,7 @@ class PlanetView(
                 }
                 tableCell.expandX().top().height(40f).padTop(15f)
             }
-            gameTableCell.expand().fill().pad(5f)
+            gameTableCell.expand().fill().pad(5f, 180f, 0f, 0f)
         }
 
         // Data Binding

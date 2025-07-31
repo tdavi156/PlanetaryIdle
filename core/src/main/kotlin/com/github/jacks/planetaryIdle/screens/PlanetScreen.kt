@@ -9,8 +9,10 @@ import com.github.jacks.planetaryIdle.input.gdxInputProcessor
 import com.github.jacks.planetaryIdle.systems.InitializeGameSystem
 import com.github.jacks.planetaryIdle.systems.RenderSystem
 import com.github.jacks.planetaryIdle.systems.ResourceUpdateSystem
+import com.github.jacks.planetaryIdle.ui.models.MenuModel
 import com.github.jacks.planetaryIdle.ui.models.PlanetModel
 import com.github.jacks.planetaryIdle.ui.views.backgroundView
+import com.github.jacks.planetaryIdle.ui.views.menuView
 import com.github.jacks.planetaryIdle.ui.views.planetView
 import com.github.quillraven.fleks.World
 import com.github.quillraven.fleks.world
@@ -42,7 +44,7 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
         stage.actors {
             log.debug { "Stage is initialized." }
             backgroundView()
-            // menuView()
+            menuView(MenuModel(stage))
             planetView(PlanetModel(entityWorld, stage))
         }
         stage.isDebugAll = false

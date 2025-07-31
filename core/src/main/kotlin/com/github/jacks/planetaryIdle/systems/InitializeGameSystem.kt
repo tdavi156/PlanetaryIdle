@@ -4,11 +4,13 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
+import com.github.jacks.planetaryIdle.components.AchievementComponent
 import com.github.jacks.planetaryIdle.components.ConfigurationComponent
 import com.github.jacks.planetaryIdle.components.ConfigurationType.*
 import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.components.ResourceConfiguration
+import com.github.jacks.planetaryIdle.components.UpgradeComponent
 import com.github.jacks.planetaryIdle.events.InitializeGameEvent
 import com.github.jacks.planetaryIdle.events.LoadGameEvent
 import com.github.quillraven.fleks.AllOf
@@ -53,6 +55,16 @@ class InitializeGameSystem(
                         }
                     }
                 }
+                MULTIPLIER -> {
+                    world.entity {
+                        add<AchievementComponent> {
+                            // load completed achievements
+                        }
+                        add<UpgradeComponent> {
+                            // load upgrade counts and scaling
+                        }
+                    }
+                }
                 UNDEFINED -> {
                     log.debug { "$configurationName has an UNDEFINED type." }
                     return@with
@@ -81,6 +93,12 @@ class InitializeGameSystem(
                             configurationName = resource.resourceName
                             configurationType = PLANET_RESOURCE
                         }
+                    }
+                }
+                world.entity {
+                    add<ConfigurationComponent> {
+                        configurationName = "multiplier"
+                        configurationType = MULTIPLIER
                     }
                 }
             }
@@ -166,7 +184,7 @@ class InitializeGameSystem(
         )
         val WHEAT_CONFIGURATION = ResourceConfiguration(
             name = "wheat",
-            tier = 1,
+            tier = 0,
             baseCost = BigDecimal("10"),
             baseValue = BigDecimal("1"),
             amountOwned = BigInteger(preferences["wheat_amount", "0"]),
@@ -174,7 +192,7 @@ class InitializeGameSystem(
         )
         val CORN_CONFIGURATION = ResourceConfiguration(
             name = "corn",
-            tier = 2,
+            tier = 1,
             baseCost = BigDecimal("100"),
             baseValue = BigDecimal("6.25"),
             amountOwned = BigInteger(preferences["corn_amount", "0"]),
@@ -182,7 +200,7 @@ class InitializeGameSystem(
         )
         val LETTUCE_CONFIGURATION = ResourceConfiguration(
             name = "lettuce",
-            tier = 3,
+            tier = 2,
             baseCost = BigDecimal("1000"),
             baseValue = BigDecimal("13.61"),
             amountOwned = BigInteger(preferences["lettuce_amount", "0"]),
@@ -190,7 +208,7 @@ class InitializeGameSystem(
         )
         val CARROTS_CONFIGURATION = ResourceConfiguration(
             name = "carrots",
-            tier = 4,
+            tier = 3,
             baseCost = BigDecimal("10000"),
             baseValue = BigDecimal("41.31"),
             amountOwned = BigInteger(preferences["carrots_amount", "0"]),
@@ -198,7 +216,7 @@ class InitializeGameSystem(
         )
         val TOMATOES_CONFIGURATION = ResourceConfiguration(
             name = "tomatoes",
-            tier = 5,
+            tier = 4,
             baseCost = BigDecimal("100000"),
             baseValue = BigDecimal("200.91"),
             amountOwned = BigInteger(preferences["tomatoes_amount", "0"]),
@@ -206,7 +224,7 @@ class InitializeGameSystem(
         )
         val BROCCOLI_CONFIGURATION = ResourceConfiguration(
             name = "broccoli",
-            tier = 6,
+            tier = 5,
             baseCost = BigDecimal("1000000"),
             baseValue = BigDecimal("1913.21"),
             amountOwned = BigInteger(preferences["broccoli_amount", "0"]),
@@ -214,7 +232,7 @@ class InitializeGameSystem(
         )
         val ONIONS_CONFIGURATION = ResourceConfiguration(
             name = "onions",
-            tier = 7,
+            tier = 6,
             baseCost = BigDecimal("10000000"),
             baseValue = BigDecimal("47479.98"),
             amountOwned = BigInteger(preferences["onions_amount", "0"]),
@@ -222,7 +240,7 @@ class InitializeGameSystem(
         )
         val POTATOES_CONFIGURATION = ResourceConfiguration(
             name = "potatoes",
-            tier = 8,
+            tier = 7,
             baseCost = BigDecimal("100000000"),
             baseValue = BigDecimal("4613468.88"),
             amountOwned = BigInteger(preferences["potatoes_amount", "0"]),
