@@ -35,7 +35,7 @@ class ResourceUpdateSystem(
             if (rscComp.amountOwned.toInt() < 1) return@forEach
             popGain += (
                     rscComp.baseValue
-                    * (rscComp.multiplier + (upgMultiplier ?: BigDecimal(0)) + achMultiplier)
+                    * (rscComp.multiplier + (upgMultiplier ?: BigDecimal(0)))
                     * rscComp.amountOwned.toBigDecimal()
                 ).divide(BigDecimal(20), 2, RoundingMode.HALF_UP)
         }
