@@ -43,9 +43,18 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
     init {
         stage.actors {
             log.debug { "Stage is initialized." }
+
+            // background color
             backgroundView()
-            menuView(MenuModel(stage))
+
+            // top bar information (always present)
+            /* */
+
+            // middle area (current view)
             planetView(PlanetModel(entityWorld, stage))
+
+            // right side menu (always present)
+            menuView(MenuModel(stage))
         }
         stage.isDebugAll = false
     }

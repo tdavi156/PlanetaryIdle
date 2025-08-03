@@ -10,6 +10,7 @@ import com.github.jacks.planetaryIdle.components.ConfigurationType.*
 import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.components.ResourceConfiguration
+import com.github.jacks.planetaryIdle.components.ScoreResources
 import com.github.jacks.planetaryIdle.components.UpgradeComponent
 import com.github.jacks.planetaryIdle.events.InitializeGameEvent
 import com.github.jacks.planetaryIdle.events.LoadGameEvent
@@ -33,8 +34,8 @@ class InitializeGameSystem(
     override fun onTickEntity(entity: Entity) {
         with(configurationComponents[entity]) {
             when(configurationType) {
-                POPULATION -> {
-                    val config = POPULATION_CONFIGURATION
+                SCORE_RESOURCE -> {
+                    val config = getScoreResourceConfiguration(configurationName)
                     world.entity {
                         add<ResourceComponent> {
                             name = config.name
@@ -47,10 +48,13 @@ class InitializeGameSystem(
                     world.entity {
                         add<ResourceComponent> {
                             name = config.name
-                            tier = config.tier
-                            baseValue = config.baseValue
-                            baseCost = config.baseCost
                             amountOwned = config.amountOwned
+                            baseCost = config.baseCost
+                            costScaling = config.costScaling
+                            baseValue = config.baseValue
+                            valueScaling = config.valueScaling
+                            baseRate = config.baseRate
+                            rateScaling = config.rateScaling
                             isUnlocked = config.isUnlocked
                         }
                     }
@@ -81,10 +85,12 @@ class InitializeGameSystem(
                     preferences.clear()
                     setupPreferences()
                 }
-                world.entity {
-                    add<ConfigurationComponent> {
-                        configurationName = "population"
-                        configurationType = POPULATION
+                ScoreResources.entries.forEach { resource ->
+                    world.entity {
+                        add<ConfigurationComponent> {
+                            configurationName = resource.resourceName
+                            configurationType = SCORE_RESOURCE
+                        }
                     }
                 }
                 PlanetResources.entries.forEach { resource ->
@@ -110,141 +116,161 @@ class InitializeGameSystem(
         return true
     }
 
+    private fun getScoreResourceConfiguration(configName : String) : ResourceConfiguration {
+        return when (configName) {
+            ScoreResources.GOLD_COINS.resourceName -> GOLD_SCORE_CONFIGURATION
+            else -> ResourceConfiguration()
+        }
+    }
     private fun getPlanetResourceConfigurations(configName : String) : ResourceConfiguration {
         return when (configName) {
-            PlanetResources.WHEAT.resourceName -> WHEAT_CONFIGURATION
-            PlanetResources.CORN.resourceName -> CORN_CONFIGURATION
-            PlanetResources.LETTUCE.resourceName -> LETTUCE_CONFIGURATION
-            PlanetResources.CARROTS.resourceName -> CARROTS_CONFIGURATION
-            PlanetResources.TOMATOES.resourceName -> TOMATOES_CONFIGURATION
-            PlanetResources.BROCCOLI.resourceName -> BROCCOLI_CONFIGURATION
-            PlanetResources.ONIONS.resourceName -> ONIONS_CONFIGURATION
-            PlanetResources.POTATOES.resourceName -> POTATOES_CONFIGURATION
+            PlanetResources.RED.resourceName -> RED_CONFIGURATION
+            PlanetResources.ORANGE.resourceName -> ORANGE_CONFIGURATION
+            PlanetResources.YELLOW.resourceName -> YELLOW_CONFIGURATION
+            PlanetResources.GREEN.resourceName -> GREEN_CONFIGURATION
+            PlanetResources.BLUE.resourceName -> BLUE_CONFIGURATION
+            PlanetResources.PURPLE.resourceName -> PURPLE_CONFIGURATION
+            PlanetResources.PINK.resourceName -> PINK_CONFIGURATION
+            PlanetResources.BROWN.resourceName -> BROWN_CONFIGURATION
+            PlanetResources.WHITE.resourceName -> WHITE_CONFIGURATION
+            PlanetResources.BLACK.resourceName -> BLACK_CONFIGURATION
             else -> ResourceConfiguration()
         }
     }
 
     private fun setupPreferences() {
         preferences.flush {
-            this["isGameInitialized"] = true
+            this["is_game_initialized"] = true
 
-            this["totalPopulation"] = "10"
-            this["availablePopulation"] = "10"
-            this["populationGainRate"] = "0"
-            this["buyAmount"] = 1
+            this["gold_coins"] = "5"
+            this["production_rate"] = "0"
+            this["buy_amount"] = 1f
 
-            this["wheat_amount"] = "0"
-            this["wheat_multiplier"] = "1"
-            this["wheat_cost"] = "10"
-            this["wheat_unlocked"] = true
+            this["red_owned"] = "0"
+            this["red_cost"] = "1"
+            this["red_value"] = "0"
+            this["red_rate"] = "1.3"
+            this["red_unlocked"] = true
 
-            this["corn_amount"] = "0"
-            this["corn_multiplier"] = "1"
-            this["corn_cost"] = "100"
-            this["corn_unlocked"] = false
-
-            this["lettuce_amount"] = "0"
-            this["lettuce_multiplier"] = "1"
-            this["lettuce_cost"] = "1000"
-            this["lettuce_unlocked"] = false
-
-            this["carrots_amount"] = "0"
-            this["carrots_multiplier"] = "1"
-            this["carrots_cost"] = "10000"
-            this["carrots_unlocked"] = false
-
-            this["tomatoes_amount"] = "0"
-            this["tomatoes_multiplier"] = "1"
-            this["tomatoes_cost"] = "100000"
-            this["tomatoes_unlocked"] = false
-
-            this["broccoli_amount"] = "0"
-            this["broccoli_multiplier"] = "1"
-            this["broccoli_cost"] = "1000000"
-            this["broccoli_unlocked"] = false
-
-            this["onions_amount"] = "0"
-            this["onions_multiplier"] = "1"
-            this["onions_cost"] = "10000000"
-            this["onions_unlocked"] = false
-
-            this["potatoes_amount"] = "0"
-            this["potatoes_multiplier"] = "1"
-            this["potatoes_cost"] = "100000000"
-            this["potatoes_unlocked"] = false
         }
     }
 
     companion object {
         private val log = logger<InitializeGameSystem>()
         private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
-        val POPULATION_CONFIGURATION = ResourceConfiguration(
-            name = "population",
-            amountOwned = BigInteger(preferences["totalPopulation", "10"])
+        val GOLD_SCORE_CONFIGURATION = ResourceConfiguration(
+            name = "gold_coins",
+            amountOwned = BigDecimal(preferences["gold_coins", "5"])
         )
-        val WHEAT_CONFIGURATION = ResourceConfiguration(
-            name = "wheat",
-            tier = 0,
-            baseCost = BigDecimal("10"),
-            baseValue = BigDecimal("1"),
-            amountOwned = BigInteger(preferences["wheat_amount", "0"]),
-            isUnlocked = preferences["wheat_unlocked", true]
+        val RED_CONFIGURATION = ResourceConfiguration(
+            name = "red",
+            amountOwned = BigDecimal(preferences["red_owned", "0"]),
+            baseCost = BigDecimal("1"),
+            costScaling = BigDecimal("0.25"),
+            baseValue = BigDecimal("0.31"),
+            valueScaling = BigDecimal("0.04"),
+            baseRate = BigDecimal("0.92"),
+            rateScaling = BigDecimal("0.9"),
+            isUnlocked = preferences["red_unlocked", true]
         )
-        val CORN_CONFIGURATION = ResourceConfiguration(
-            name = "corn",
-            tier = 1,
-            baseCost = BigDecimal("100"),
-            baseValue = BigDecimal("6.25"),
-            amountOwned = BigInteger(preferences["corn_amount", "0"]),
-            isUnlocked = preferences["corn_unlocked", false]
+        val ORANGE_CONFIGURATION = ResourceConfiguration(
+            name = "orange",
+            amountOwned = BigDecimal(preferences["orange_owned", "0"]),
+            baseCost = BigDecimal("1"),
+            costScaling = BigDecimal("1"),
+            baseValue = BigDecimal("0.31"),
+            valueScaling = BigDecimal("1"),
+            baseRate = BigDecimal("1.3"),
+            rateScaling = BigDecimal("1"),
+            isUnlocked = preferences["orange_unlocked", false]
         )
-        val LETTUCE_CONFIGURATION = ResourceConfiguration(
-            name = "lettuce",
-            tier = 2,
-            baseCost = BigDecimal("1000"),
-            baseValue = BigDecimal("13.61"),
-            amountOwned = BigInteger(preferences["lettuce_amount", "0"]),
-            isUnlocked = preferences["lettuce_unlocked", false]
+        val YELLOW_CONFIGURATION = ResourceConfiguration(
+            name = "yellow",
+            amountOwned = BigDecimal(preferences["yellow_owned", "0"]),
+            baseCost = BigDecimal("1"),
+            costScaling = BigDecimal("1"),
+            baseValue = BigDecimal("0.31"),
+            valueScaling = BigDecimal("1"),
+            baseRate = BigDecimal("1.3"),
+            rateScaling = BigDecimal("1"),
+            isUnlocked = preferences["yellow_unlocked", false]
         )
-        val CARROTS_CONFIGURATION = ResourceConfiguration(
-            name = "carrots",
-            tier = 3,
-            baseCost = BigDecimal("10000"),
-            baseValue = BigDecimal("41.31"),
-            amountOwned = BigInteger(preferences["carrots_amount", "0"]),
-            isUnlocked = preferences["carrots_unlocked", false]
+        val GREEN_CONFIGURATION = ResourceConfiguration(
+            name = "green",
+            amountOwned = BigDecimal(preferences["green_owned", "0"]),
+            baseCost = BigDecimal("1"),
+            costScaling = BigDecimal("1"),
+            baseValue = BigDecimal("0.31"),
+            valueScaling = BigDecimal("1"),
+            baseRate = BigDecimal("1.3"),
+            rateScaling = BigDecimal("1"),
+            isUnlocked = preferences["green_unlocked", false]
         )
-        val TOMATOES_CONFIGURATION = ResourceConfiguration(
-            name = "tomatoes",
-            tier = 4,
-            baseCost = BigDecimal("100000"),
-            baseValue = BigDecimal("200.91"),
-            amountOwned = BigInteger(preferences["tomatoes_amount", "0"]),
-            isUnlocked = preferences["tomatoes_unlocked", false]
+        val BLUE_CONFIGURATION = ResourceConfiguration(
+            name = "blue",
+            amountOwned = BigDecimal(preferences["blue_owned", "0"]),
+            baseCost = BigDecimal("1"),
+            costScaling = BigDecimal("1"),
+            baseValue = BigDecimal("0.31"),
+            valueScaling = BigDecimal("1"),
+            baseRate = BigDecimal("1.3"),
+            rateScaling = BigDecimal("1"),
+            isUnlocked = preferences["blue_unlocked", false]
         )
-        val BROCCOLI_CONFIGURATION = ResourceConfiguration(
-            name = "broccoli",
-            tier = 5,
-            baseCost = BigDecimal("1000000"),
-            baseValue = BigDecimal("1913.21"),
-            amountOwned = BigInteger(preferences["broccoli_amount", "0"]),
-            isUnlocked = preferences["broccoli_unlocked", false]
+        val PURPLE_CONFIGURATION = ResourceConfiguration(
+            name = "purple",
+            amountOwned = BigDecimal(preferences["purple_owned", "0"]),
+            baseCost = BigDecimal("1"),
+            costScaling = BigDecimal("1"),
+            baseValue = BigDecimal("0.31"),
+            valueScaling = BigDecimal("1"),
+            baseRate = BigDecimal("1.3"),
+            rateScaling = BigDecimal("1"),
+            isUnlocked = preferences["purple_unlocked", false]
         )
-        val ONIONS_CONFIGURATION = ResourceConfiguration(
-            name = "onions",
-            tier = 6,
-            baseCost = BigDecimal("10000000"),
-            baseValue = BigDecimal("47479.98"),
-            amountOwned = BigInteger(preferences["onions_amount", "0"]),
-            isUnlocked = preferences["onions_unlocked", false]
+        val PINK_CONFIGURATION = ResourceConfiguration(
+            name = "pink",
+            amountOwned = BigDecimal(preferences["pink_owned", "0"]),
+            baseCost = BigDecimal("1"),
+            costScaling = BigDecimal("1"),
+            baseValue = BigDecimal("0.31"),
+            valueScaling = BigDecimal("1"),
+            baseRate = BigDecimal("1.3"),
+            rateScaling = BigDecimal("1"),
+            isUnlocked = preferences["pink_unlocked", false]
         )
-        val POTATOES_CONFIGURATION = ResourceConfiguration(
-            name = "potatoes",
-            tier = 7,
-            baseCost = BigDecimal("100000000"),
-            baseValue = BigDecimal("4613468.88"),
-            amountOwned = BigInteger(preferences["potatoes_amount", "0"]),
-            isUnlocked = preferences["potatoes_unlocked", false]
+        val BROWN_CONFIGURATION = ResourceConfiguration(
+            name = "brown",
+            amountOwned = BigDecimal(preferences["brown_owned", "0"]),
+            baseCost = BigDecimal("1"),
+            costScaling = BigDecimal("1"),
+            baseValue = BigDecimal("0.31"),
+            valueScaling = BigDecimal("1"),
+            baseRate = BigDecimal("1.3"),
+            rateScaling = BigDecimal("1"),
+            isUnlocked = preferences["brown_unlocked", false]
+        )
+        val WHITE_CONFIGURATION = ResourceConfiguration(
+            name = "white",
+            amountOwned = BigDecimal(preferences["white_owned", "0"]),
+            baseCost = BigDecimal("1"),
+            costScaling = BigDecimal("1"),
+            baseValue = BigDecimal("0.31"),
+            valueScaling = BigDecimal("1"),
+            baseRate = BigDecimal("1.3"),
+            rateScaling = BigDecimal("1"),
+            isUnlocked = preferences["white_unlocked", false]
+        )
+        val BLACK_CONFIGURATION = ResourceConfiguration(
+            name = "black",
+            amountOwned = BigDecimal(preferences["black_owned", "0"]),
+            baseCost = BigDecimal("1"),
+            costScaling = BigDecimal("1"),
+            baseValue = BigDecimal("0.31"),
+            valueScaling = BigDecimal("1"),
+            baseRate = BigDecimal("1.3"),
+            rateScaling = BigDecimal("1"),
+            isUnlocked = preferences["black_unlocked", false]
         )
     }
 }

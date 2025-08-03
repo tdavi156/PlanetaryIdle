@@ -47,53 +47,53 @@ class MenuView(
 
         // UI
         table { menuTableCell ->
-            this@MenuView.planetButton = textButton("Planet", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
+            this@MenuView.planetButton = textButton("Planet", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(180f).height(40f)
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         // this@MenuView.currentView = "MenuView"
-                        log.debug { "currentView -> ${this@MenuView.planetButton.txt}" }
+                        //log.debug { "currentView -> ${this@MenuView.planetButton.txt}" }
                     }
                 })
             }
             row()
-            this@MenuView.galaxyButton = textButton("Galaxy", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
+            this@MenuView.galaxyButton = textButton("Galaxy", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(180f).height(40f)
                 isDisabled = false
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         // this@MenuView.currentView = "galaxyView"
-                        log.debug { "currentView -> ${this@MenuView.galaxyButton.txt}" }
+                        //log.debug { "currentView -> ${this@MenuView.galaxyButton.txt}" }
                     }
                 })
             }
             row()
-            this@MenuView.automationButton = textButton("Automation", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
+            this@MenuView.automationButton = textButton("Automation", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(180f).height(40f)
                 isDisabled = true
             }
             row()
-            this@MenuView.challengesButton = textButton("Challenges", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
+            this@MenuView.challengesButton = textButton("Challenges", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(180f).height(40f)
                 isDisabled = true
             }
             row()
-            this@MenuView.achievementsButton = textButton("Achievements", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
+            this@MenuView.achievementsButton = textButton("Achievements", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(180f).height(40f)
                 isDisabled = true
             }
             row()
-            this@MenuView.statisticsButton = textButton("Statistics", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
+            this@MenuView.statisticsButton = textButton("Statistics", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(180f).height(40f)
                 isDisabled = true
             }
             row()
-            this@MenuView.settingsButton = textButton("Settings", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
+            this@MenuView.settingsButton = textButton("Settings", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(180f).height(40f)
                 isDisabled = true
             }
             row()
-            this@MenuView.resetButton = textButton("Reset Game", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
+            this@MenuView.resetButton = textButton("Reset Game", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(180f).height(40f)
                 isDisabled = false
                 this.addListener(object : ChangeListener() {
@@ -104,7 +104,7 @@ class MenuView(
                 })
             }
             row()
-            this@MenuView.quitButton = textButton("Quit Game", Buttons.BLUE_TEXT_BUTTON_DEFAULT.skinKey) { cell ->
+            this@MenuView.quitButton = textButton("Quit Game", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(180f).height(40f)
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
@@ -115,7 +115,7 @@ class MenuView(
                     }
                 })
             }
-            menuTableCell.expand().top().left().width(180f)
+            menuTableCell.expand().top().right().width(180f)
         }
 
 

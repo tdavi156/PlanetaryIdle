@@ -2,49 +2,57 @@ package com.github.jacks.planetaryIdle.components
 
 import java.math.*
 
+enum class ScoreResources(
+    val resourceName : String
+) {
+    GOLD_COINS("gold_coins")
+}
+
 enum class PlanetResources(
     val resourceName : String
 ) {
-    WHEAT("wheat"),
-    CORN("corn"),
-    LETTUCE("lettuce"),
-    CARROTS("carrots"),
-    TOMATOES("tomatoes"),
-    BROCCOLI("broccoli"),
-    ONIONS("onions"),
-    POTATOES("potatoes");
+    RED("red"),
+    ORANGE("orange"),
+    YELLOW("yellow"),
+    GREEN("green"),
+    BLUE("blue"),
+    PURPLE("purple"),
+    PINK("pink"),
+    BROWN("brown"),
+    WHITE("white"),
+    BLACK("black");
 }
 
 data class ResourceConfiguration(
     val name: String = "",
-    val tier: Int = 0,
+    val amountOwned: BigDecimal = BigDecimal("0"),
     val baseCost: BigDecimal = BigDecimal("0"),
+    val costScaling: BigDecimal = BigDecimal("0"),
     val baseValue: BigDecimal = BigDecimal("0"),
-    val amountOwned: BigInteger = BigInteger("0"),
+    val valueScaling: BigDecimal = BigDecimal("0"),
+    val baseRate : BigDecimal = BigDecimal("0"),
+    val rateScaling : BigDecimal = BigDecimal("0"),
     val isUnlocked: Boolean = false
 )
 
 data class ResourceComponent(
     var name : String = "",
-    var tier : Int = 0,
+    var amountOwned: BigDecimal = BigDecimal("0"),
     var baseCost: BigDecimal = BigDecimal("0"),
+    var costScaling: BigDecimal = BigDecimal("0"),
     var baseValue: BigDecimal = BigDecimal("0"),
-    var amountOwned: BigInteger = BigInteger("0"),
+    var valueScaling: BigDecimal = BigDecimal("0"),
+    var baseRate : BigDecimal = BigDecimal("0"),
+    var rateScaling : BigDecimal = BigDecimal("0"),
     var isUnlocked : Boolean = false
 ) {
 
-    private val numTens : Int
-        get() = amountOwned.divide(BigInteger("10")).toInt()
-
-    val multiplier : BigDecimal
-        get() = BigDecimal("2").pow(numTens)
+    val cost : BigDecimal
+        get() = (baseCost + costScaling).pow(amountOwned.toInt())
 
     val value : BigDecimal
-        get() = baseValue * multiplier
+        get() = baseValue + (valueScaling * amountOwned)
 
-    val cost : BigDecimal
-        get() = baseCost * BigDecimal(10).pow((numTens * (tier + 1)) + tier)
-
-    val nextCost : BigDecimal
-        get() = baseCost * BigDecimal(10).pow(((numTens + 1) * (tier + 1)) + tier)
+    val rate : BigDecimal
+        get() = baseRate + (rateScaling * amountOwned)
 }

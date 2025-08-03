@@ -6,7 +6,6 @@ import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.components.UpgradeComponent
 import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
 import com.github.jacks.planetaryIdle.events.fire
-import com.github.quillraven.fleks.AllOf
 import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.Fixed
 import com.github.quillraven.fleks.IntervalSystem
@@ -23,23 +22,19 @@ class ResourceUpdateSystem(
 ) : IntervalSystem(interval = Fixed(1 / 20f)) {
 
     private val resourceEntities =  world.family(allOf = arrayOf(ResourceComponent::class))
-    private val multiplierEntity = world.family(allOf = arrayOf(UpgradeComponent::class, AchievementComponent::class)).firstOrNull()
+    //private val multiplierEntity = world.family(allOf = arrayOf(UpgradeComponent::class, AchievementComponent::class)).firstOrNull()
 
     override fun onTick() {
-        var popGain = BigDecimal(0)
-        val upgMultiplier = multiplierEntity?.let { upgradeComponents[it].multiplier.toBigDecimal() }
-        val achMultiplier = multiplierEntity?.let { achievementComponents[it].multiplier.toBigDecimal() }
+        var goldCoins = BigDecimal(0)
+        //val upgMultiplier = multiplierEntity?.let { upgradeComponents[it].multiplier.toBigDecimal() }
+        //val achMultiplier = multiplierEntity?.let { achievementComponents[it].multiplier.toBigDecimal() }
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
-            if (rscComp.name == "population") return@forEach
+            if (rscComp.name == "gold_coins") return@forEach
             if (rscComp.amountOwned.toInt() < 1) return@forEach
-            popGain += (
-                    rscComp.baseValue
-                    * (rscComp.multiplier + (upgMultiplier ?: BigDecimal(0)))
-                    * rscComp.amountOwned.toBigDecimal()
-                ).divide(BigDecimal(20), 2, RoundingMode.HALF_UP)
+            goldCoins += (rscComp.value).divide(BigDecimal(20), 2, RoundingMode.HALF_UP)
         }
-        stage.fire(ResourceUpdateEvent(popGain))
+        stage.fire(ResourceUpdateEvent(goldCoins))
     }
 
     companion object {

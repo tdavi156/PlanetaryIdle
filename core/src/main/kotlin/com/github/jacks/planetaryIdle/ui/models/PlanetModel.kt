@@ -32,43 +32,23 @@ class PlanetModel(
 
     private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
     private val resourceComponents : ComponentMapper<ResourceComponent> = world.mapper()
-    private val upgradeComponents : ComponentMapper<UpgradeComponent> = world.mapper()
-    private val achievementComponents : ComponentMapper<AchievementComponent> = world.mapper()
+    //private val upgradeComponents : ComponentMapper<UpgradeComponent> = world.mapper()
+    //private val achievementComponents : ComponentMapper<AchievementComponent> = world.mapper()
     private val resourceEntities = world.family(allOf = arrayOf(ResourceComponent::class))
-    private val multiplierEntity = world.family(allOf = arrayOf(UpgradeComponent::class, AchievementComponent::class)).first()
+    //private val multiplierEntity = world.family(allOf = arrayOf(UpgradeComponent::class, AchievementComponent::class)).first()
 
-    var totalPopulationAmount by propertyNotify(BigDecimal(preferences["totalPopulation", "10"]))
-    var availablePopulationAmount by propertyNotify(BigDecimal(preferences["availablePopulation", "10"]))
-    var populationGainPerSecond by propertyNotify(BigDecimal(preferences["populationGainRate", "0"]))
-    var buyAmount by propertyNotify(preferences["buyAmount", 1f])
-    var soilUpgrades by propertyNotify(preferences["soilUpgrades", 0])
+    var goldCoins by propertyNotify(BigDecimal(preferences["gold_coins", "5"]))
+    var productionRate by propertyNotify(BigDecimal(preferences["production_rate", "0"]))
+    var buyAmount by propertyNotify(preferences["buy_amount", 1f])
 
-    var wheatAmount by propertyNotify(BigInteger(preferences["wheat_amount", "0"]))
-    var cornAmount by propertyNotify(BigInteger(preferences["corn_amount", "0"]))
-    var lettuceAmount by propertyNotify(BigInteger(preferences["lettuce_amount", "0"]))
-    var carrotsAmount by propertyNotify(BigInteger(preferences["carrots_amount", "0"]))
-    var tomatoesAmount by propertyNotify(BigInteger(preferences["tomatoes_amount", "0"]))
-    var broccoliAmount by propertyNotify(BigInteger(preferences["broccoli_amount", "0"]))
-    var onionsAmount by propertyNotify(BigInteger(preferences["onions_amount", "0"]))
-    var potatoesAmount by propertyNotify(BigInteger(preferences["potatoes_amount", "0"]))
+    // var soilUpgrades by propertyNotify(preferences["soilUpgrades", 0])
 
-    var wheatMultiplier by propertyNotify(BigDecimal(preferences["wheat_multiplier", "1"]))
-    var cornMultiplier by propertyNotify(BigDecimal(preferences["corn_multiplier", "1"]))
-    var lettuceMultiplier by propertyNotify(BigDecimal(preferences["lettuce_multiplier", "1"]))
-    var carrotsMultiplier by propertyNotify(BigDecimal(preferences["carrots_multiplier", "1"]))
-    var tomatoesMultiplier by propertyNotify(BigDecimal(preferences["tomatoes_multiplier", "1"]))
-    var broccoliMultiplier by propertyNotify(BigDecimal(preferences["broccoli_multiplier", "1"]))
-    var onionsMultiplier by propertyNotify(BigDecimal(preferences["onions_multiplier", "1"]))
-    var potatoesMultiplier by propertyNotify(BigDecimal(preferences["potatoes_multiplier", "1"]))
-
-    var wheatCost by propertyNotify(BigDecimal(preferences["wheat_cost", "10"]))
-    var cornCost by propertyNotify(BigDecimal(preferences["corn_cost", "100"]))
-    var lettuceCost by propertyNotify(BigDecimal(preferences["lettuce_cost", "1000"]))
-    var carrotsCost by propertyNotify(BigDecimal(preferences["carrots_cost", "10000"]))
-    var tomatoesCost by propertyNotify(BigDecimal(preferences["tomatoes_cost", "100000"]))
-    var broccoliCost by propertyNotify(BigDecimal(preferences["broccoli_cost", "1000000"]))
-    var onionsCost by propertyNotify(BigDecimal(preferences["onions_cost", "10000000"]))
-    var potatoesCost by propertyNotify(BigDecimal(preferences["potatoes_cost", "100000000"]))
+    var redOwned by propertyNotify(BigDecimal(preferences["red_owned", "0"]))
+    var redCost by propertyNotify(BigDecimal(preferences["red_cost", "1"]))
+    var redValue by propertyNotify(BigDecimal(preferences["red_value", "0"]))
+    var redValueIncrease by propertyNotify(BigDecimal(preferences["red_value_increase", "0.31"]))
+    var redRate by propertyNotify(BigDecimal(preferences["red_rate", "1.3"]))
+    var redRateIncrease by propertyNotify(BigDecimal(preferences["red_rate_increase", "0.12"]))
 
     var gameCompleted by propertyNotify(false)
 
@@ -79,26 +59,22 @@ class PlanetModel(
     override fun handle(event: Event?): Boolean {
         when (event) {
             is BuyResourceEvent -> {
-                val entity = getResourceEntityByName(event.resourceType) ?: gdxError("No Entity with foodType: ${event.resourceType}")
+                val entity = getResourceEntityByName(event.resourceType) ?: gdxError("No Entity with type: ${event.resourceType}")
                 val rscComp = resourceComponents[entity]
-                updatePopulation(rscComp)
+                updateGoldCoins(rscComp)
                 updateModelAmount(rscComp)
                 updateResourceComponent(rscComp)
                 updateModel(rscComp)
-                updateModelPopulationRate()
+                updateModelProductionRate()
             }
             is ResourceUpdateEvent -> {
                 val amount = event.amount
-                availablePopulationAmount += amount
-                totalPopulationAmount = (totalPopulationAmount + amount).coerceAtMost(BigDecimal("1E308"))
-                preferences.flush {
-                    this["availablePopulation"] = availablePopulationAmount.toString()
-                    this["totalPopulation"] = totalPopulationAmount.toString()
-                }
+                goldCoins += amount
+                preferences.flush { this["gold_coins"] = goldCoins.toString() }
             }
             is UpgradeSoilEvent -> {
-                soilUpgrades += event.amount
-                upgradeComponents[multiplierEntity].soilUpgrades += event.amount
+                //soilUpgrades += event.amount
+                //upgradeComponents[multiplierEntity].soilUpgrades += event.amount
                 // reset all crops amounts
                 // reset AP
                 // reset total AP
@@ -106,7 +82,7 @@ class PlanetModel(
             }
             is UpdateBuyAmountEvent -> {
                 buyAmount = event.amount
-                preferences.flush { this["buyAmount"] = buyAmount }
+                preferences.flush { this["buy_amount"] = buyAmount }
                 updateModel()
             }
             is SaveGameEvent -> {
@@ -137,16 +113,16 @@ class PlanetModel(
      * amount of a given ResourceComponent
      */
     private fun updateResourceComponent(rscComp : ResourceComponent) {
-        rscComp.amountOwned += buyAmount.toBigDecimal().toBigInteger()
+        rscComp.amountOwned += buyAmount.toBigDecimal()
     }
 
     /**
      * Update the Model value for:
-     * availablePopulation given the purchased ResourceComponent
+     * goldCoins given the purchased ResourceComponent
      */
-    private fun updatePopulation(rscComp : ResourceComponent) {
-        availablePopulationAmount -= calculateCost(rscComp)
-        preferences.flush { this["availablePopulation"] = availablePopulationAmount.toString() }
+    private fun updateGoldCoins(rscComp : ResourceComponent) {
+        goldCoins -= calculateCost(rscComp)
+        preferences.flush { this["gold_coins"] = goldCoins.toString() }
     }
 
     /**
@@ -154,61 +130,33 @@ class PlanetModel(
      * amount of a given ResourceComponent
      */
     private fun updateModelAmount(rscComp: ResourceComponent) {
-        val bigBuyAmount = buyAmount.toBigDecimal().toBigInteger()
+        val bigBuyAmount = buyAmount.toBigDecimal()
         when (rscComp.name) {
-            "wheat" -> {
-                wheatAmount += bigBuyAmount
-                preferences.flush { this["wheat_amount"] = wheatAmount.toString() }
-            }
-            "corn" -> {
-                cornAmount += bigBuyAmount
-                preferences.flush { this["corn_amount"] = cornAmount.toString() }
-            }
-            "lettuce" -> {
-                lettuceAmount += bigBuyAmount
-                preferences.flush { this["lettuce_amount"] = lettuceAmount.toString() }
-            }
-            "carrots" -> {
-                carrotsAmount += bigBuyAmount
-                preferences.flush { this["carrots_amount"] = carrotsAmount.toString() }
-            }
-            "tomatoes" -> {
-                tomatoesAmount += bigBuyAmount
-                preferences.flush { this["tomatoes_amount"] = tomatoesAmount.toString() }
-            }
-            "broccoli" -> {
-                broccoliAmount += bigBuyAmount
-                preferences.flush { this["broccoli_amount"] = broccoliAmount.toString() }
-            }
-            "onions" -> {
-                onionsAmount += bigBuyAmount
-                preferences.flush { this["onions_amount"] = onionsAmount.toString() }
-            }
-            "potatoes" -> {
-                potatoesAmount += bigBuyAmount
-                preferences.flush { this["potatoes_amount"] = potatoesAmount.toString() }
+            "red" -> {
+                redOwned += bigBuyAmount
+                preferences.flush { this["red_owned"] = redOwned.toString() }
             }
         }
     }
 
     /**
      * Update the Model values for:
-     * populationGainRate
+     * productionRate
      */
-    private fun updateModelPopulationRate() {
-        var popGain = BigDecimal(0)
+    private fun updateModelProductionRate() {
+        var productionGain = BigDecimal(0)
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
-            if (rscComp.name == "population") return@forEach
-            popGain += (rscComp.baseValue * rscComp.multiplier * rscComp.amountOwned.toBigDecimal())
+            if (rscComp.name == "gold_coins") return@forEach
+            productionGain += (rscComp.baseValue * rscComp.amountOwned)
         }
-        populationGainPerSecond = popGain
-        preferences.flush { this["populationGainRate"] = populationGainPerSecond.toString() }
+        productionRate = productionGain
+        preferences.flush { this["production_rate"] = productionRate.toString() }
     }
 
     /**
      * Update the Model values for:
-     * multiplier and cost for each ResourceComponent
+     * cost for each ResourceComponent
      */
     private fun updateModel() {
         resourceEntities.forEach { entity ->
@@ -219,72 +167,16 @@ class PlanetModel(
 
     /**
      * Update the Model values for:
-     * multiplier and cost for a given ResourceComponent
+     * cost for a given ResourceComponent
      */
     private fun updateModel(rscComp : ResourceComponent) {
         when (rscComp.name) {
-            "wheat" -> {
-                wheatMultiplier = rscComp.multiplier
-                wheatCost = calculateCost(rscComp)
+            "red" -> {
+                redCost = rscComp.cost
+                redValueIncrease = rscComp.value
+                redRate = rscComp.rate
                 preferences.flush {
-                    this["wheat_multiplier"] = wheatMultiplier.toString()
-                    this["wheat_cost"] = wheatCost.toString()
-                }
-            }
-            "corn" -> {
-                cornMultiplier = rscComp.multiplier
-                cornCost = calculateCost(rscComp)
-                preferences.flush {
-                    this["corn_multiplier"] = cornMultiplier.toString()
-                    this["corn_cost"] = cornCost.toString()
-                }
-            }
-            "lettuce" -> {
-                lettuceMultiplier = rscComp.multiplier
-                lettuceCost = calculateCost(rscComp)
-                preferences.flush {
-                    this["lettuce_multiplier"] = lettuceMultiplier.toString()
-                    this["lettuce_cost"] = lettuceCost.toString()
-                }
-            }
-            "carrots" -> {
-                carrotsMultiplier = rscComp.multiplier
-                carrotsCost = calculateCost(rscComp)
-                preferences.flush {
-                    this["carrots_multiplier"] = carrotsMultiplier.toString()
-                    this["carrots_cost"] = carrotsCost.toString()
-                }
-            }
-            "tomatoes" -> {
-                tomatoesMultiplier = rscComp.multiplier
-                tomatoesCost = calculateCost(rscComp)
-                preferences.flush {
-                    this["tomatoes_multiplier"] = tomatoesMultiplier.toString()
-                    this["tomatoes_cost"] = tomatoesCost.toString()
-                }
-            }
-            "broccoli" -> {
-                broccoliMultiplier = rscComp.multiplier
-                broccoliCost = calculateCost(rscComp)
-                preferences.flush {
-                    this["broccoli_multiplier"] = broccoliMultiplier.toString()
-                    this["broccoli_cost"] = broccoliCost.toString()
-                }
-            }
-            "onions" -> {
-                onionsMultiplier = rscComp.multiplier
-                onionsCost = calculateCost(rscComp)
-                preferences.flush {
-                    this["onions_multiplier"] = onionsMultiplier.toString()
-                    this["onions_cost"] = onionsCost.toString()
-                }
-            }
-            "potatoes" -> {
-                potatoesMultiplier = rscComp.multiplier
-                potatoesCost = calculateCost(rscComp)
-                preferences.flush {
-                    this["potatoes_multiplier"] = potatoesMultiplier.toString()
-                    this["potatoes_cost"] = potatoesCost.toString()
+                    this["red_cost"] = redCost.toString()
                 }
             }
         }
@@ -293,57 +185,30 @@ class PlanetModel(
     /**
      * @param ResourceComponent
      * Calculates the cost of a resource relative to the buyAmount and accounts
-     * for part of the purchase bridging the price increase threshold.
+     * for the price increase per bought item.
      * @return Float
      */
     private fun calculateCost(rscComp: ResourceComponent) : BigDecimal {
-        val _100 = BigInteger("100")
-        val cost = rscComp.cost
-        val nextCost = rscComp.nextCost
-        val amount = rscComp.amountOwned
-        return if (buyAmount == 100f || (buyAmount == 10f && amount.mod(_100) > BigInteger("90"))) {
-            (cost * ((((amount / _100) + BigInteger("1")) * _100).subtract(amount).toBigDecimal())) + (nextCost * (amount.mod(BigInteger("${buyAmount.toInt()}")).toBigDecimal()))
-        } else {
-            cost * (buyAmount.toBigDecimal())
-        }
+        // do calculations based on buy amount
+        return rscComp.cost
     }
 
     private fun resetGameValues() {
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
-            rscComp.amountOwned = BigInteger("0")
+            rscComp.amountOwned = BigDecimal("0")
         }
-        totalPopulationAmount = BigDecimal("10")
-        availablePopulationAmount = BigDecimal("10")
-        populationGainPerSecond = BigDecimal("0")
+
+        goldCoins = BigDecimal("5")
+        productionRate = BigDecimal("0")
         buyAmount = 1f
 
-        wheatAmount = BigInteger("0")
-        cornAmount = BigInteger("0")
-        lettuceAmount = BigInteger("0")
-        carrotsAmount = BigInteger("0")
-        tomatoesAmount = BigInteger("0")
-        broccoliAmount = BigInteger("0")
-        onionsAmount = BigInteger("0")
-        potatoesAmount = BigInteger("0")
-
-        wheatMultiplier = BigDecimal("1")
-        cornMultiplier = BigDecimal("1")
-        lettuceMultiplier = BigDecimal("1")
-        carrotsMultiplier = BigDecimal("1")
-        tomatoesMultiplier = BigDecimal("1")
-        broccoliMultiplier = BigDecimal("1")
-        onionsMultiplier = BigDecimal("1")
-        potatoesMultiplier = BigDecimal("1")
-
-        wheatCost = BigDecimal("10")
-        cornCost = BigDecimal("100")
-        lettuceCost = BigDecimal("1000")
-        carrotsCost = BigDecimal("10000")
-        tomatoesCost = BigDecimal("100000")
-        broccoliCost = BigDecimal("1000000")
-        onionsCost = BigDecimal("10000000")
-        potatoesCost = BigDecimal("100000000")
+        redOwned = BigDecimal("0")
+        redCost = BigDecimal("1")
+        redValue = BigDecimal("0")
+        redValueIncrease = BigDecimal("0.31")
+        redRate = BigDecimal("1.3")
+        redRateIncrease = BigDecimal("0.12")
 
         gameCompleted = false
 

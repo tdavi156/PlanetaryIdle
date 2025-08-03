@@ -1,7 +1,7 @@
 package com.github.jacks.planetaryIdle.components
 
 enum class ConfigurationType {
-    UNDEFINED, POPULATION, PLANET_RESOURCE, MULTIPLIER;
+    UNDEFINED, SCORE_RESOURCE, PLANET_RESOURCE, MULTIPLIER;
 }
 
 data class ConfigurationComponent(

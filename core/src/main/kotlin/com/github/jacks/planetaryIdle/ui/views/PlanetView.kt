@@ -9,21 +9,21 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
+import com.badlogic.gdx.scenes.scene2d.ui.TextTooltip
+import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.Align
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
-import com.github.jacks.planetaryIdle.events.QuitGameEvent
-import com.github.jacks.planetaryIdle.events.ResetGameEvent
-import com.github.jacks.planetaryIdle.events.SaveGameEvent
 import com.github.jacks.planetaryIdle.events.UpdateBuyAmountEvent
-import com.github.jacks.planetaryIdle.events.UpgradeSoilEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.ui.Buttons
 import com.github.jacks.planetaryIdle.ui.Drawables
 import com.github.jacks.planetaryIdle.ui.Labels
+import com.github.jacks.planetaryIdle.ui.Tooltips
 import com.github.jacks.planetaryIdle.ui.get
 import com.github.jacks.planetaryIdle.ui.models.PlanetModel
+import com.github.jacks.planetaryIdle.ui.models.propertyNotify
 import ktx.actors.txt
 import ktx.log.logger
 import ktx.preferences.get
@@ -55,91 +55,47 @@ class PlanetView(
     private val costNumFormat : NumberFormat = NumberFormat.getInstance()
 
     // initial values from preferences
-    private var totalPopulation = BigDecimal(preferences["totalPopulation", "10"])
-    private var availablePopulation = BigDecimal(preferences["availablePopulation", "10"])
-    private var populationGainRate = BigDecimal(preferences["populationGainRate", "0"])
-    private var buyAmount : Float = preferences["buyAmount", 1f]
+    private var goldCoins = BigDecimal(preferences["gold_coins", "5"])
+    private var productionRate = BigDecimal(preferences["production_rate", "0"])
+    private var buyAmount : Float = preferences["buy_amount", 1f]
 
-    private var wheatAmount = BigInteger(preferences["wheat_amount", "0"])
-    private var cornAmount = BigInteger(preferences["corn_amount", "0"])
-    private var lettuceAmount = BigInteger(preferences["lettuce_amount", "0"])
-    private var carrotsAmount = BigInteger(preferences["carrots_amount", "0"])
-    private var tomatoesAmount = BigInteger(preferences["tomatoes_amount", "0"])
-    private var broccoliAmount = BigInteger(preferences["broccoli_amount", "0"])
-    private var onionsAmount = BigInteger(preferences["onions_amount", "0"])
-    private var potatoesAmount = BigInteger(preferences["potatoes_amount", "0"])
+    private var redOwned = BigDecimal(preferences["red_owned", "0"])
 
-    private var wheatMultiplier = BigDecimal(preferences["wheat_multiplier", "1"])
-    private var cornMultiplier = BigDecimal(preferences["corn_multiplier", "1"])
-    private var lettuceMultiplier = BigDecimal(preferences["lettuce_multiplier", "1"])
-    private var carrotsMultiplier = BigDecimal(preferences["carrots_multiplier", "1"])
-    private var tomatoesMultiplier = BigDecimal(preferences["tomatoes_multiplier", "1"])
-    private var broccoliMultiplier = BigDecimal(preferences["broccoli_multiplier", "1"])
-    private var onionsMultiplier = BigDecimal(preferences["onions_multiplier", "1"])
-    private var potatoesMultiplier = BigDecimal(preferences["potatoes_multiplier", "1"])
+    private var redCost = BigDecimal(preferences["red_cost", "1"])
 
-    private var wheatCost = BigDecimal(preferences["wheat_cost", "10"])
-    private var cornCost = BigDecimal(preferences["corn_cost", "100"])
-    private var lettuceCost = BigDecimal(preferences["lettuce_cost", "1000"])
-    private var carrotsCost = BigDecimal(preferences["carrots_cost", "10000"])
-    private var tomatoesCost = BigDecimal(preferences["tomatoes_cost", "100000"])
-    private var broccoliCost = BigDecimal(preferences["broccoli_cost", "1000000"])
-    private var onionsCost = BigDecimal(preferences["onions_cost", "10000000"])
-    private var potatoesCost = BigDecimal(preferences["potatoes_cost", "100000000"])
+    private var redValue = BigDecimal(preferences["red_value", "0"])
+
+    private var redValueIncrease = BigDecimal(preferences["red_value_increase", "0.31"])
+
+    private var redRate = BigDecimal(preferences["red_rate", "1.3"])
+
+    private var redRateIncrease = BigDecimal(preferences["red_rate_increase", "0.12"])
 
     // tables
-    private val wheatTable : Table
-    private val cornTable : Table
-    private val lettuceTable : Table
-    private val carrotsTable : Table
-    private val tomatoesTable : Table
-    private val broccoliTable : Table
-    private val onionsTable : Table
-    private val potatoesTable : Table
 
     // buttons
     private val setBuyAmountButton : TextButton
 
-    private var wheatButton : TextButton
-    private var cornButton : TextButton
-    private var lettuceButton : TextButton
-    private var carrotsButton : TextButton
-    private var tomatoesButton : TextButton
-    private var broccoliButton : TextButton
-    private var onionsButton : TextButton
-    private var potatoesButton : TextButton
+    private var redButton : TextButton
 
-    private var soilButton : TextButton
+    // tooltips
+    private var redTooltip : TextTooltip
+
+    //private var soilButton : TextButton
 
     // labels
-    private var totalPopulationLabel : Label
-    private var availablePopulationLabel : Label
-    private var populationGainPerSecondLabel : Label
+    private var goldCoinsLabel : Label
+    private var productionRateLabel : Label
 
-    private var wheatAmountLabel : Label
-    private var cornAmountLabel : Label
-    private var lettuceAmountLabel : Label
-    private var carrotsAmountLabel : Label
-    private var tomatoesAmountLabel : Label
-    private var broccoliAmountLabel : Label
-    private var onionsAmountLabel : Label
-    private var potatoesAmountLabel : Label
-
-    private var wheatMultiplierLabel : Label
-    private var cornMultiplierLabel : Label
-    private var lettuceMultiplierLabel : Label
-    private var carrotsMultiplierLabel : Label
-    private var tomatoesMultiplierLabel : Label
-    private var broccoliMultiplierLabel : Label
-    private var onionsMultiplierLabel : Label
-    private var potatoesMultiplierLabel : Label
-
-    private var soilLabel : Label
+    //private var soilLabel : Label
 
     // images
     private var colonizationProgress : Image
 
+    private val tooltipManager = TooltipManager.getInstance()
+
     init {
+        tooltipManager.initialTime = 0f
         setFillParent(true)
         stage = getStage()
         setupNumberFormating()
@@ -148,11 +104,11 @@ class PlanetView(
         table { gameTableCell ->
             // 1st row information area
             table { tableCell ->
-                this@PlanetView.availablePopulationLabel = label("You have ${this@PlanetView.availablePopulation} available population. (AP)", Labels.DEFAULT.skinKey) { cell ->
+                this@PlanetView.goldCoinsLabel = label("You have ${this@PlanetView.goldCoins} gold coins.", Labels.DEFAULT.skinKey) { cell ->
                     cell.center().padBottom(10f)
                 }
                 row()
-                this@PlanetView.populationGainPerSecondLabel = label("You are gaining ${this@PlanetView.formatNumberWithDecimal(this@PlanetView.populationGainRate)} population per second.", Labels.DEFAULT.skinKey) { cell ->
+                this@PlanetView.productionRateLabel = label("You are growing ${this@PlanetView.formatNumberWithDecimal(this@PlanetView.productionRate)} food per second.", Labels.DEFAULT.skinKey) { cell ->
                     cell.center()
                 }
                 tableCell.expandX().top().padTop(10f).height(100f)
@@ -166,28 +122,28 @@ class PlanetView(
 
             // 2nd row buttons area
             table { tableCell ->
-                table { innerTableCell ->
-                    this@PlanetView.soilLabel = label("Improved Soil (0)", Labels.SMALL.skinKey) { cell ->
-
-                    }
-                    row()
-                    this@PlanetView.soilButton = textButton(
-                        "Reset all crops and\n" +
-                            "start over with better soil.\n" +
-                            "Unlock the next crop.",
-                        Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey
-                    ) { cell ->
-                        cell.left().width(160f).height(80f).pad(5f)
-                        isDisabled = false
-                        this.addListener(object : ChangeListener() {
-                            override fun changed(event: ChangeEvent, actor: Actor) {
-                                stage.fire(UpgradeSoilEvent())
-                            }
-                        })
-                    }
-                    innerTableCell.expandX().left().width(180f).height(90f)
-                }
-                this@PlanetView.setBuyAmountButton = textButton("Buy ${this@PlanetView.buyAmount.roundToInt()}", Buttons.BLUE_TEXT_BUTTON_SMALL.skinKey) { cell ->
+//                table { innerTableCell ->
+//                    this@PlanetView.soilLabel = label("Improved Soil (0)", Labels.SMALL.skinKey) { cell ->
+//
+//                    }
+//                    row()
+//                    this@PlanetView.soilButton = textButton(
+//                        "Reset all crops and\n" +
+//                            "start over with better soil.\n" +
+//                            "Unlock the next crop.",
+//                        Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey
+//                    ) { cell ->
+//                        cell.left().width(160f).height(80f).pad(5f)
+//                        isDisabled = false
+//                        this.addListener(object : ChangeListener() {
+//                            override fun changed(event: ChangeEvent, actor: Actor) {
+//                                stage.fire(UpgradeSoilEvent())
+//                            }
+//                        })
+//                    }
+//                    innerTableCell.expandX().left().width(180f).height(90f)
+//                }
+                this@PlanetView.setBuyAmountButton = textButton("Buy ${this@PlanetView.buyAmount.roundToInt()}", Buttons.GREY_BUTTON_SMALL.skinKey) { cell ->
                     this.addListener(object : ChangeListener() {
                         override fun changed(event: ChangeEvent, actor: Actor) {
                             when (this@PlanetView.buyAmount) {
@@ -208,6 +164,21 @@ class PlanetView(
 
             // Middle actionable area
             table { tableCell ->
+                this@PlanetView.redButton = textButton(this@PlanetView.updateButtonText("red"), Buttons.RED_BUTTON_MEDIUM.skinKey) { cell ->
+                    cell.left().width(200f).height(50f).pad(5f)
+                    isDisabled = this@PlanetView.goldCoins < this@PlanetView.redCost
+                    this@PlanetView.redTooltip = textTooltip(this@PlanetView.updateTooltipText("red"), Tooltips.DEFAULT_GREY.skinKey)
+                    this.addListener(this@PlanetView.redTooltip)
+                    this.addListener(object : ChangeListener() {
+                        override fun changed(event: ChangeEvent, actor: Actor) {
+                        log.debug { "red button pressed" }
+                        stage.fire(BuyResourceEvent("red"))
+                        }
+                    })
+                }
+
+
+                /*
                 this@PlanetView.wheatTable = table { foodTableCell ->
                     table { foodTableNameCell ->
                         label("Wheat Fields", Labels.MEDIUM.skinKey) { cell ->
@@ -418,6 +389,8 @@ class PlanetView(
                     background(skin[Drawables.BAR_GREEN_THICK_A25])
                     foodTableCell.expandX().fill().pad(0f, 10f, 0f, 10f).top()
                 }
+                */
+
                 tableCell.expand().fill().top()
             }
             row()
@@ -429,8 +402,8 @@ class PlanetView(
                     this@PlanetView.colonizationProgress = image(skin[Drawables.BAR_GREEN_THICK]) { cell ->
                         scaleX = 0f
                     }
-                    this@PlanetView.totalPopulationLabel = label(
-                        "${"%.2f".format((this@PlanetView.totalPopulation / MAX_POP_AMOUNT.toBigDecimal()).toFloat().coerceAtMost(1f) * 100f)} %"
+                    this@PlanetView.goldCoinsLabel = label(
+                        "${"%.2f".format((this@PlanetView.productionRate / MAX_POP_AMOUNT.toBigDecimal()).toFloat().coerceAtMost(1f) * 100f)} %"
                         , Labels.MEDIUM.skinKey
                     ) { cell ->
                         setAlignment(Align.center)
@@ -443,172 +416,78 @@ class PlanetView(
         }
 
         // Data Binding
-        model.onPropertyChange(PlanetModel::totalPopulationAmount) { amount -> totalPopAmountChange(amount) }
-        model.onPropertyChange(PlanetModel::availablePopulationAmount) { amount -> availablePopAmountChange(amount) }
-        model.onPropertyChange(PlanetModel::populationGainPerSecond) { amount -> popGainRateChange(amount) }
+        model.onPropertyChange(PlanetModel::goldCoins) { amount -> goldCoinAmountChanged(amount) }
+        model.onPropertyChange(PlanetModel::productionRate) { rate -> productionRateChanged(rate) }
         model.onPropertyChange(PlanetModel::buyAmount) { amount -> buyAmountChange(amount) }
 
-        model.onPropertyChange(PlanetModel::wheatAmount) { amount -> wheatAmountChange(amount) }
-        model.onPropertyChange(PlanetModel::cornAmount) { amount -> cornAmountChange(amount) }
-        model.onPropertyChange(PlanetModel::lettuceAmount) { amount -> lettuceAmountChange(amount) }
-        model.onPropertyChange(PlanetModel::carrotsAmount) { amount -> carrotsAmountChange(amount) }
-        model.onPropertyChange(PlanetModel::tomatoesAmount) { amount -> tomatoesAmountChange(amount) }
-        model.onPropertyChange(PlanetModel::broccoliAmount) { amount -> broccoliAmountChange(amount) }
-        model.onPropertyChange(PlanetModel::onionsAmount) { amount -> onionsAmountChange(amount) }
-        model.onPropertyChange(PlanetModel::potatoesAmount) { amount -> potatoesAmountChange(amount) }
-
-        model.onPropertyChange(PlanetModel::wheatMultiplier) { multiplier -> wheatMultiplierChange(multiplier) }
-        model.onPropertyChange(PlanetModel::cornMultiplier) { multiplier -> cornMultiplierChange(multiplier) }
-        model.onPropertyChange(PlanetModel::lettuceMultiplier) { multiplier -> lettuceMultiplierChange(multiplier) }
-        model.onPropertyChange(PlanetModel::carrotsMultiplier) { multiplier -> carrotsMultiplierChange(multiplier) }
-        model.onPropertyChange(PlanetModel::tomatoesMultiplier) { multiplier -> tomatoesMultiplierChange(multiplier) }
-        model.onPropertyChange(PlanetModel::broccoliMultiplier) { multiplier -> broccoliMultiplierChange(multiplier) }
-        model.onPropertyChange(PlanetModel::onionsMultiplier) { multiplier -> onionsMultiplierChange(multiplier) }
-        model.onPropertyChange(PlanetModel::potatoesMultiplier) { multiplier -> potatoesMultiplierChange(multiplier) }
-
-        model.onPropertyChange(PlanetModel::wheatCost) { cost -> wheatCostChange(cost) }
-        model.onPropertyChange(PlanetModel::cornCost) { cost -> cornCostChange(cost) }
-        model.onPropertyChange(PlanetModel::lettuceCost) { cost -> lettuceCostChange(cost) }
-        model.onPropertyChange(PlanetModel::carrotsCost) { cost -> carrotsCostChange(cost) }
-        model.onPropertyChange(PlanetModel::tomatoesCost) { cost -> tomatoesCostChange(cost) }
-        model.onPropertyChange(PlanetModel::broccoliCost) { cost -> broccoliCostChange(cost) }
-        model.onPropertyChange(PlanetModel::onionsCost) { cost -> onionsCostChange(cost) }
-        model.onPropertyChange(PlanetModel::potatoesCost) { cost -> potatoesCostChange(cost) }
+        model.onPropertyChange(PlanetModel::redOwned) { amount -> redOwnedChanged(amount) }
+        model.onPropertyChange(PlanetModel::redCost) { amount -> redCostChanged(amount) }
+        model.onPropertyChange(PlanetModel::redValue) { amount -> redValueChanged(amount) }
+        model.onPropertyChange(PlanetModel::redRate) { amount -> redRateChanged(amount) }
 
         model.onPropertyChange(PlanetModel::gameCompleted) { completed -> popupGameCompleted(completed) }
+
+        // commit tooltip manager properties
+        tooltipManager.hideAll()
     }
 
-    private fun totalPopAmountChange(amount : BigDecimal) {
+    private fun updateButtonText(buttonName : String) : String {
+        return "Crops/s: $redRate (+$redRateIncrease) \n" +
+            "$redCost gold"
+    }
+
+    private fun updateTooltipText(buttonName : String) : String {
+        return "Name: \n" +
+            "Amount: $redOwned \n" +
+            "Value: $redValueIncrease"
+    }
+
+    /*
+    private fun goldCoinAmountChanged(amount : BigDecimal) {
         val popPercent = (amount / MAX_POP_AMOUNT.toBigDecimal()).toFloat().coerceAtMost(1f)
-        totalPopulationLabel.txt = "${"%.2f".format(popPercent * 100f)} %"
+        goldCoinsLabel.txt = "${"%.2f".format(popPercent * 100f)} %"
         colonizationProgress.scaleX = popPercent
         checkForGameEnd(amount)
     }
-    private fun availablePopAmountChange(amount : BigDecimal) {
-        availablePopulation = amount
+     */
+
+    private fun goldCoinAmountChanged(amount : BigDecimal) {
+        goldCoins = amount
         if (amount < BigDecimal("1000")) {
-            availablePopulationLabel.txt = "You have ${formatNumberWithDecimal(amount)} available population. (AP)"
+            goldCoinsLabel.txt = "You have ${formatNumberWithDecimal(amount)} gold coins."
         } else {
-            availablePopulationLabel.txt = "You have ${formatExponent2Dec(amount)} available population. (AP)"
+            goldCoinsLabel.txt = "You have ${formatExponent2Dec(amount)} gold coins."
         }
         updateAvailable(amount)
     }
-    private fun popGainRateChange(amount : BigDecimal) {
+    private fun productionRateChanged(amount : BigDecimal) {
         if (amount < BigDecimal("1000")) {
-            populationGainPerSecondLabel.txt = "You are gaining ${formatNumberWithDecimal(amount)} population per second."
+            productionRateLabel.txt = "You are producing ${formatNumberWithDecimal(amount)} food per second."
         } else {
-            populationGainPerSecondLabel.txt = "You are gaining ${formatExponent2Dec(amount)} population per second."
+            productionRateLabel.txt = "You are producing ${formatExponent2Dec(amount)} food per second."
         }
     }
     private fun buyAmountChange(amount : Float) {
         setBuyAmountButton.txt = "Buy ${amount.roundToInt()}"
     }
     private fun updateAvailable(amount : BigDecimal) {
-        wheatButton.isDisabled = amount < wheatCost
-        cornButton.isDisabled = amount < cornCost
-        lettuceButton.isDisabled = amount < lettuceCost
-        carrotsButton.isDisabled = amount < carrotsCost
-        tomatoesButton.isDisabled = amount < tomatoesCost
-        broccoliButton.isDisabled = amount < broccoliCost
-        onionsButton.isDisabled = amount < onionsCost
-        potatoesButton.isDisabled = amount < potatoesCost
+        redButton.isDisabled = amount < redCost
     }
-    private fun wheatAmountChange(amount : BigInteger) {
-        wheatAmountLabel.txt = amount.toString()
-        if (amount > BigInteger("0")) {
-            cornTable.isVisible = true
+    private fun redOwnedChanged(amount : BigDecimal) {
+        updateButtonText("red")
+        updateTooltipText("red")
+        if (amount > BigDecimal("5")) {
+            //cornTable.isVisible = true
         }
     }
-    private fun cornAmountChange(amount : BigInteger) {
-        cornAmountLabel.txt = amount.toString()
-        if (amount > BigInteger("0")) {
-            lettuceTable.isVisible = true
-        }
+    private fun redCostChanged(cost : BigDecimal) {
+        redCost = cost
     }
-    private fun lettuceAmountChange(amount : BigInteger) {
-        lettuceAmountLabel.txt = amount.toString()
-        if (amount > BigInteger("0")) {
-            carrotsTable.isVisible = true
-        }
+    private fun redValueChanged(value : BigDecimal) {
+        redValue = value
     }
-    private fun carrotsAmountChange(amount : BigInteger) {
-        carrotsAmountLabel.txt = amount.toString()
-        if (amount > BigInteger("0")) {
-            tomatoesTable.isVisible = true
-        }
-    }
-    private fun tomatoesAmountChange(amount : BigInteger) {
-        tomatoesAmountLabel.txt = amount.toString()
-        if (amount > BigInteger("0")) {
-            broccoliTable.isVisible = true
-        }
-    }
-    private fun broccoliAmountChange(amount : BigInteger) {
-        broccoliAmountLabel.txt = amount.toString()
-        if (amount > BigInteger("0")) {
-            onionsTable.isVisible = true
-        }
-    }
-    private fun onionsAmountChange(amount : BigInteger) {
-        onionsAmountLabel.txt = amount.toString()
-        if (amount > BigInteger("0")) {
-            potatoesTable.isVisible = true
-        }
-    }
-    private fun potatoesAmountChange(amount : BigInteger) {
-        potatoesAmountLabel.txt = amount.toString()
-        if (amount > BigInteger("0")) {
-            // next unlock
-        }
-    }
-    private fun wheatMultiplierChange(multiplier : BigDecimal) { wheatMultiplierLabel.txt = "x${multNumFormat.format(multiplier)}" }
-    private fun cornMultiplierChange(multiplier : BigDecimal) { cornMultiplierLabel.txt = "x${multNumFormat.format(multiplier)}" }
-    private fun lettuceMultiplierChange(multiplier : BigDecimal) { lettuceMultiplierLabel.txt = "x${multNumFormat.format(multiplier)}" }
-    private fun carrotsMultiplierChange(multiplier : BigDecimal) { carrotsMultiplierLabel.txt = "x${multNumFormat.format(multiplier)}" }
-    private fun tomatoesMultiplierChange(multiplier : BigDecimal) { tomatoesMultiplierLabel.txt = "x${multNumFormat.format(multiplier)}" }
-    private fun broccoliMultiplierChange(multiplier : BigDecimal) { broccoliMultiplierLabel.txt = "x${multNumFormat.format(multiplier)}" }
-    private fun onionsMultiplierChange(multiplier : BigDecimal) { onionsMultiplierLabel.txt = "x${multNumFormat.format(multiplier)}" }
-    private fun potatoesMultiplierChange(multiplier : BigDecimal) { potatoesMultiplierLabel.txt = "x${multNumFormat.format(multiplier)}" }
-
-    private fun wheatCostChange(cost : BigDecimal) {
-        wheatCost = cost
-        wheatButton.isDisabled = availablePopulation < wheatCost
-        wheatButton.txt = formatBuyButton(cost)
-    }
-    private fun cornCostChange(cost : BigDecimal) {
-        cornCost = cost
-        cornButton.isDisabled = availablePopulation < cornCost
-        cornButton.txt = formatBuyButton(cost)
-    }
-    private fun lettuceCostChange(cost : BigDecimal) {
-        lettuceCost = cost
-        lettuceButton.isDisabled = availablePopulation < lettuceCost
-        lettuceButton.txt = formatBuyButton(cost)
-    }
-    private fun carrotsCostChange(cost : BigDecimal) {
-        carrotsCost = cost
-        carrotsButton.isDisabled = availablePopulation < carrotsCost
-        carrotsButton.txt = formatBuyButton(cost)
-    }
-    private fun tomatoesCostChange(cost : BigDecimal) {
-        tomatoesCost = cost
-        tomatoesButton.isDisabled = availablePopulation < tomatoesCost
-        tomatoesButton.txt = formatBuyButton(cost)
-    }
-    private fun broccoliCostChange(cost : BigDecimal) {
-        broccoliCost = cost
-        broccoliButton.isDisabled = availablePopulation < broccoliCost
-        broccoliButton.txt = formatBuyButton(cost)
-    }
-    private fun onionsCostChange(cost : BigDecimal) {
-        onionsCost = cost
-        onionsButton.isDisabled = availablePopulation < onionsCost
-        onionsButton.txt = formatBuyButton(cost)
-    }
-    private fun potatoesCostChange(cost : BigDecimal) {
-        potatoesCost = cost
-        potatoesButton.isDisabled = availablePopulation < potatoesCost
-        potatoesButton.txt = formatBuyButton(cost)
+    private fun redRateChanged(rate : BigDecimal) {
+        redRate = rate
     }
     private fun formatBuyButton(cost : BigDecimal) : String {
         return if (cost > BigDecimal(999)) {
