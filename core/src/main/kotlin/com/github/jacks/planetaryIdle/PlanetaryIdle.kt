@@ -66,4 +66,8 @@ class PlanetaryIdle : KtxGame<KtxScreen>(), EventListener {
         return true
     }
 
+    companion object {
+        const val FRAMES_PER_SECOND_FLOAT : Float = 60f
+        const val FRAMES_PER_SECOND_INT : Int = 60
+    }
 }

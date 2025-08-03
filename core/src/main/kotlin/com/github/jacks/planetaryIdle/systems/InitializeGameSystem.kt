@@ -55,6 +55,7 @@ class InitializeGameSystem(
                             valueScaling = config.valueScaling
                             baseRate = config.baseRate
                             rateScaling = config.rateScaling
+                            currentTicks = config.currentTicks
                             isUnlocked = config.isUnlocked
                         }
                     }
@@ -150,6 +151,7 @@ class InitializeGameSystem(
             this["red_cost"] = "1"
             this["red_value"] = "0"
             this["red_rate"] = "1.3"
+            this["red_current_ticks"] = 0
             this["red_unlocked"] = true
 
         }
@@ -171,6 +173,7 @@ class InitializeGameSystem(
             valueScaling = BigDecimal("0.04"),
             baseRate = BigDecimal("0.92"),
             rateScaling = BigDecimal("0.9"),
+            currentTicks = preferences["red_current_ticks", 0],
             isUnlocked = preferences["red_unlocked", true]
         )
         val ORANGE_CONFIGURATION = ResourceConfiguration(

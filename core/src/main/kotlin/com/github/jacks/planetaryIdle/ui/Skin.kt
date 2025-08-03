@@ -9,7 +9,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable
 import ktx.assets.disposeSafely
 import ktx.scene2d.Scene2DSkin
 import ktx.style.SkinDsl
-import ktx.style.get
 import ktx.style.label
 import ktx.style.set
 import ktx.style.skin
@@ -198,7 +197,6 @@ private fun @SkinDsl Skin.loadLabels(skin : Skin) {
 private fun @SkinDsl Skin.loadTooltips(skin: Skin) {
     textTooltip(Tooltips.DEFAULT_GREY.skinKey) {
         background = skin[Drawables.BACKGROUND_GREY]
-        label = skin[Labels.DEFAULT.skinKey]
     }
 }
 
@@ -380,18 +378,18 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         fontColor = Color(1f, 1f, 1f, 1f)
     }
     textButton(Buttons.GREY_BUTTON_SMALL.skinKey) {
-        up = skin[Drawables.BUTTON_GREY_UP]
-        down = skin[Drawables.BUTTON_GREY_UP]
+        up = skin[Drawables.BUTTON_BLACK_OVER]
+        down = skin[Drawables.BUTTON_BLACK_UP]
         over = skin[Drawables.BUTTON_GREY_UP]
-        disabled = skin[Drawables.BUTTON_GREY_UP]
+        disabled = skin[Drawables.BUTTON_BLACK_UP]
         font = skin[Fonts.SMALL]
         fontColor = Color(1f, 1f, 1f, 1f)
     }
     textButton(Buttons.GREY_BUTTON_MEDIUM.skinKey) {
-        up = skin[Drawables.BUTTON_GREY_UP]
-        down = skin[Drawables.BUTTON_GREY_UP]
+        up = skin[Drawables.BUTTON_BLACK_OVER]
+        down = skin[Drawables.BUTTON_BLACK_UP]
         over = skin[Drawables.BUTTON_GREY_UP]
-        disabled = skin[Drawables.BUTTON_GREY_UP]
+        disabled = skin[Drawables.BUTTON_BLACK_UP]
         font = skin[Fonts.MEDIUM]
         fontColor = Color(1f, 1f, 1f, 1f)
     }

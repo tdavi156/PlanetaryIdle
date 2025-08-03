@@ -21,7 +21,7 @@ class BackgroundView(skin : Skin) : KTable, Table(skin) {
             skin.add(PIXMAP_KEY, TextureRegionDrawable(
                 Texture(
                     Pixmap(1, 1, Pixmap.Format.RGBA8888).apply {
-                        this.drawPixel(0, 0, Color.rgba8888(0.12f, 0.12f, 0.12f, 1f))
+                        this.drawPixel(0, 0, Color.rgba8888(0.37f, 0.3f, 0.22f, 1f))
                     }
                 )
             ))

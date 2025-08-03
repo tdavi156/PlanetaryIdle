@@ -79,7 +79,7 @@ class PlanetView(
     private var redButton : TextButton
 
     // tooltips
-    private var redTooltip : TextTooltip
+    //private var redTooltip : TextTooltip
 
     //private var soilButton : TextButton
 
@@ -115,7 +115,7 @@ class PlanetView(
             }
 
             row()
-            image(skin[Drawables.BAR_GREEN_THIN]) { cell ->
+            image(skin[Drawables.BAR_BLACK_THIN]) { cell ->
                 cell.expandX().fillX().height(2f)
             }
             row()
@@ -164,15 +164,14 @@ class PlanetView(
 
             // Middle actionable area
             table { tableCell ->
-                this@PlanetView.redButton = textButton(this@PlanetView.updateButtonText("red"), Buttons.RED_BUTTON_MEDIUM.skinKey) { cell ->
-                    cell.left().width(200f).height(50f).pad(5f)
+                this@PlanetView.redButton = textButton(this@PlanetView.updateButtonText("red"), Buttons.RED_BUTTON_SMALL.skinKey) { cell ->
+                    cell.expand().top().left().width(210f).height(55f).pad(3f,5f,0f,3f)
                     isDisabled = this@PlanetView.goldCoins < this@PlanetView.redCost
-                    this@PlanetView.redTooltip = textTooltip(this@PlanetView.updateTooltipText("red"), Tooltips.DEFAULT_GREY.skinKey)
-                    this.addListener(this@PlanetView.redTooltip)
+                    //this@PlanetView.redTooltip = textTooltip(this@PlanetView.updateTooltipText("red"), Tooltips.DEFAULT_GREY.skinKey)
+                    //this.addListener(this@PlanetView.redTooltip)
                     this.addListener(object : ChangeListener() {
                         override fun changed(event: ChangeEvent, actor: Actor) {
-                        log.debug { "red button pressed" }
-                        stage.fire(BuyResourceEvent("red"))
+                            stage.fire(BuyResourceEvent("red"))
                         }
                     })
                 }
@@ -391,7 +390,7 @@ class PlanetView(
                 }
                 */
 
-                tableCell.expand().fill().top()
+                tableCell.expand().fill().top().left()
             }
             row()
 
@@ -412,7 +411,7 @@ class PlanetView(
                 }
                 tableCell.expandX().top().height(40f).padTop(15f)
             }
-            gameTableCell.expand().fill().pad(5f, 180f, 0f, 0f)
+            gameTableCell.expand().fill().pad(5f, 0f, 5f, 200f)
         }
 
         // Data Binding
@@ -532,7 +531,7 @@ class PlanetView(
     }
 
     companion object {
-        private val log = logger<PlanetView>()
+        val log = logger<PlanetView>()
         private val MAX_POP_AMOUNT = BigInteger("1000000000000")
     }
 }

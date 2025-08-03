@@ -48,7 +48,7 @@ class MenuView(
         // UI
         table { menuTableCell ->
             this@MenuView.planetButton = textButton("Planet", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
+                cell.top().left().width(200f).height(45f).pad(4f,2f,2f,2f)
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         // this@MenuView.currentView = "MenuView"
@@ -58,7 +58,7 @@ class MenuView(
             }
             row()
             this@MenuView.galaxyButton = textButton("Galaxy", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
+                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = false
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
@@ -69,32 +69,32 @@ class MenuView(
             }
             row()
             this@MenuView.automationButton = textButton("Automation", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
+                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = true
             }
             row()
             this@MenuView.challengesButton = textButton("Challenges", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
+                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = true
             }
             row()
             this@MenuView.achievementsButton = textButton("Achievements", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
+                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = true
             }
             row()
             this@MenuView.statisticsButton = textButton("Statistics", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
+                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = true
             }
             row()
             this@MenuView.settingsButton = textButton("Settings", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
+                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = true
             }
             row()
             this@MenuView.resetButton = textButton("Reset Game", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
+                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = false
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
@@ -105,7 +105,7 @@ class MenuView(
             }
             row()
             this@MenuView.quitButton = textButton("Quit Game", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
-                cell.top().left().width(180f).height(40f)
+                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         log.debug { "Save Game" }
@@ -115,7 +115,7 @@ class MenuView(
                     }
                 })
             }
-            menuTableCell.expand().top().right().width(180f)
+            menuTableCell.expand().top().right().width(204f)
         }
 
 

@@ -1,5 +1,7 @@
 package com.github.jacks.planetaryIdle.components
 
+import com.github.jacks.planetaryIdle.PlanetaryIdle.Companion.FRAMES_PER_SECOND_FLOAT
+import com.github.jacks.planetaryIdle.PlanetaryIdle.Companion.FRAMES_PER_SECOND_INT
 import java.math.*
 
 enum class ScoreResources(
@@ -32,6 +34,7 @@ data class ResourceConfiguration(
     val valueScaling: BigDecimal = BigDecimal("0"),
     val baseRate : BigDecimal = BigDecimal("0"),
     val rateScaling : BigDecimal = BigDecimal("0"),
+    val currentTicks : Int = 0,
     val isUnlocked: Boolean = false
 )
 
@@ -44,6 +47,7 @@ data class ResourceComponent(
     var valueScaling: BigDecimal = BigDecimal("0"),
     var baseRate : BigDecimal = BigDecimal("0"),
     var rateScaling : BigDecimal = BigDecimal("0"),
+    var currentTicks : Int = 0,
     var isUnlocked : Boolean = false
 ) {
 
@@ -55,4 +59,10 @@ data class ResourceComponent(
 
     val rate : BigDecimal
         get() = baseRate + (rateScaling * amountOwned)
+
+    val tickCount : Int
+        get() {
+            return if (rate.toInt() >= FRAMES_PER_SECOND_INT) { 1 }
+            else { (BigDecimal("1").divide((rate / BigDecimal(FRAMES_PER_SECOND_INT)), 0, RoundingMode.UP)).toInt() }
+        }
 }
