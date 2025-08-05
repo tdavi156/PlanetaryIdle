@@ -9,10 +9,12 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable
 import ktx.assets.disposeSafely
 import ktx.scene2d.Scene2DSkin
 import ktx.style.SkinDsl
+import ktx.style.defaultStyle
 import ktx.style.label
 import ktx.style.set
 import ktx.style.skin
 import ktx.style.textButton
+import ktx.style.textField
 import ktx.style.textTooltip
 
 enum class Drawables(
@@ -81,7 +83,9 @@ enum class Labels {
     LARGE,
     X_LARGE,
     XX_LARGE,
-    TITLE;
+    TITLE,
+
+    SMALL_RED_BGD;
 
     val skinKey = this.name.lowercase()
 }
@@ -101,12 +105,6 @@ enum class Fonts(
 
     val skinKey = "Font_${this.name.lowercase()}"
     val fontPath = "fonts/${this.atlasRegionKey}.fnt"
-}
-
-enum class Tooltips {
-    DEFAULT_GREY;
-
-    val skinKey = this.name.lowercase()
 }
 
 enum class Buttons {
@@ -145,7 +143,6 @@ fun loadSkin() {
     Scene2DSkin.defaultSkin = skin(TextureAtlas("ui/ui.atlas")) { skin ->
         loadFonts(skin)
         loadLabels(skin)
-        loadTooltips(skin)
         loadButtons(skin)
     }
 }
@@ -192,11 +189,11 @@ private fun @SkinDsl Skin.loadLabels(skin : Skin) {
         font = skin[Fonts.TITLE]
         fontColor = Color.WHITE
     }
-}
 
-private fun @SkinDsl Skin.loadTooltips(skin: Skin) {
-    textTooltip(Tooltips.DEFAULT_GREY.skinKey) {
-        background = skin[Drawables.BACKGROUND_GREY]
+    label(Labels.SMALL_RED_BGD.skinKey) {
+        font = skin[Fonts.TITLE]
+        fontColor = Color.WHITE
+        background = skin.get(Drawables.BUTTON_RED_UP)
     }
 }
 

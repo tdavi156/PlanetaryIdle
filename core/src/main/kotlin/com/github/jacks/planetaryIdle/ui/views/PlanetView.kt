@@ -3,15 +3,16 @@ package com.github.jacks.planetaryIdle.ui.views
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
-import com.badlogic.gdx.scenes.scene2d.ui.TextTooltip
 import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
@@ -20,10 +21,8 @@ import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.ui.Buttons
 import com.github.jacks.planetaryIdle.ui.Drawables
 import com.github.jacks.planetaryIdle.ui.Labels
-import com.github.jacks.planetaryIdle.ui.Tooltips
 import com.github.jacks.planetaryIdle.ui.get
 import com.github.jacks.planetaryIdle.ui.models.PlanetModel
-import com.github.jacks.planetaryIdle.ui.models.propertyNotify
 import ktx.actors.txt
 import ktx.log.logger
 import ktx.preferences.get
@@ -78,14 +77,13 @@ class PlanetView(
 
     private var redButton : TextButton
 
-    // tooltips
-    //private var redTooltip : TextTooltip
-
     //private var soilButton : TextButton
 
     // labels
     private var goldCoinsLabel : Label
     private var productionRateLabel : Label
+
+    private var redToolTip : Label = label("", Labels.SMALL_RED_BGD.skinKey) { isVisible = false}
 
     //private var soilLabel : Label
 
@@ -167,13 +165,24 @@ class PlanetView(
                 this@PlanetView.redButton = textButton(this@PlanetView.updateButtonText("red"), Buttons.RED_BUTTON_SMALL.skinKey) { cell ->
                     cell.expand().top().left().width(210f).height(55f).pad(3f,5f,0f,3f)
                     isDisabled = this@PlanetView.goldCoins < this@PlanetView.redCost
-                    //this@PlanetView.redTooltip = textTooltip(this@PlanetView.updateTooltipText("red"), Tooltips.DEFAULT_GREY.skinKey)
-                    //this.addListener(this@PlanetView.redTooltip)
                     this.addListener(object : ChangeListener() {
                         override fun changed(event: ChangeEvent, actor: Actor) {
                             stage.fire(BuyResourceEvent("red"))
                         }
                     })
+                    this.addListener(object : ClickListener() {
+                        override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                            this@PlanetView.redToolTip.isVisible = true
+                        }
+
+                        override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                            this@PlanetView.redToolTip.isVisible = false
+                        }
+                    })
+                }
+                this@PlanetView.redToolTip = label("sample text", Labels.SMALL_RED_BGD.skinKey) { cell ->
+                    cell.expand().top().left().width(150f).height(80f).pad(3f, 10f, 0f, 0f)
+                    this.isVisible = false
                 }
 
 
