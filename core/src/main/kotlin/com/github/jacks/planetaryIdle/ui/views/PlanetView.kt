@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.InputEvent
+import com.badlogic.gdx.scenes.scene2d.InputListener
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
@@ -83,7 +84,7 @@ class PlanetView(
     private var goldCoinsLabel : Label
     private var productionRateLabel : Label
 
-    private var redToolTip : Label = label("", Labels.SMALL_RED_BGD.skinKey) { isVisible = false}
+    private var redToolTip : Label
 
     //private var soilLabel : Label
 
@@ -167,21 +168,24 @@ class PlanetView(
                     isDisabled = this@PlanetView.goldCoins < this@PlanetView.redCost
                     this.addListener(object : ChangeListener() {
                         override fun changed(event: ChangeEvent, actor: Actor) {
+                            this@PlanetView.redToolTip.isVisible = isOver
                             stage.fire(BuyResourceEvent("red"))
                         }
                     })
-                    this.addListener(object : ClickListener() {
+                    this.addListener(object : InputListener() {
                         override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-                            this@PlanetView.redToolTip.isVisible = true
+                            this@PlanetView.redToolTip.isVisible = isOver
+                            super.enter(event, x, y, pointer, fromActor)
                         }
-
                         override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
-                            this@PlanetView.redToolTip.isVisible = false
+                            this@PlanetView.redToolTip.isVisible = isOver
+                            super.exit(event, x, y, pointer, toActor)
                         }
                     })
                 }
-                this@PlanetView.redToolTip = label("sample text", Labels.SMALL_RED_BGD.skinKey) { cell ->
-                    cell.expand().top().left().width(150f).height(80f).pad(3f, 10f, 0f, 0f)
+                this@PlanetView.redToolTip = label(this@PlanetView.updateTooltipText("red"), Labels.SMALL_RED_BGD.skinKey) { cell ->
+                    cell.expand().top().left().width(150f).height(65f).pad(3f, 10f, 0f, 0f)
+                    this.setAlignment(Align.center)
                     this.isVisible = false
                 }
 
@@ -429,9 +433,9 @@ class PlanetView(
         model.onPropertyChange(PlanetModel::buyAmount) { amount -> buyAmountChange(amount) }
 
         model.onPropertyChange(PlanetModel::redOwned) { amount -> redOwnedChanged(amount) }
-        model.onPropertyChange(PlanetModel::redCost) { amount -> redCostChanged(amount) }
-        model.onPropertyChange(PlanetModel::redValue) { amount -> redValueChanged(amount) }
-        model.onPropertyChange(PlanetModel::redRate) { amount -> redRateChanged(amount) }
+        model.onPropertyChange(PlanetModel::redCost) { cost -> redCostChanged(cost) }
+        model.onPropertyChange(PlanetModel::redValue) { value -> redValueChanged(value) }
+        model.onPropertyChange(PlanetModel::redRate) { rate -> redRateChanged(rate) }
 
         model.onPropertyChange(PlanetModel::gameCompleted) { completed -> popupGameCompleted(completed) }
 
@@ -440,8 +444,17 @@ class PlanetView(
     }
 
     private fun updateButtonText(buttonName : String) : String {
-        return "Crops/s: $redRate (+$redRateIncrease) \n" +
-            "$redCost gold"
+        return when (buttonName) {
+            "red" -> {
+                "Crops/s: $redRate (+$redRateIncrease)\n$redCost gold"
+            }
+            "yellow" -> {
+                "Crops/s: $redRate (+$redRateIncrease)\n$redCost gold"
+            }
+            else -> {
+                "Invalid Button Name"
+            }
+        }
     }
 
     private fun updateTooltipText(buttonName : String) : String {

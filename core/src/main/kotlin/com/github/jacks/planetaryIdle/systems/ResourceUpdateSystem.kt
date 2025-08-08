@@ -27,6 +27,7 @@ class ResourceUpdateSystem(
     private val resourceEntities =  world.family(allOf = arrayOf(ResourceComponent::class))
     //private val multiplierEntity = world.family(allOf = arrayOf(UpgradeComponent::class, AchievementComponent::class)).firstOrNull()
 
+    /*
     override fun onTick() {
         var goldCoins = BigDecimal(0)
         //val upgMultiplier = multiplierEntity?.let { upgradeComponents[it].multiplier.toBigDecimal() }
@@ -39,6 +40,7 @@ class ResourceUpdateSystem(
         }
         stage.fire(ResourceUpdateEvent(goldCoins))
     }
+     */
 
     override fun onTickEntity(entity: Entity) {
         val rscComp = resourceComponents[entity]

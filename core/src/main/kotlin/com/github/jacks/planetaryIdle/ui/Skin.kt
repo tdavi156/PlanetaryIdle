@@ -17,6 +17,12 @@ import ktx.style.textButton
 import ktx.style.textField
 import ktx.style.textTooltip
 
+enum class Colors(
+    val color : Color
+) {
+    GREY(Color(0.1f, 0.1f, 0.1f, 1f))
+}
+
 enum class Drawables(
     val atlasKey : String
 ) {
@@ -191,8 +197,8 @@ private fun @SkinDsl Skin.loadLabels(skin : Skin) {
     }
 
     label(Labels.SMALL_RED_BGD.skinKey) {
-        font = skin[Fonts.TITLE]
-        fontColor = Color.WHITE
+        font = skin[Fonts.TINY]
+        fontColor = Color.BLACK
         background = skin.get(Drawables.BUTTON_RED_UP)
     }
 }
