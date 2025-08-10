@@ -49,8 +49,9 @@ class ResourceUpdateSystem(
         if (rscComp.currentTicks < rscComp.tickCount) { rscComp.currentTicks++ }
         if (rscComp.currentTicks >= rscComp.tickCount) {
             // may need to set it to 1 here to account for the tick that we process on
+            rscComp.amountSold = rscComp.amountSold.plus(BigDecimal("1"))
             rscComp.currentTicks = 0
-            stage.fire(ResourceUpdateEvent(rscComp.value))
+            stage.fire(ResourceUpdateEvent(rscComp))
         }
     }
 

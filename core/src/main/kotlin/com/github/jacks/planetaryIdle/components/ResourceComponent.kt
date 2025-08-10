@@ -1,6 +1,5 @@
 package com.github.jacks.planetaryIdle.components
 
-import com.github.jacks.planetaryIdle.PlanetaryIdle.Companion.FRAMES_PER_SECOND_FLOAT
 import com.github.jacks.planetaryIdle.PlanetaryIdle.Companion.FRAMES_PER_SECOND_INT
 import java.math.*
 
@@ -47,15 +46,16 @@ data class ResourceComponent(
     var valueScaling: BigDecimal = BigDecimal("0"),
     var baseRate : BigDecimal = BigDecimal("0"),
     var rateScaling : BigDecimal = BigDecimal("0"),
+    var amountSold : BigDecimal = BigDecimal("0"),
     var currentTicks : Int = 0,
     var isUnlocked : Boolean = false
 ) {
 
     val cost : BigDecimal
-        get() = (baseCost + costScaling).pow(amountOwned.toInt())
+        get() = baseCost.multiply((ONE + costScaling).pow(amountOwned.toInt()))
 
     val value : BigDecimal
-        get() = baseValue + (valueScaling * amountOwned)
+        get() = baseValue + (valueScaling * amountSold)
 
     val rate : BigDecimal
         get() = baseRate + (rateScaling * amountOwned)
@@ -63,6 +63,10 @@ data class ResourceComponent(
     val tickCount : Int
         get() {
             return if (rate.toInt() >= FRAMES_PER_SECOND_INT) { 1 }
-            else { (BigDecimal("1").divide((rate / BigDecimal(FRAMES_PER_SECOND_INT)), 0, RoundingMode.UP)).toInt() }
+            else { (ONE.divide((rate / BigDecimal(FRAMES_PER_SECOND_INT)), 0, RoundingMode.UP)).toInt() }
         }
+
+    companion object {
+        val ONE = BigDecimal("1")
+    }
 }

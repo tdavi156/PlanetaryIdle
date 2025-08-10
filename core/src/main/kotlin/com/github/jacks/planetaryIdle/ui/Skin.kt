@@ -9,18 +9,24 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable
 import ktx.assets.disposeSafely
 import ktx.scene2d.Scene2DSkin
 import ktx.style.SkinDsl
-import ktx.style.defaultStyle
 import ktx.style.label
 import ktx.style.set
 import ktx.style.skin
 import ktx.style.textButton
-import ktx.style.textField
-import ktx.style.textTooltip
 
 enum class Colors(
     val color : Color
 ) {
-    GREY(Color(0.1f, 0.1f, 0.1f, 1f))
+    RED(Color(0.835f, 0.306f, 0.306f, 1f)),
+    ORANGE(Color(0.878f, 0.6f, 0.322f, 1f)),
+    YELLOW(Color(0.878f, 0.878f, 0.322f, 1f)),
+    GREEN(Color(0.6f, 0.878f, 0.322f, 1f)),
+    BLUE(Color(0.322f, 0.6f, 0.878f, 1f)),
+    PURPLE(Color(0.6f, 0.322f, 0.878f, 1f)),
+    PINK(Color(0.878f, 0.322f, 0.878f, 1f)),
+    BROWN(Color(0.482f, 0.306f, 0.22f, 1f)),
+    WHITE(Color(0.902f, 0.902f, 0.902f, 1f)),
+    BLACK(Color(0.149f, 0.149f, 0.149f, 1f));
 }
 
 enum class Drawables(
@@ -91,7 +97,19 @@ enum class Labels {
     XX_LARGE,
     TITLE,
 
-    SMALL_RED_BGD;
+    RED,
+    ORANGE,
+    YELLOW,
+    GREEN,
+    BLUE,
+    PURPLE,
+    PINK,
+    BROWN,
+    WHITE,
+    BLACK,
+
+    SMALL_RED_BGD,
+    SMALL_ORANGE_BGD;
 
     val skinKey = this.name.lowercase()
 }
@@ -100,14 +118,18 @@ enum class Fonts(
     val atlasRegionKey : String,
     val scaling : Float
 ) {
-    TINY("default_12pt", 1f),
-    SMALL("default_16pt", 1f),
-    MEDIUM("default_20pt", 1f),
+    TINY("regular_12pt", 1f),
+    SMALL("regular_16pt", 1f),
+    MEDIUM("regular_20pt", 1f),
     DEFAULT("default_24pt", 1f),
     LARGE("default_28pt", 1f),
     X_LARGE("default_32pt", 1f),
     XX_LARGE("default_40pt", 1f),
-    TITLE("default_64pt", 1f);
+    TITLE("default_64pt", 1f),
+
+    TINY_BUTTON("regular_12pt", 1f),
+    SMALL_BUTTON("regular_16pt", 1f),
+    MEDIUM_BUTTON("regular_20pt", 1f);
 
     val skinKey = "Font_${this.name.lowercase()}"
     val fontPath = "fonts/${this.atlasRegionKey}.fnt"
@@ -196,10 +218,58 @@ private fun @SkinDsl Skin.loadLabels(skin : Skin) {
         fontColor = Color.WHITE
     }
 
+    // value labels
+    label(Labels.RED.skinKey) {
+        font = skin[Fonts.DEFAULT]
+        fontColor = Colors.RED.color
+    }
+    label(Labels.ORANGE.skinKey) {
+        font = skin[Fonts.DEFAULT]
+        fontColor = Colors.ORANGE.color
+    }
+    label(Labels.YELLOW.skinKey) {
+        font = skin[Fonts.DEFAULT]
+        fontColor = Colors.YELLOW.color
+    }
+    label(Labels.GREEN.skinKey) {
+        font = skin[Fonts.DEFAULT]
+        fontColor = Colors.GREEN.color
+    }
+    label(Labels.BLUE.skinKey) {
+        font = skin[Fonts.DEFAULT]
+        fontColor = Colors.BLUE.color
+    }
+    label(Labels.PURPLE.skinKey) {
+        font = skin[Fonts.DEFAULT]
+        fontColor = Colors.PURPLE.color
+    }
+    label(Labels.PINK.skinKey) {
+        font = skin[Fonts.DEFAULT]
+        fontColor = Colors.PINK.color
+    }
+    label(Labels.BROWN.skinKey) {
+        font = skin[Fonts.DEFAULT]
+        fontColor = Colors.BROWN.color
+    }
+    label(Labels.WHITE.skinKey) {
+        font = skin[Fonts.DEFAULT]
+        fontColor = Colors.WHITE.color
+    }
+    label(Labels.BLACK.skinKey) {
+        font = skin[Fonts.DEFAULT]
+        fontColor = Colors.BLACK.color
+    }
+
+    // tooltip labels
     label(Labels.SMALL_RED_BGD.skinKey) {
-        font = skin[Fonts.TINY]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color.BLACK
         background = skin.get(Drawables.BUTTON_RED_UP)
+    }
+    label(Labels.SMALL_ORANGE_BGD.skinKey) {
+        font = skin[Fonts.SMALL_BUTTON]
+        fontColor = Color.BLACK
+        background = skin.get(Drawables.BUTTON_ORANGE_UP)
     }
 }
 
@@ -209,7 +279,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         down = skin[Drawables.BUTTON_RED_DISABLED]
         over = skin[Drawables.BUTTON_RED_OVER]
         disabled = skin[Drawables.BUTTON_RED_DISABLED]
-        font = skin[Fonts.SMALL]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color(0f, 0f, 0f, 1f)
     }
     textButton(Buttons.RED_BUTTON_MEDIUM.skinKey) {
@@ -225,7 +295,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         down = skin[Drawables.BUTTON_ORANGE_DISABLED]
         over = skin[Drawables.BUTTON_ORANGE_OVER]
         disabled = skin[Drawables.BUTTON_ORANGE_DISABLED]
-        font = skin[Fonts.SMALL]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color(0f, 0f, 0f, 1f)
     }
     textButton(Buttons.ORANGE_BUTTON_MEDIUM.skinKey) {
@@ -241,7 +311,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         down = skin[Drawables.BUTTON_YELLOW_DISABLED]
         over = skin[Drawables.BUTTON_YELLOW_OVER]
         disabled = skin[Drawables.BUTTON_YELLOW_DISABLED]
-        font = skin[Fonts.SMALL]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color(0f, 0f, 0f, 1f)
     }
     textButton(Buttons.YELLOW_BUTTON_MEDIUM.skinKey) {
@@ -257,7 +327,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         down = skin[Drawables.BUTTON_GREEN_DISABLED]
         over = skin[Drawables.BUTTON_GREEN_OVER]
         disabled = skin[Drawables.BUTTON_GREEN_DISABLED]
-        font = skin[Fonts.SMALL]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color(0f, 0f, 0f, 1f)
     }
     textButton(Buttons.GREEN_BUTTON_MEDIUM.skinKey) {
@@ -273,7 +343,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         down = skin[Drawables.BUTTON_LIGHT_BLUE_DISABLED]
         over = skin[Drawables.BUTTON_LIGHT_BLUE_OVER]
         disabled = skin[Drawables.BUTTON_LIGHT_BLUE_DISABLED]
-        font = skin[Fonts.SMALL]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color(0f, 0f, 0f, 1f)
     }
     textButton(Buttons.LIGHT_BLUE_BUTTON_MEDIUM.skinKey) {
@@ -289,7 +359,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         down = skin[Drawables.BUTTON_BLUE_DISABLED]
         over = skin[Drawables.BUTTON_BLUE_OVER]
         disabled = skin[Drawables.BUTTON_BLUE_DISABLED]
-        font = skin[Fonts.SMALL]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color(0f, 0f, 0f, 1f)
     }
     textButton(Buttons.BLUE_BUTTON_MEDIUM.skinKey) {
@@ -305,7 +375,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         down = skin[Drawables.BUTTON_PURPLE_DISABLED]
         over = skin[Drawables.BUTTON_PURPLE_OVER]
         disabled = skin[Drawables.BUTTON_PURPLE_DISABLED]
-        font = skin[Fonts.SMALL]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color(0f, 0f, 0f, 1f)
     }
     textButton(Buttons.PURPLE_BUTTON_MEDIUM.skinKey) {
@@ -321,7 +391,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         down = skin[Drawables.BUTTON_PINK_DISABLED]
         over = skin[Drawables.BUTTON_PINK_OVER]
         disabled = skin[Drawables.BUTTON_PINK_DISABLED]
-        font = skin[Fonts.SMALL]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color(0f, 0f, 0f, 1f)
     }
     textButton(Buttons.PINK_BUTTON_MEDIUM.skinKey) {
@@ -337,7 +407,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         down = skin[Drawables.BUTTON_BROWN_DISABLED]
         over = skin[Drawables.BUTTON_BROWN_OVER]
         disabled = skin[Drawables.BUTTON_BROWN_DISABLED]
-        font = skin[Fonts.SMALL]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color(0f, 0f, 0f, 1f)
     }
     textButton(Buttons.BROWN_BUTTON_MEDIUM.skinKey) {
@@ -353,7 +423,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         down = skin[Drawables.BUTTON_WHITE_DISABLED]
         over = skin[Drawables.BUTTON_WHITE_OVER]
         disabled = skin[Drawables.BUTTON_WHITE_DISABLED]
-        font = skin[Fonts.SMALL]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color(0f, 0f, 0f, 1f)
     }
     textButton(Buttons.WHITE_BUTTON_MEDIUM.skinKey) {
@@ -369,7 +439,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         down = skin[Drawables.BUTTON_BLACK_DISABLED]
         over = skin[Drawables.BUTTON_BLACK_OVER]
         disabled = skin[Drawables.BUTTON_BLACK_DISABLED]
-        font = skin[Fonts.SMALL]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color(1f, 1f, 1f, 1f)
     }
     textButton(Buttons.BLACK_BUTTON_MEDIUM.skinKey) {
@@ -385,7 +455,7 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
         down = skin[Drawables.BUTTON_BLACK_UP]
         over = skin[Drawables.BUTTON_GREY_UP]
         disabled = skin[Drawables.BUTTON_BLACK_UP]
-        font = skin[Fonts.SMALL]
+        font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color(1f, 1f, 1f, 1f)
     }
     textButton(Buttons.GREY_BUTTON_MEDIUM.skinKey) {

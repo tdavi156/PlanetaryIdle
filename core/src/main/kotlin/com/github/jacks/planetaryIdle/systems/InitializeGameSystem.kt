@@ -149,11 +149,17 @@ class InitializeGameSystem(
 
             this["red_owned"] = "0"
             this["red_cost"] = "1"
-            this["red_value"] = "0"
+            this["red_value"] = "0.31"
             this["red_rate"] = "1.3"
             this["red_current_ticks"] = 0
             this["red_unlocked"] = true
 
+            this["orange_owned"] = "0"
+            this["orange_cost"] = "100"
+            this["orange_value"] = "2.4"
+            this["orange_rate"] = "0.95"
+            this["orange_current_ticks"] = 0
+            this["orange_unlocked"] = false
         }
     }
 
@@ -168,34 +174,36 @@ class InitializeGameSystem(
             name = "red",
             amountOwned = BigDecimal(preferences["red_owned", "0"]),
             baseCost = BigDecimal("1"),
-            costScaling = BigDecimal("0.25"),
+            costScaling = BigDecimal("0.2"),
             baseValue = BigDecimal("0.31"),
             valueScaling = BigDecimal("0.04"),
-            baseRate = BigDecimal("0.92"),
-            rateScaling = BigDecimal("0.9"),
+            baseRate = BigDecimal("1.3"),
+            rateScaling = BigDecimal("0.17"),
             currentTicks = preferences["red_current_ticks", 0],
             isUnlocked = preferences["red_unlocked", true]
         )
         val ORANGE_CONFIGURATION = ResourceConfiguration(
             name = "orange",
             amountOwned = BigDecimal(preferences["orange_owned", "0"]),
-            baseCost = BigDecimal("1"),
-            costScaling = BigDecimal("1"),
-            baseValue = BigDecimal("0.31"),
-            valueScaling = BigDecimal("1"),
-            baseRate = BigDecimal("1.3"),
-            rateScaling = BigDecimal("1"),
+            baseCost = BigDecimal("100"),
+            costScaling = BigDecimal("0.225"),
+            baseValue = BigDecimal("2.4"),
+            valueScaling = BigDecimal("0.09"),
+            baseRate = BigDecimal("0.95"),
+            rateScaling = BigDecimal("0.11"),
+            currentTicks = preferences["orange_current_ticks", 0],
             isUnlocked = preferences["orange_unlocked", false]
         )
         val YELLOW_CONFIGURATION = ResourceConfiguration(
             name = "yellow",
             amountOwned = BigDecimal(preferences["yellow_owned", "0"]),
-            baseCost = BigDecimal("1"),
-            costScaling = BigDecimal("1"),
-            baseValue = BigDecimal("0.31"),
-            valueScaling = BigDecimal("1"),
-            baseRate = BigDecimal("1.3"),
-            rateScaling = BigDecimal("1"),
+            baseCost = BigDecimal("1000"),
+            costScaling = BigDecimal("0.25"),
+            baseValue = BigDecimal("18.9"),
+            valueScaling = BigDecimal("0.23"),
+            baseRate = BigDecimal("0.67"),
+            rateScaling = BigDecimal("0.07"),
+            currentTicks = preferences["yellow_current_ticks", 0],
             isUnlocked = preferences["yellow_unlocked", false]
         )
         val GREEN_CONFIGURATION = ResourceConfiguration(

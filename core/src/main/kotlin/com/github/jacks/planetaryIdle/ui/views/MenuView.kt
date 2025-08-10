@@ -115,7 +115,7 @@ class MenuView(
                     }
                 })
             }
-            menuTableCell.expand().top().right().width(204f)
+            menuTableCell.expand().top().right().width(204f).padTop(60f)
         }
 
 

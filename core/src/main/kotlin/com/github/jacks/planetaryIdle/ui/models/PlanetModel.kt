@@ -5,9 +5,7 @@ import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.github.jacks.planetaryIdle.components.AchievementComponent
 import com.github.jacks.planetaryIdle.components.ResourceComponent
-import com.github.jacks.planetaryIdle.components.UpgradeComponent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
@@ -46,9 +44,16 @@ class PlanetModel(
     var redOwned by propertyNotify(BigDecimal(preferences["red_owned", "0"]))
     var redCost by propertyNotify(BigDecimal(preferences["red_cost", "1"]))
     var redValue by propertyNotify(BigDecimal(preferences["red_value", "0"]))
-    var redValueIncrease by propertyNotify(BigDecimal(preferences["red_value_increase", "0.31"]))
+    var redValueIncrease by propertyNotify(BigDecimal(preferences["red_value_increase", "0.04"]))
     var redRate by propertyNotify(BigDecimal(preferences["red_rate", "1.3"]))
-    var redRateIncrease by propertyNotify(BigDecimal(preferences["red_rate_increase", "0.12"]))
+    var redRateIncrease by propertyNotify(BigDecimal(preferences["red_rate_increase", "0.17"]))
+
+    var orangeOwned by propertyNotify(BigDecimal(preferences["orange_owned", "0"]))
+    var orangeCost by propertyNotify(BigDecimal(preferences["orange_cost", "100"]))
+    var orangeValue by propertyNotify(BigDecimal(preferences["orange_value", "0"]))
+    var orangeValueIncrease by propertyNotify(BigDecimal(preferences["orange_value_increase", "2.4"]))
+    var orangeRate by propertyNotify(BigDecimal(preferences["orange_rate", "0.95"]))
+    var orangeRateIncrease by propertyNotify(BigDecimal(preferences["orange_rate_increase", "0.11"]))
 
     var gameCompleted by propertyNotify(false)
 
@@ -64,12 +69,14 @@ class PlanetModel(
                 updateGoldCoins(rscComp)
                 updateModelAmount(rscComp)
                 updateResourceComponent(rscComp)
-                updateModel(rscComp)
+                updateModelCost(rscComp)
+                updateModelValue(rscComp)
+                updateModelRate(rscComp)
                 updateModelProductionRate()
             }
             is ResourceUpdateEvent -> {
-                val amount = event.amount
-                goldCoins += amount
+                updateModelValue(event.rscComp)
+                goldCoins += event.rscComp.value
                 preferences.flush { this["gold_coins"] = goldCoins.toString() }
             }
             is UpgradeSoilEvent -> {
@@ -109,14 +116,6 @@ class PlanetModel(
     }
 
     /**
-     * Update the ResourceComponent value for:
-     * amount of a given ResourceComponent
-     */
-    private fun updateResourceComponent(rscComp : ResourceComponent) {
-        rscComp.amountOwned += buyAmount.toBigDecimal()
-    }
-
-    /**
      * Update the Model value for:
      * goldCoins given the purchased ResourceComponent
      */
@@ -135,6 +134,69 @@ class PlanetModel(
             "red" -> {
                 redOwned += bigBuyAmount
                 preferences.flush { this["red_owned"] = redOwned.toString() }
+            }
+            "orange" -> {
+                orangeOwned += bigBuyAmount
+                preferences.flush { this["orange_owned"] = orangeOwned.toString() }
+            }
+        }
+    }
+
+    /**
+     * Update the ResourceComponent value for:
+     * amount of a given ResourceComponent
+     */
+    private fun updateResourceComponent(rscComp : ResourceComponent) {
+        rscComp.amountOwned += buyAmount.toBigDecimal()
+    }
+
+    /**
+     * Update the Model values for:
+     * cost for a given ResourceComponent
+     */
+    private fun updateModelCost(rscComp : ResourceComponent) {
+        when (rscComp.name) {
+            "red" -> {
+                redCost = rscComp.cost
+                preferences.flush {
+                    this["red_cost"] = redCost.toString()
+                }
+            }
+            "orange" -> {
+                orangeCost = rscComp.cost
+                preferences.flush {
+                    this["orange_cost"] = orangeCost.toString()
+                }
+            }
+        }
+    }
+
+    /**
+     * Update the Model values for:
+     * value for a given ResourceComponent
+     */
+    private fun updateModelValue(rscComp : ResourceComponent) {
+        when (rscComp.name) {
+            "red" -> {
+                redValue = rscComp.value
+            }
+            "orange" -> {
+                orangeValue = rscComp.value
+            }
+        }
+    }
+
+    /**
+     * Update the Model values for:
+     * rate for a given ResourceComponent
+     */
+    private fun updateModelRate(rscComp : ResourceComponent) {
+        when (rscComp.name) {
+            "red" -> {
+                redRate = rscComp.rate
+            }
+            "orange" -> {
+                orangeRate = rscComp.rate
             }
         }
     }
@@ -161,24 +223,7 @@ class PlanetModel(
     private fun updateModel() {
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
-            updateModel(rscComp)
-        }
-    }
-
-    /**
-     * Update the Model values for:
-     * cost for a given ResourceComponent
-     */
-    private fun updateModel(rscComp : ResourceComponent) {
-        when (rscComp.name) {
-            "red" -> {
-                redCost = rscComp.cost
-                redValueIncrease = rscComp.value
-                redRate = rscComp.rate
-                preferences.flush {
-                    this["red_cost"] = redCost.toString()
-                }
-            }
+            updateModelCost(rscComp)
         }
     }
 

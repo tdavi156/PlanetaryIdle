@@ -2,6 +2,7 @@ package com.github.jacks.planetaryIdle.events
 
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.quillraven.fleks.Entity
 import java.math.BigDecimal
 
@@ -17,7 +18,7 @@ class ResetGameEvent : Event()
 
 class GameCompletedEvent : Event()
 
-class ResourceUpdateEvent(val amount : BigDecimal) : Event()
+class ResourceUpdateEvent(val rscComp : ResourceComponent) : Event()
 class BuyResourceEvent(val resourceType : String) : Event()
 class UpdateBuyAmountEvent(val amount : Float) : Event()
 class UpgradeSoilEvent(val amount : Int = 1) : Event()

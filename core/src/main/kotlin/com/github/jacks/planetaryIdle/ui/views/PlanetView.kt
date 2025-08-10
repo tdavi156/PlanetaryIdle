@@ -13,7 +13,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
@@ -60,31 +59,47 @@ class PlanetView(
     private var buyAmount : Float = preferences["buy_amount", 1f]
 
     private var redOwned = BigDecimal(preferences["red_owned", "0"])
-
     private var redCost = BigDecimal(preferences["red_cost", "1"])
-
-    private var redValue = BigDecimal(preferences["red_value", "0"])
-
+    private var redValue = BigDecimal(preferences["red_value", "0.31"])
     private var redValueIncrease = BigDecimal(preferences["red_value_increase", "0.31"])
-
     private var redRate = BigDecimal(preferences["red_rate", "1.3"])
+    private var redRateIncrease = BigDecimal(preferences["red_rate_increase", "0.17"])
 
-    private var redRateIncrease = BigDecimal(preferences["red_rate_increase", "0.12"])
+    private var orangeOwned = BigDecimal(preferences["orange_owned", "0"])
+    private var orangeCost = BigDecimal(preferences["orange_cost", "100"])
+    private var orangeValue = BigDecimal(preferences["orange_value", "2.4"])
+    private var orangeValueIncrease = BigDecimal(preferences["orange_value_increase", "2.4"])
+    private var orangeRate = BigDecimal(preferences["orange_rate", "0.95"])
+    private var orangeRateIncrease = BigDecimal(preferences["orange_rate_increase", "0.11"])
 
     // tables
 
     // buttons
-    private val setBuyAmountButton : TextButton
+    //private val setBuyAmountButton : TextButton
 
     private var redButton : TextButton
+    private var orangeButton : TextButton
 
     //private var soilButton : TextButton
 
     // labels
     private var goldCoinsLabel : Label
     private var productionRateLabel : Label
+    private var productionRateProgressLabel : Label
 
-    private var redToolTip : Label
+    private var redValueLabel : Label
+    private var orangeValueLabel : Label
+    private var yellowValueLabel : Label
+//    private var greenValueLabel : Label
+//    private var blueValueLabel : Label
+//    private var purpleValueLabel : Label
+//    private var pinkValueLabel : Label
+//    private var brownValueLabel : Label
+//    private var whiteValueLabel : Label
+//    private var blackValueLabel : Label
+
+    private lateinit var redToolTip : Label
+    private lateinit var orangeToolTip : Label
 
     //private var soilLabel : Label
 
@@ -103,14 +118,18 @@ class PlanetView(
         table { gameTableCell ->
             // 1st row information area
             table { tableCell ->
-                this@PlanetView.goldCoinsLabel = label("You have ${this@PlanetView.goldCoins} gold coins.", Labels.DEFAULT.skinKey) { cell ->
-                    cell.center().padBottom(10f)
+                this@PlanetView.redValueLabel = label("0.00", Labels.RED.skinKey) { cell ->
+                    cell.center().pad(3f)
                 }
-                row()
-                this@PlanetView.productionRateLabel = label("You are growing ${this@PlanetView.formatNumberWithDecimal(this@PlanetView.productionRate)} food per second.", Labels.DEFAULT.skinKey) { cell ->
-                    cell.center()
+                label(" + ", Labels.WHITE.skinKey)
+                this@PlanetView.orangeValueLabel = label("0.00", Labels.ORANGE.skinKey) { cell ->
+                    cell.center().pad(3f)
                 }
-                tableCell.expandX().top().padTop(10f).height(100f)
+                label(" + ", Labels.WHITE.skinKey)
+                this@PlanetView.yellowValueLabel = label("0.00", Labels.YELLOW.skinKey) { cell ->
+                    cell.center().pad(3f)
+                }
+                tableCell.expandX().top().height(40f)
             }
 
             row()
@@ -142,268 +161,97 @@ class PlanetView(
 //                    }
 //                    innerTableCell.expandX().left().width(180f).height(90f)
 //                }
-                this@PlanetView.setBuyAmountButton = textButton("Buy ${this@PlanetView.buyAmount.roundToInt()}", Buttons.GREY_BUTTON_SMALL.skinKey) { cell ->
-                    this.addListener(object : ChangeListener() {
-                        override fun changed(event: ChangeEvent, actor: Actor) {
-                            when (this@PlanetView.buyAmount) {
-                                1f -> this@PlanetView.buyAmount = 10f
-                                10f -> this@PlanetView.buyAmount = 100f
-                                100f -> this@PlanetView.buyAmount = 1f
-                                else -> this@PlanetView.buyAmount = 1f
-                            }
-                            log.debug { "BuyAmount: ${this@PlanetView.buyAmount}" }
-                            stage.fire(UpdateBuyAmountEvent(this@PlanetView.buyAmount))
-                        }
-                    })
-                    cell.expandX().top().right().width(90f).height(30f).pad(10f, 10f, 20f, 10f)
-                }
-                tableCell.expandX().fillX().top().padTop(10f).height(80f)
+//                this@PlanetView.setBuyAmountButton = textButton("Buy ${this@PlanetView.buyAmount.roundToInt()}", Buttons.GREY_BUTTON_SMALL.skinKey) { cell ->
+//                    this.addListener(object : ChangeListener() {
+//                        override fun changed(event: ChangeEvent, actor: Actor) {
+//                            when (this@PlanetView.buyAmount) {
+//                                1f -> this@PlanetView.buyAmount = 10f
+//                                10f -> this@PlanetView.buyAmount = 100f
+//                                100f -> this@PlanetView.buyAmount = 1f
+//                                else -> this@PlanetView.buyAmount = 1f
+//                            }
+//                            log.debug { "BuyAmount: ${this@PlanetView.buyAmount}" }
+//                            stage.fire(UpdateBuyAmountEvent(this@PlanetView.buyAmount))
+//                        }
+//                    })
+//                    cell.expandX().top().right().width(90f).height(30f).pad(10f, 10f, 20f, 10f)
+//                }
+//                tableCell.expandX().fillX().top().padTop(10f).height(80f)
             }
             row()
 
             // Middle actionable area
             table { tableCell ->
-                this@PlanetView.redButton = textButton(this@PlanetView.updateButtonText("red"), Buttons.RED_BUTTON_SMALL.skinKey) { cell ->
-                    cell.expand().top().left().width(210f).height(55f).pad(3f,5f,0f,3f)
-                    isDisabled = this@PlanetView.goldCoins < this@PlanetView.redCost
-                    this.addListener(object : ChangeListener() {
-                        override fun changed(event: ChangeEvent, actor: Actor) {
-                            this@PlanetView.redToolTip.isVisible = isOver
-                            stage.fire(BuyResourceEvent("red"))
-                        }
-                    })
-                    this.addListener(object : InputListener() {
-                        override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-                            this@PlanetView.redToolTip.isVisible = isOver
-                            super.enter(event, x, y, pointer, fromActor)
-                        }
-                        override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
-                            this@PlanetView.redToolTip.isVisible = isOver
-                            super.exit(event, x, y, pointer, toActor)
-                        }
-                    })
-                }
-                this@PlanetView.redToolTip = label(this@PlanetView.updateTooltipText("red"), Labels.SMALL_RED_BGD.skinKey) { cell ->
-                    cell.expand().top().left().width(150f).height(65f).pad(3f, 10f, 0f, 0f)
-                    this.setAlignment(Align.center)
-                    this.isVisible = false
-                }
-
-
-                /*
-                this@PlanetView.wheatTable = table { foodTableCell ->
-                    table { foodTableNameCell ->
-                        label("Wheat Fields", Labels.MEDIUM.skinKey) { cell ->
-                            cell.left().pad(0f, 10f, 0f, 15f)
-                        }
-                        this@PlanetView.wheatMultiplierLabel = label("x${this@PlanetView.multNumFormat.format(this@PlanetView.wheatMultiplier)}", Labels.SMALL.skinKey) { cell ->
-                            cell.expand().left()
-                        }
-                        foodTableNameCell.left().width(200f)
-                    }
-                    this@PlanetView.wheatAmountLabel = label(this@PlanetView.amtNumFormat.format(this@PlanetView.wheatAmount), Labels.MEDIUM.skinKey) { cell ->
-                        cell.expandX().left()
-                    }
-                    this@PlanetView.wheatButton = textButton(this@PlanetView.formatBuyButton(this@PlanetView.wheatCost), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
-                        cell.right().width(200f).height(50f).pad(5f)
-                        isDisabled = this@PlanetView.availablePopulation < this@PlanetView.wheatCost
+                table { buttonTableCell ->
+                    this@PlanetView.redButton = textButton(this@PlanetView.updateButtonText("red"), Buttons.RED_BUTTON_SMALL.skinKey) { cell ->
+                        cell.expand().top().left().width(210f).height(55f).pad(3f,5f,3f,0f)
+                        isDisabled = this@PlanetView.goldCoins < this@PlanetView.redCost
                         this.addListener(object : ChangeListener() {
                             override fun changed(event: ChangeEvent, actor: Actor) {
-                                stage.fire(BuyResourceEvent("wheat"))
+                                this@PlanetView.redToolTip.isVisible = isOver
+                                stage.fire(BuyResourceEvent("red"))
+                            }
+                        })
+                        this.addListener(object : InputListener() {
+                            override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                                this@PlanetView.redToolTip.isVisible = isOver
+                                super.enter(event, x, y, pointer, fromActor)
+                            }
+                            override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                                this@PlanetView.redToolTip.isVisible = isOver
+                                super.exit(event, x, y, pointer, toActor)
                             }
                         })
                     }
-                    foodTableCell.expandX().fill().pad(0f, 10f, 0f, 10f).top()
-                }
-                row()
-                this@PlanetView.cornTable = table { foodTableCell ->
-                    table { foodTableNameCell ->
-                        label("Corn Fields", Labels.MEDIUM.skinKey) { cell ->
-                            cell.left().pad(0f, 10f, 0f, 15f)
-                        }
-                        this@PlanetView.cornMultiplierLabel = label("x${this@PlanetView.multNumFormat.format(this@PlanetView.cornMultiplier)}", Labels.SMALL.skinKey) { cell ->
-                            cell.expand().left()
-                        }
-                        foodTableNameCell.left().width(200f)
-                    }
-                    this@PlanetView.cornAmountLabel = label(this@PlanetView.amtNumFormat.format(this@PlanetView.cornAmount), Labels.MEDIUM.skinKey) { cell ->
-                        cell.expandX().left()
-                    }
-                    this@PlanetView.cornButton = textButton(this@PlanetView.formatBuyButton(this@PlanetView.cornCost), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
-                        cell.right().width(200f).height(50f).pad(5f)
-                        isDisabled = this@PlanetView.availablePopulation < this@PlanetView.cornCost
+                    row()
+                    this@PlanetView.orangeButton = textButton(this@PlanetView.updateButtonText("orange"), Buttons.ORANGE_BUTTON_SMALL.skinKey) { cell ->
+                        cell.expand().top().left().width(210f).height(55f).pad(3f,5f,3f,0f)
+                        isVisible = false
+                        isDisabled = this@PlanetView.goldCoins < this@PlanetView.orangeCost
                         this.addListener(object : ChangeListener() {
                             override fun changed(event: ChangeEvent, actor: Actor) {
-                                stage.fire(BuyResourceEvent("corn"))
+                                this@PlanetView.orangeToolTip.isVisible = isOver
+                                stage.fire(BuyResourceEvent("orange"))
+                            }
+                        })
+                        this.addListener(object : InputListener() {
+                            override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                                this@PlanetView.orangeToolTip.isVisible = isOver
+                                super.enter(event, x, y, pointer, fromActor)
+                            }
+                            override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                                this@PlanetView.orangeToolTip.isVisible = isOver
+                                super.exit(event, x, y, pointer, toActor)
                             }
                         })
                     }
-                    isVisible = false
-                    background(skin[Drawables.BAR_GREEN_THICK_A25])
-                    foodTableCell.expandX().fill().pad(0f, 10f, 0f, 10f).top()
+                    buttonTableCell.expand().fill().top().left().pad(5f).width(230f)
                 }
-                row()
-                this@PlanetView.lettuceTable = table { foodTableCell ->
-                    table { foodTableNameCell ->
-                        label("Lettuce Fields", Labels.MEDIUM.skinKey) { cell ->
-                            cell.left().pad(0f, 10f, 0f, 15f)
-                        }
-                        this@PlanetView.lettuceMultiplierLabel = label("x${this@PlanetView.multNumFormat.format(this@PlanetView.lettuceMultiplier)}", Labels.SMALL.skinKey) { cell ->
-                            cell.expand().left()
-                        }
-                        foodTableNameCell.left().width(200f)
+                table { tooltipTableCell ->
+                    this@PlanetView.redToolTip = label(this@PlanetView.updateTooltipText("red"), Labels.SMALL_RED_BGD.skinKey) { cell ->
+                        cell.expand().top().left().width(150f).height(65f).pad(0f, 5f, 0f, 0f)
+                        this.setAlignment(Align.center)
+                        this.isVisible = false
                     }
-                    this@PlanetView.lettuceAmountLabel = label(this@PlanetView.amtNumFormat.format(this@PlanetView.lettuceAmount), Labels.MEDIUM.skinKey) { cell ->
-                        cell.expandX().left()
+                    row()
+                    this@PlanetView.orangeToolTip = label(this@PlanetView.updateTooltipText("orange"), Labels.SMALL_ORANGE_BGD.skinKey) { cell ->
+                        cell.expand().top().left().width(150f).height(65f).pad(0f, 5f, 0f, 0f)
+                        this.setAlignment(Align.center)
+                        this.isVisible = false
                     }
-                    this@PlanetView.lettuceButton = textButton(this@PlanetView.formatBuyButton(this@PlanetView.lettuceCost), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
-                        cell.right().width(200f).height(50f).pad(5f)
-                        isDisabled = this@PlanetView.availablePopulation < this@PlanetView.lettuceCost
-                        this.addListener(object : ChangeListener() {
-                            override fun changed(event: ChangeEvent, actor: Actor) {
-                                stage.fire(BuyResourceEvent("lettuce"))
-                            }
-                        })
-                    }
-                    isVisible = false
-                    foodTableCell.expandX().fill().pad(0f, 10f, 0f, 10f).top()
+                    tooltipTableCell.expand().fill().top().left().width(230f)
                 }
-                row()
-                this@PlanetView.carrotsTable = table { foodTableCell ->
-                    table { foodTableNameCell ->
-                        label("Carrot Fields", Labels.MEDIUM.skinKey) { cell ->
-                            cell.left().pad(0f, 10f, 0f, 15f)
-                        }
-                        this@PlanetView.carrotsMultiplierLabel = label("x${this@PlanetView.multNumFormat.format(this@PlanetView.carrotsMultiplier)}", Labels.SMALL.skinKey) { cell ->
-                            cell.expand().left()
-                        }
-                        foodTableNameCell.left().width(200f)
+                table { infoTableCell ->
+                    this@PlanetView.goldCoinsLabel = label("You have ${this@PlanetView.goldCoins} gold coins.", Labels.DEFAULT.skinKey) { cell ->
+                        cell.center().padBottom(10f)
                     }
-                    this@PlanetView.carrotsAmountLabel = label(this@PlanetView.amtNumFormat.format(this@PlanetView.carrotsAmount), Labels.MEDIUM.skinKey) { cell ->
-                        cell.expandX().left()
+                    row()
+                    this@PlanetView.productionRateLabel = label("You are growing ${this@PlanetView.formatNumberWithDecimal(this@PlanetView.productionRate)} food per second.", Labels.DEFAULT.skinKey) { cell ->
+                        cell.center()
                     }
-                    this@PlanetView.carrotsButton = textButton(this@PlanetView.formatBuyButton(this@PlanetView.carrotsCost), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
-                        cell.right().width(200f).height(50f).pad(5f)
-                        isDisabled = this@PlanetView.availablePopulation < this@PlanetView.carrotsCost
-                        this.addListener(object : ChangeListener() {
-                            override fun changed(event: ChangeEvent, actor: Actor) {
-                                stage.fire(BuyResourceEvent("carrots"))
-                            }
-                        })
-                    }
-                    isVisible = false
-                    background(skin[Drawables.BAR_GREEN_THICK_A25])
-                    foodTableCell.expandX().fill().pad(0f, 10f, 0f, 10f).top()
+                    infoTableCell.expand().fill().top().left()
                 }
-                row()
-                this@PlanetView.tomatoesTable = table { foodTableCell ->
-                    table { foodTableNameCell ->
-                        label("Tomato Fields", Labels.MEDIUM.skinKey) { cell ->
-                            cell.left().pad(0f, 10f, 0f, 15f)
-                        }
-                        this@PlanetView.tomatoesMultiplierLabel = label("x${this@PlanetView.multNumFormat.format(this@PlanetView.tomatoesMultiplier)}", Labels.SMALL.skinKey) { cell ->
-                            cell.expand().left()
-                        }
-                        foodTableNameCell.left().width(200f)
-                    }
-                    this@PlanetView.tomatoesAmountLabel = label(this@PlanetView.amtNumFormat.format(this@PlanetView.tomatoesAmount), Labels.MEDIUM.skinKey) { cell ->
-                        cell.expandX().left()
-                    }
-                    this@PlanetView.tomatoesButton = textButton(this@PlanetView.formatBuyButton(this@PlanetView.tomatoesCost), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
-                        cell.right().width(200f).height(50f).pad(5f)
-                        isDisabled = this@PlanetView.availablePopulation < this@PlanetView.tomatoesCost
-                        this.addListener(object : ChangeListener() {
-                            override fun changed(event: ChangeEvent, actor: Actor) {
-                                stage.fire(BuyResourceEvent("tomatoes"))
-                            }
-                        })
-                    }
-                    isVisible = false
-                    foodTableCell.expandX().fill().pad(0f, 10f, 0f, 10f).top()
-                }
-                row()
-                this@PlanetView.broccoliTable = table { foodTableCell ->
-                    table { foodTableNameCell ->
-                        label("Broccoli Fields", Labels.MEDIUM.skinKey) { cell ->
-                            cell.left().pad(0f, 10f, 0f, 15f)
-                        }
-                        this@PlanetView.broccoliMultiplierLabel = label("x${this@PlanetView.multNumFormat.format(this@PlanetView.broccoliMultiplier)}", Labels.SMALL.skinKey) { cell ->
-                            cell.expand().left()
-                        }
-                        foodTableNameCell.left().width(200f)
-                    }
-                    this@PlanetView.broccoliAmountLabel = label(this@PlanetView.amtNumFormat.format(this@PlanetView.broccoliAmount), Labels.MEDIUM.skinKey) { cell ->
-                        cell.expandX().left()
-                    }
-                    this@PlanetView.broccoliButton = textButton(this@PlanetView.formatBuyButton(this@PlanetView.broccoliCost), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
-                        cell.right().width(200f).height(50f).pad(5f)
-                        isDisabled = this@PlanetView.availablePopulation < this@PlanetView.broccoliCost
-                        this.addListener(object : ChangeListener() {
-                            override fun changed(event: ChangeEvent, actor: Actor) {
-                                stage.fire(BuyResourceEvent("broccoli"))
-                            }
-                        })
-                    }
-                    isVisible = false
-                    background(skin[Drawables.BAR_GREEN_THICK_A25])
-                    foodTableCell.expandX().fill().pad(0f, 10f, 0f, 10f).top()
-                }
-                row()
-                this@PlanetView.onionsTable = table { foodTableCell ->
-                    table { foodTableNameCell ->
-                        label("Onion Fields", Labels.MEDIUM.skinKey) { cell ->
-                            cell.left().pad(0f, 10f, 0f, 15f)
-                        }
-                        this@PlanetView.onionsMultiplierLabel = label("x${this@PlanetView.multNumFormat.format(this@PlanetView.onionsMultiplier)}", Labels.SMALL.skinKey) { cell ->
-                            cell.expand().left()
-                        }
-                        foodTableNameCell.left().width(200f)
-                    }
-                    this@PlanetView.onionsAmountLabel = label(this@PlanetView.amtNumFormat.format(this@PlanetView.onionsAmount), Labels.MEDIUM.skinKey) { cell ->
-                        cell.expandX().left()
-                    }
-                    this@PlanetView.onionsButton = textButton(this@PlanetView.formatBuyButton(this@PlanetView.onionsCost), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
-                        cell.right().width(200f).height(50f).pad(5f)
-                        isDisabled = this@PlanetView.availablePopulation < this@PlanetView.onionsCost
-                        this.addListener(object : ChangeListener() {
-                            override fun changed(event: ChangeEvent, actor: Actor) {
-                                stage.fire(BuyResourceEvent("onions"))
-                            }
-                        })
-                    }
-                    isVisible = false
-                    foodTableCell.expandX().fill().pad(0f, 10f, 0f, 10f).top()
-                }
-                row()
-                this@PlanetView.potatoesTable = table { foodTableCell ->
-                    table { foodTableNameCell ->
-                        label("Potato Fields", Labels.MEDIUM.skinKey) { cell ->
-                            cell.left().pad(0f, 10f, 0f, 15f)
-                        }
-                        this@PlanetView.potatoesMultiplierLabel = label("x${this@PlanetView.multNumFormat.format(this@PlanetView.potatoesMultiplier)}", Labels.SMALL.skinKey) { cell ->
-                            cell.expand().left()
-                        }
-                        foodTableNameCell.left().width(200f)
-                    }
-                    this@PlanetView.potatoesAmountLabel = label(this@PlanetView.amtNumFormat.format(this@PlanetView.potatoesAmount), Labels.MEDIUM.skinKey) { cell ->
-                        cell.expandX().left()
-                    }
-                    this@PlanetView.potatoesButton = textButton(this@PlanetView.formatBuyButton(this@PlanetView.potatoesCost), Buttons.GREEN_TEXT_BUTTON_SMALL.skinKey) { cell ->
-                        cell.right().width(200f).height(50f).pad(5f)
-                        isDisabled = this@PlanetView.availablePopulation < this@PlanetView.potatoesCost
-                        this.addListener(object : ChangeListener() {
-                            override fun changed(event: ChangeEvent, actor: Actor) {
-                                stage.fire(BuyResourceEvent("potatoes"))
-                            }
-                        })
-                    }
-                    isVisible = false
-                    background(skin[Drawables.BAR_GREEN_THICK_A25])
-                    foodTableCell.expandX().fill().pad(0f, 10f, 0f, 10f).top()
-                }
-                */
-
-                tableCell.expand().fill().top().left()
+                tableCell.expandY().fillY().top().left()
             }
             row()
 
@@ -414,7 +262,7 @@ class PlanetView(
                     this@PlanetView.colonizationProgress = image(skin[Drawables.BAR_GREEN_THICK]) { cell ->
                         scaleX = 0f
                     }
-                    this@PlanetView.goldCoinsLabel = label(
+                    this@PlanetView.productionRateProgressLabel = label(
                         "${"%.2f".format((this@PlanetView.productionRate / MAX_POP_AMOUNT.toBigDecimal()).toFloat().coerceAtMost(1f) * 100f)} %"
                         , Labels.MEDIUM.skinKey
                     ) { cell ->
@@ -437,6 +285,11 @@ class PlanetView(
         model.onPropertyChange(PlanetModel::redValue) { value -> redValueChanged(value) }
         model.onPropertyChange(PlanetModel::redRate) { rate -> redRateChanged(rate) }
 
+        model.onPropertyChange(PlanetModel::orangeOwned) { amount -> orangeOwnedChanged(amount) }
+        model.onPropertyChange(PlanetModel::orangeCost) { cost -> orangeCostChanged(cost) }
+        model.onPropertyChange(PlanetModel::orangeValue) { value -> orangeValueChanged(value) }
+        model.onPropertyChange(PlanetModel::orangeRate) { rate -> orangeRateChanged(rate) }
+
         model.onPropertyChange(PlanetModel::gameCompleted) { completed -> popupGameCompleted(completed) }
 
         // commit tooltip manager properties
@@ -445,33 +298,24 @@ class PlanetView(
 
     private fun updateButtonText(buttonName : String) : String {
         return when (buttonName) {
-            "red" -> {
-                "Crops/s: $redRate (+$redRateIncrease)\n$redCost gold"
-            }
-            "yellow" -> {
-                "Crops/s: $redRate (+$redRateIncrease)\n$redCost gold"
-            }
+            "red" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithDecimal(redCost)} gold" }
+            "orange" -> { "Crops/s: ${formatNumberWithDecimal(orangeRate)} (+$orangeRateIncrease)\n${formatNumberWithDecimal(orangeCost)} gold" }
+            "yellow" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithDecimal(redCost)} gold" }
             else -> {
                 "Invalid Button Name"
             }
         }
     }
-
-    private fun updateTooltipText(buttonName : String) : String {
-        return "Name: \n" +
-            "Amount: $redOwned \n" +
-            "Value: $redValueIncrease"
+    private fun updateTooltipText(tooltipName : String) : String {
+        return when (tooltipName) {
+            "red" -> { "Name: Red\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
+            "orange" -> { "Name: Orange\nAmount: ${formatNumberNoDecimal(orangeOwned)} \nValue: ${formatNumberWithDecimal(orangeValueIncrease)}" }
+            "yellow" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
+            else -> {
+                "Invalid Tooltip Name"
+            }
+        }
     }
-
-    /*
-    private fun goldCoinAmountChanged(amount : BigDecimal) {
-        val popPercent = (amount / MAX_POP_AMOUNT.toBigDecimal()).toFloat().coerceAtMost(1f)
-        goldCoinsLabel.txt = "${"%.2f".format(popPercent * 100f)} %"
-        colonizationProgress.scaleX = popPercent
-        checkForGameEnd(amount)
-    }
-     */
-
     private fun goldCoinAmountChanged(amount : BigDecimal) {
         goldCoins = amount
         if (amount < BigDecimal("1000")) {
@@ -489,16 +333,17 @@ class PlanetView(
         }
     }
     private fun buyAmountChange(amount : Float) {
-        setBuyAmountButton.txt = "Buy ${amount.roundToInt()}"
+        //setBuyAmountButton.txt = "Buy ${amount.roundToInt()}"
     }
     private fun updateAvailable(amount : BigDecimal) {
         redButton.isDisabled = amount < redCost
+        orangeButton.isDisabled = amount < orangeCost
     }
     private fun redOwnedChanged(amount : BigDecimal) {
-        updateButtonText("red")
-        updateTooltipText("red")
-        if (amount > BigDecimal("5")) {
-            //cornTable.isVisible = true
+        redOwned = amount
+        redToolTip.txt = updateTooltipText("red")
+        if (amount.toInt() >= 5) {
+            orangeButton.isVisible = true
         }
     }
     private fun redCostChanged(cost : BigDecimal) {
@@ -506,10 +351,32 @@ class PlanetView(
     }
     private fun redValueChanged(value : BigDecimal) {
         redValue = value
+        redValueLabel.txt = formatNumberWithDecimal(value)
     }
     private fun redRateChanged(rate : BigDecimal) {
         redRate = rate
+        redButton.txt = updateButtonText("red")
     }
+
+    private fun orangeOwnedChanged(amount : BigDecimal) {
+        orangeOwned = amount
+        orangeToolTip.txt = updateTooltipText("orange")
+        if (amount.toInt() >= 5) {
+            //yellowButton.isVisible = true
+        }
+    }
+    private fun orangeCostChanged(cost : BigDecimal) {
+        orangeCost = cost
+    }
+    private fun orangeValueChanged(value : BigDecimal) {
+        orangeValue = value
+        orangeValueLabel.txt = formatNumberWithDecimal(value)
+    }
+    private fun orangeRateChanged(rate : BigDecimal) {
+        orangeRate = rate
+        orangeButton.txt = updateButtonText("orange")
+    }
+
     private fun formatBuyButton(cost : BigDecimal) : String {
         return if (cost > BigDecimal(999)) {
             "Buy ${buyAmount.roundToInt()}\nAssign: ${formatExponentNoDec(cost)} AP"
