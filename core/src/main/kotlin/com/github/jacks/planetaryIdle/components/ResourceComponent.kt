@@ -65,8 +65,7 @@ data class ResourceComponent(
         get() {
             return if (rate.toInt() >= FRAMES_PER_SECOND_INT) { 1 }
             else {
-                PlanetScreen.log.debug { "" }
-                (ONE.divide((rate / BigDecimal(FRAMES_PER_SECOND_INT)), 0, RoundingMode.UP)).toInt()
+                (ONE.divide((rate / BigDecimal(FRAMES_PER_SECOND_INT)), 2, RoundingMode.UP)).toInt()
             }
         }
 

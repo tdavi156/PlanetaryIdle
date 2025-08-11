@@ -841,14 +841,14 @@ class PlanetView(
         return when (buttonName) {
             "red" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
             "orange" -> { "Crops/s: ${formatNumberWithDecimal(orangeRate)} (+$orangeRateIncrease)\n${formatNumberWithLetter(orangeCost)} gold" }
-            "yellow" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
-            "green" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
-            "blue" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
-            "purple" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
-            "pink" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
-            "brown" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
-            "white" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
-            "black" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
+            "yellow" -> { "Crops/s: ${formatNumberWithDecimal(yellowRate)} (+$yellowRateIncrease)\n${formatNumberWithLetter(yellowCost)} gold" }
+            "green" -> { "Crops/s: ${formatNumberWithDecimal(greenRate)} (+$greenRateIncrease)\n${formatNumberWithLetter(greenCost)} gold" }
+            "blue" -> { "Crops/s: ${formatNumberWithDecimal(blueRate)} (+$blueRateIncrease)\n${formatNumberWithLetter(blueCost)} gold" }
+            "purple" -> { "Crops/s: ${formatNumberWithDecimal(purpleRate)} (+$purpleRateIncrease)\n${formatNumberWithLetter(purpleCost)} gold" }
+            "pink" -> { "Crops/s: ${formatNumberWithDecimal(pinkRate)} (+$pinkRateIncrease)\n${formatNumberWithLetter(pinkCost)} gold" }
+            "brown" -> { "Crops/s: ${formatNumberWithDecimal(brownRate)} (+$brownRateIncrease)\n${formatNumberWithLetter(brownCost)} gold" }
+            "white" -> { "Crops/s: ${formatNumberWithDecimal(whiteRate)} (+$whiteRateIncrease)\n${formatNumberWithLetter(whiteCost)} gold" }
+            "black" -> { "Crops/s: ${formatNumberWithDecimal(blackRate)} (+$blackRateIncrease)\n${formatNumberWithLetter(blackCost)} gold" }
             else -> {
                 "Invalid Button Name"
             }
@@ -858,14 +858,14 @@ class PlanetView(
         return when (tooltipName) {
             "red" -> { "Name: Red\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
             "orange" -> { "Name: Orange\nAmount: ${formatNumberNoDecimal(orangeOwned)} \nValue: ${formatNumberWithDecimal(orangeValueIncrease)}" }
-            "yellow" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
-            "green" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
-            "blue" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
-            "purple" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
-            "pink" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
-            "brown" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
-            "white" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
-            "black" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
+            "yellow" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(yellowOwned)} \nValue: ${formatNumberWithDecimal(yellowValueIncrease)}" }
+            "green" -> { "Name: Green\nAmount: ${formatNumberNoDecimal(greenOwned)} \nValue: ${formatNumberWithDecimal(greenValueIncrease)}" }
+            "blue" -> { "Name: Blue\nAmount: ${formatNumberNoDecimal(blueOwned)} \nValue: ${formatNumberWithDecimal(blueValueIncrease)}" }
+            "purple" -> { "Name: Purple\nAmount: ${formatNumberNoDecimal(purpleOwned)} \nValue: ${formatNumberWithDecimal(purpleValueIncrease)}" }
+            "pink" -> { "Name: Pink\nAmount: ${formatNumberNoDecimal(pinkOwned)} \nValue: ${formatNumberWithDecimal(pinkValueIncrease)}" }
+            "brown" -> { "Name: Brown\nAmount: ${formatNumberNoDecimal(brownOwned)} \nValue: ${formatNumberWithDecimal(brownValueIncrease)}" }
+            "white" -> { "Name: White\nAmount: ${formatNumberNoDecimal(whiteOwned)} \nValue: ${formatNumberWithDecimal(whiteValueIncrease)}" }
+            "black" -> { "Name: Black\nAmount: ${formatNumberNoDecimal(blackOwned)} \nValue: ${formatNumberWithDecimal(blackValueIncrease)}" }
             else -> {
                 "Invalid Tooltip Name"
             }
@@ -889,6 +889,14 @@ class PlanetView(
     private fun updateAvailable(amount : BigDecimal) {
         redButton.isDisabled = amount < redCost
         orangeButton.isDisabled = amount < orangeCost
+        yellowButton.isDisabled = amount < yellowCost
+        greenButton.isDisabled = amount < greenCost
+        blueButton.isDisabled = amount < blueCost
+        purpleButton.isDisabled = amount < purpleCost
+        pinkButton.isDisabled = amount < pinkCost
+        brownButton.isDisabled = amount < brownCost
+        whiteButton.isDisabled = amount < whiteCost
+        blackButton.isDisabled = amount < blackCost
     }
     private fun redOwnedChanged(amount : BigDecimal) {
         redOwned = amount
