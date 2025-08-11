@@ -1,6 +1,7 @@
 package com.github.jacks.planetaryIdle.components
 
 import com.github.jacks.planetaryIdle.PlanetaryIdle.Companion.FRAMES_PER_SECOND_INT
+import com.github.jacks.planetaryIdle.screens.PlanetScreen
 import java.math.*
 
 enum class ScoreResources(
@@ -63,7 +64,10 @@ data class ResourceComponent(
     val tickCount : Int
         get() {
             return if (rate.toInt() >= FRAMES_PER_SECOND_INT) { 1 }
-            else { (ONE.divide((rate / BigDecimal(FRAMES_PER_SECOND_INT)), 0, RoundingMode.UP)).toInt() }
+            else {
+                PlanetScreen.log.debug { "" }
+                (ONE.divide((rate / BigDecimal(FRAMES_PER_SECOND_INT)), 0, RoundingMode.UP)).toInt()
+            }
         }
 
     companion object {

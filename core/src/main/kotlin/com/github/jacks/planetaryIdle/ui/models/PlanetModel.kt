@@ -55,6 +55,62 @@ class PlanetModel(
     var orangeRate by propertyNotify(BigDecimal(preferences["orange_rate", "0.95"]))
     var orangeRateIncrease by propertyNotify(BigDecimal(preferences["orange_rate_increase", "0.11"]))
 
+    var yellowOwned by propertyNotify(BigDecimal(preferences["yellow_owned", "0"]))
+    var yellowCost by propertyNotify(BigDecimal(preferences["yellow_cost", "1"]))
+    var yellowValue by propertyNotify(BigDecimal(preferences["yellow_value", "0"]))
+    var yellowValueIncrease by propertyNotify(BigDecimal(preferences["yellow_value_increase", "0.04"]))
+    var yellowRate by propertyNotify(BigDecimal(preferences["yellow_rate", "1.3"]))
+    var yellowRateIncrease by propertyNotify(BigDecimal(preferences["yellow_rate_increase", "0.17"]))
+
+    var greenOwned by propertyNotify(BigDecimal(preferences["green_owned", "0"]))
+    var greenCost by propertyNotify(BigDecimal(preferences["green_cost", "1"]))
+    var greenValue by propertyNotify(BigDecimal(preferences["green_value", "0"]))
+    var greenValueIncrease by propertyNotify(BigDecimal(preferences["green_value_increase", "0.04"]))
+    var greenRate by propertyNotify(BigDecimal(preferences["green_rate", "1.3"]))
+    var greenRateIncrease by propertyNotify(BigDecimal(preferences["green_rate_increase", "0.17"]))
+
+    var blueOwned by propertyNotify(BigDecimal(preferences["blue_owned", "0"]))
+    var blueCost by propertyNotify(BigDecimal(preferences["blue_cost", "1"]))
+    var blueValue by propertyNotify(BigDecimal(preferences["blue_value", "0"]))
+    var blueValueIncrease by propertyNotify(BigDecimal(preferences["blue_value_increase", "0.04"]))
+    var blueRate by propertyNotify(BigDecimal(preferences["blue_rate", "1.3"]))
+    var blueRateIncrease by propertyNotify(BigDecimal(preferences["blue_rate_increase", "0.17"]))
+
+    var purpleOwned by propertyNotify(BigDecimal(preferences["purple_owned", "0"]))
+    var purpleCost by propertyNotify(BigDecimal(preferences["purple_cost", "1"]))
+    var purpleValue by propertyNotify(BigDecimal(preferences["purple_value", "0"]))
+    var purpleValueIncrease by propertyNotify(BigDecimal(preferences["purple_value_increase", "0.04"]))
+    var purpleRate by propertyNotify(BigDecimal(preferences["purple_rate", "1.3"]))
+    var purpleRateIncrease by propertyNotify(BigDecimal(preferences["purple_rate_increase", "0.17"]))
+
+    var pinkOwned by propertyNotify(BigDecimal(preferences["pink_owned", "0"]))
+    var pinkCost by propertyNotify(BigDecimal(preferences["pink_cost", "1"]))
+    var pinkValue by propertyNotify(BigDecimal(preferences["pink_value", "0"]))
+    var pinkValueIncrease by propertyNotify(BigDecimal(preferences["pink_value_increase", "0.04"]))
+    var pinkRate by propertyNotify(BigDecimal(preferences["pink_rate", "1.3"]))
+    var pinkRateIncrease by propertyNotify(BigDecimal(preferences["pink_rate_increase", "0.17"]))
+
+    var brownOwned by propertyNotify(BigDecimal(preferences["brown_owned", "0"]))
+    var brownCost by propertyNotify(BigDecimal(preferences["brown_cost", "1"]))
+    var brownValue by propertyNotify(BigDecimal(preferences["brown_value", "0"]))
+    var brownValueIncrease by propertyNotify(BigDecimal(preferences["brown_value_increase", "0.04"]))
+    var brownRate by propertyNotify(BigDecimal(preferences["brown_rate", "1.3"]))
+    var brownRateIncrease by propertyNotify(BigDecimal(preferences["brown_rate_increase", "0.17"]))
+
+    var whiteOwned by propertyNotify(BigDecimal(preferences["white_owned", "0"]))
+    var whiteCost by propertyNotify(BigDecimal(preferences["white_cost", "1"]))
+    var whiteValue by propertyNotify(BigDecimal(preferences["white_value", "0"]))
+    var whiteValueIncrease by propertyNotify(BigDecimal(preferences["white_value_increase", "0.04"]))
+    var whiteRate by propertyNotify(BigDecimal(preferences["white_rate", "1.3"]))
+    var whiteRateIncrease by propertyNotify(BigDecimal(preferences["white_rate_increase", "0.17"]))
+
+    var blackOwned by propertyNotify(BigDecimal(preferences["black_owned", "0"]))
+    var blackCost by propertyNotify(BigDecimal(preferences["black_cost", "1"]))
+    var blackValue by propertyNotify(BigDecimal(preferences["black_value", "0"]))
+    var blackValueIncrease by propertyNotify(BigDecimal(preferences["black_value_increase", "0.04"]))
+    var blackRate by propertyNotify(BigDecimal(preferences["black_rate", "1.3"]))
+    var blackRateIncrease by propertyNotify(BigDecimal(preferences["black_rate_increase", "0.17"]))
+
     var gameCompleted by propertyNotify(false)
 
     init {
@@ -139,6 +195,38 @@ class PlanetModel(
                 orangeOwned += bigBuyAmount
                 preferences.flush { this["orange_owned"] = orangeOwned.toString() }
             }
+            "yellow" -> {
+                yellowOwned += bigBuyAmount
+                preferences.flush { this["yellow_owned"] = yellowOwned.toString() }
+            }
+            "green" -> {
+                greenOwned += bigBuyAmount
+                preferences.flush { this["green_owned"] = greenOwned.toString() }
+            }
+            "blue" -> {
+                blueOwned += bigBuyAmount
+                preferences.flush { this["blue_owned"] = blueOwned.toString() }
+            }
+            "purple" -> {
+                purpleOwned += bigBuyAmount
+                preferences.flush { this["purple_owned"] = purpleOwned.toString() }
+            }
+            "pink" -> {
+                pinkOwned += bigBuyAmount
+                preferences.flush { this["pink_owned"] = pinkOwned.toString() }
+            }
+            "brown" -> {
+                brownOwned += bigBuyAmount
+                preferences.flush { this["brown_owned"] = brownOwned.toString() }
+            }
+            "white" -> {
+                whiteOwned += bigBuyAmount
+                preferences.flush { this["white_owned"] = whiteOwned.toString() }
+            }
+            "black" -> {
+                blackOwned += bigBuyAmount
+                preferences.flush { this["black_owned"] = blackOwned.toString() }
+            }
         }
     }
 
@@ -158,15 +246,43 @@ class PlanetModel(
         when (rscComp.name) {
             "red" -> {
                 redCost = rscComp.cost
-                preferences.flush {
-                    this["red_cost"] = redCost.toString()
-                }
+                preferences.flush { this["red_cost"] = redCost.toString() }
             }
             "orange" -> {
                 orangeCost = rscComp.cost
-                preferences.flush {
-                    this["orange_cost"] = orangeCost.toString()
-                }
+                preferences.flush { this["orange_cost"] = orangeCost.toString() }
+            }
+            "yellow" -> {
+                yellowCost = rscComp.cost
+                preferences.flush { this["yellow_cost"] = yellowCost.toString() }
+            }
+            "green" -> {
+                greenCost = rscComp.cost
+                preferences.flush { this["green_cost"] = greenCost.toString() }
+            }
+            "blue" -> {
+                blueCost = rscComp.cost
+                preferences.flush { this["blue_cost"] = blueCost.toString() }
+            }
+            "purple" -> {
+                purpleCost = rscComp.cost
+                preferences.flush { this["purple_cost"] = purpleCost.toString() }
+            }
+            "pink" -> {
+                pinkCost = rscComp.cost
+                preferences.flush { this["pink_cost"] = pinkCost.toString() }
+            }
+            "brown" -> {
+                brownCost = rscComp.cost
+                preferences.flush { this["brown_cost"] = brownCost.toString() }
+            }
+            "white" -> {
+                whiteCost = rscComp.cost
+                preferences.flush { this["white_cost"] = whiteCost.toString() }
+            }
+            "black" -> {
+                blackCost = rscComp.cost
+                preferences.flush { this["black_cost"] = blackCost.toString() }
             }
         }
     }
@@ -183,6 +299,30 @@ class PlanetModel(
             "orange" -> {
                 orangeValue = rscComp.value
             }
+            "yellow" -> {
+                yellowValue = rscComp.value
+            }
+            "green" -> {
+                greenValue = rscComp.value
+            }
+            "blue" -> {
+                blueValue = rscComp.value
+            }
+            "purple" -> {
+                purpleValue = rscComp.value
+            }
+            "pink" -> {
+                pinkValue = rscComp.value
+            }
+            "brown" -> {
+                brownValue = rscComp.value
+            }
+            "white" -> {
+                whiteValue = rscComp.value
+            }
+            "black" -> {
+                blackValue = rscComp.value
+            }
         }
     }
 
@@ -197,6 +337,30 @@ class PlanetModel(
             }
             "orange" -> {
                 orangeRate = rscComp.rate
+            }
+            "yellow" -> {
+                yellowRate = rscComp.rate
+            }
+            "green" -> {
+                greenRate = rscComp.rate
+            }
+            "blue" -> {
+                blueRate = rscComp.rate
+            }
+            "purple" -> {
+                purpleRate = rscComp.rate
+            }
+            "pink" -> {
+                pinkRate = rscComp.rate
+            }
+            "brown" -> {
+                brownRate = rscComp.rate
+            }
+            "white" -> {
+                whiteRate = rscComp.rate
+            }
+            "black" -> {
+                blackRate = rscComp.rate
             }
         }
     }

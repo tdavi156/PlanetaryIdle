@@ -11,12 +11,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
-import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.Align
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
-import com.github.jacks.planetaryIdle.events.UpdateBuyAmountEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.ui.Buttons
 import com.github.jacks.planetaryIdle.ui.Drawables
@@ -28,7 +26,6 @@ import ktx.log.logger
 import ktx.preferences.get
 import ktx.scene2d.*
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
@@ -42,6 +39,8 @@ class PlanetView(
     private lateinit var stage : Stage
     private var currentView : String = "planetView"
     private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
+
+    private val twoDecimalWithCommasFormat : NumberFormat = DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance())
 
     private val decimalFormat : NumberFormat = NumberFormat.getInstance()
     private val noDecimalFormat : NumberFormat = NumberFormat.getInstance()
@@ -72,6 +71,61 @@ class PlanetView(
     private var orangeRate = BigDecimal(preferences["orange_rate", "0.95"])
     private var orangeRateIncrease = BigDecimal(preferences["orange_rate_increase", "0.11"])
 
+    private var yellowOwned = BigDecimal(preferences["yellow_owned", "0"])
+    private var yellowCost = BigDecimal(preferences["yellow_cost", "1"])
+    private var yellowValue = BigDecimal(preferences["yellow_value", "0.31"])
+    private var yellowValueIncrease = BigDecimal(preferences["yellow_value_increase", "0.31"])
+    private var yellowRate = BigDecimal(preferences["yellow_rate", "1.3"])
+    private var yellowRateIncrease = BigDecimal(preferences["yellow_rate_increase", "0.17"])
+
+    private var greenOwned = BigDecimal(preferences["green_owned", "0"])
+    private var greenCost = BigDecimal(preferences["green_cost", "1"])
+    private var greenValue = BigDecimal(preferences["green_value", "0.31"])
+    private var greenValueIncrease = BigDecimal(preferences["green_value_increase", "0.31"])
+    private var greenRate = BigDecimal(preferences["green_rate", "1.3"])
+    private var greenRateIncrease = BigDecimal(preferences["green_rate_increase", "0.17"])
+
+    private var blueOwned = BigDecimal(preferences["blue_owned", "0"])
+    private var blueCost = BigDecimal(preferences["blue_cost", "1"])
+    private var blueValue = BigDecimal(preferences["blue_value", "0.31"])
+    private var blueValueIncrease = BigDecimal(preferences["blue_value_increase", "0.31"])
+    private var blueRate = BigDecimal(preferences["blue_rate", "1.3"])
+    private var blueRateIncrease = BigDecimal(preferences["blue_rate_increase", "0.17"])
+
+    private var purpleOwned = BigDecimal(preferences["purple_owned", "0"])
+    private var purpleCost = BigDecimal(preferences["purple_cost", "1"])
+    private var purpleValue = BigDecimal(preferences["purple_value", "0.31"])
+    private var purpleValueIncrease = BigDecimal(preferences["purple_value_increase", "0.31"])
+    private var purpleRate = BigDecimal(preferences["purple_rate", "1.3"])
+    private var purpleRateIncrease = BigDecimal(preferences["purple_rate_increase", "0.17"])
+
+    private var pinkOwned = BigDecimal(preferences["pink_owned", "0"])
+    private var pinkCost = BigDecimal(preferences["pink_cost", "1"])
+    private var pinkValue = BigDecimal(preferences["pink_value", "0.31"])
+    private var pinkValueIncrease = BigDecimal(preferences["pink_value_increase", "0.31"])
+    private var pinkRate = BigDecimal(preferences["pink_rate", "1.3"])
+    private var pinkRateIncrease = BigDecimal(preferences["pink_rate_increase", "0.17"])
+
+    private var brownOwned = BigDecimal(preferences["brown_owned", "0"])
+    private var brownCost = BigDecimal(preferences["brown_cost", "1"])
+    private var brownValue = BigDecimal(preferences["brown_value", "0.31"])
+    private var brownValueIncrease = BigDecimal(preferences["brown_value_increase", "0.31"])
+    private var brownRate = BigDecimal(preferences["brown_rate", "1.3"])
+    private var brownRateIncrease = BigDecimal(preferences["brown_rate_increase", "0.17"])
+
+    private var whiteOwned = BigDecimal(preferences["white_owned", "0"])
+    private var whiteCost = BigDecimal(preferences["white_cost", "1"])
+    private var whiteValue = BigDecimal(preferences["white_value", "0.31"])
+    private var whiteValueIncrease = BigDecimal(preferences["white_value_increase", "0.31"])
+    private var whiteRate = BigDecimal(preferences["white_rate", "1.3"])
+    private var whiteRateIncrease = BigDecimal(preferences["white_rate_increase", "0.17"])
+
+    private var blackOwned = BigDecimal(preferences["black_owned", "0"])
+    private var blackCost = BigDecimal(preferences["black_cost", "1"])
+    private var blackValue = BigDecimal(preferences["black_value", "0.31"])
+    private var blackValueIncrease = BigDecimal(preferences["black_value_increase", "0.31"])
+    private var blackRate = BigDecimal(preferences["black_rate", "1.3"])
+    private var blackRateIncrease = BigDecimal(preferences["black_rate_increase", "0.17"])
     // tables
 
     // buttons
@@ -79,6 +133,14 @@ class PlanetView(
 
     private var redButton : TextButton
     private var orangeButton : TextButton
+    private var yellowButton : TextButton
+    private var greenButton : TextButton
+    private var blueButton : TextButton
+    private var purpleButton : TextButton
+    private var pinkButton : TextButton
+    private var brownButton : TextButton
+    private var whiteButton : TextButton
+    private var blackButton : TextButton
 
     //private var soilButton : TextButton
 
@@ -90,26 +152,31 @@ class PlanetView(
     private var redValueLabel : Label
     private var orangeValueLabel : Label
     private var yellowValueLabel : Label
-//    private var greenValueLabel : Label
-//    private var blueValueLabel : Label
-//    private var purpleValueLabel : Label
-//    private var pinkValueLabel : Label
-//    private var brownValueLabel : Label
-//    private var whiteValueLabel : Label
-//    private var blackValueLabel : Label
+    private var greenValueLabel : Label
+    private var blueValueLabel : Label
+    private var purpleValueLabel : Label
+    private var pinkValueLabel : Label
+    private var brownValueLabel : Label
+    private var whiteValueLabel : Label
+    private var blackValueLabel : Label
 
-    private lateinit var redToolTip : Label
-    private lateinit var orangeToolTip : Label
+    private lateinit var redToolTipLabel : Label
+    private lateinit var orangeToolTipLabel : Label
+    private lateinit var yellowToolTipLabel : Label
+    private lateinit var greenToolTipLabel : Label
+    private lateinit var blueToolTipLabel : Label
+    private lateinit var purpleToolTipLabel : Label
+    private lateinit var pinkToolTipLabel : Label
+    private lateinit var brownToolTipLabel : Label
+    private lateinit var whiteToolTipLabel : Label
+    private lateinit var blackToolTipLabel : Label
 
     //private var soilLabel : Label
 
     // images
     private var colonizationProgress : Image
 
-    private val tooltipManager = TooltipManager.getInstance()
-
     init {
-        tooltipManager.initialTime = 0f
         setFillParent(true)
         stage = getStage()
         setupNumberFormating()
@@ -118,15 +185,43 @@ class PlanetView(
         table { gameTableCell ->
             // 1st row information area
             table { tableCell ->
-                this@PlanetView.redValueLabel = label("0.00", Labels.RED.skinKey) { cell ->
+                this@PlanetView.redValueLabel = label("0", Labels.RED.skinKey) { cell ->
                     cell.center().pad(3f)
                 }
                 label(" + ", Labels.WHITE.skinKey)
-                this@PlanetView.orangeValueLabel = label("0.00", Labels.ORANGE.skinKey) { cell ->
+                this@PlanetView.orangeValueLabel = label("0", Labels.ORANGE.skinKey) { cell ->
                     cell.center().pad(3f)
                 }
                 label(" + ", Labels.WHITE.skinKey)
-                this@PlanetView.yellowValueLabel = label("0.00", Labels.YELLOW.skinKey) { cell ->
+                this@PlanetView.yellowValueLabel = label("0", Labels.YELLOW.skinKey) { cell ->
+                    cell.center().pad(3f)
+                }
+                label(" + ", Labels.WHITE.skinKey)
+                this@PlanetView.greenValueLabel = label("0", Labels.GREEN.skinKey) { cell ->
+                    cell.center().pad(3f)
+                }
+                label(" + ", Labels.WHITE.skinKey)
+                this@PlanetView.blueValueLabel = label("0", Labels.BLUE.skinKey) { cell ->
+                    cell.center().pad(3f)
+                }
+                label(" + ", Labels.WHITE.skinKey)
+                this@PlanetView.purpleValueLabel = label("0", Labels.PURPLE.skinKey) { cell ->
+                    cell.center().pad(3f)
+                }
+                label(" + ", Labels.WHITE.skinKey)
+                this@PlanetView.pinkValueLabel = label("0", Labels.PINK.skinKey) { cell ->
+                    cell.center().pad(3f)
+                }
+                label(" + ", Labels.WHITE.skinKey)
+                this@PlanetView.brownValueLabel = label("0", Labels.BROWN.skinKey) { cell ->
+                    cell.center().pad(3f)
+                }
+                label(" + ", Labels.WHITE.skinKey)
+                this@PlanetView.whiteValueLabel = label("0", Labels.WHITE.skinKey) { cell ->
+                    cell.center().pad(3f)
+                }
+                label(" + ", Labels.WHITE.skinKey)
+                this@PlanetView.blackValueLabel = label("0", Labels.BLACK.skinKey) { cell ->
                     cell.center().pad(3f)
                 }
                 tableCell.expandX().top().height(40f)
@@ -188,17 +283,17 @@ class PlanetView(
                         isDisabled = this@PlanetView.goldCoins < this@PlanetView.redCost
                         this.addListener(object : ChangeListener() {
                             override fun changed(event: ChangeEvent, actor: Actor) {
-                                this@PlanetView.redToolTip.isVisible = isOver
+                                this@PlanetView.redToolTipLabel.isVisible = isOver
                                 stage.fire(BuyResourceEvent("red"))
                             }
                         })
                         this.addListener(object : InputListener() {
                             override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-                                this@PlanetView.redToolTip.isVisible = isOver
+                                this@PlanetView.redToolTipLabel.isVisible = isOver
                                 super.enter(event, x, y, pointer, fromActor)
                             }
                             override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
-                                this@PlanetView.redToolTip.isVisible = isOver
+                                this@PlanetView.redToolTipLabel.isVisible = isOver
                                 super.exit(event, x, y, pointer, toActor)
                             }
                         })
@@ -210,17 +305,184 @@ class PlanetView(
                         isDisabled = this@PlanetView.goldCoins < this@PlanetView.orangeCost
                         this.addListener(object : ChangeListener() {
                             override fun changed(event: ChangeEvent, actor: Actor) {
-                                this@PlanetView.orangeToolTip.isVisible = isOver
                                 stage.fire(BuyResourceEvent("orange"))
                             }
                         })
                         this.addListener(object : InputListener() {
                             override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-                                this@PlanetView.orangeToolTip.isVisible = isOver
+                                this@PlanetView.orangeToolTipLabel.isVisible = isOver
                                 super.enter(event, x, y, pointer, fromActor)
                             }
                             override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
-                                this@PlanetView.orangeToolTip.isVisible = isOver
+                                this@PlanetView.orangeToolTipLabel.isVisible = isOver
+                                super.exit(event, x, y, pointer, toActor)
+                            }
+                        })
+                    }
+                    row()
+                    this@PlanetView.yellowButton = textButton(this@PlanetView.updateButtonText("yellow"), Buttons.YELLOW_BUTTON_SMALL.skinKey) { cell ->
+                        cell.expand().top().left().width(210f).height(55f).pad(3f,5f,3f,0f)
+                        isVisible = false
+                        isDisabled = this@PlanetView.goldCoins < this@PlanetView.yellowCost
+                        this.addListener(object : ChangeListener() {
+                            override fun changed(event: ChangeEvent, actor: Actor) {
+                                stage.fire(BuyResourceEvent("yellow"))
+                            }
+                        })
+                        this.addListener(object : InputListener() {
+                            override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                                this@PlanetView.yellowToolTipLabel.isVisible = isOver
+                                super.enter(event, x, y, pointer, fromActor)
+                            }
+                            override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                                this@PlanetView.yellowToolTipLabel.isVisible = isOver
+                                super.exit(event, x, y, pointer, toActor)
+                            }
+                        })
+                    }
+                    row()
+                    this@PlanetView.greenButton = textButton(this@PlanetView.updateButtonText("green"), Buttons.GREEN_BUTTON_SMALL.skinKey) { cell ->
+                        cell.expand().top().left().width(210f).height(55f).pad(3f,5f,3f,0f)
+                        isVisible = false
+                        isDisabled = this@PlanetView.goldCoins < this@PlanetView.greenCost
+                        this.addListener(object : ChangeListener() {
+                            override fun changed(event: ChangeEvent, actor: Actor) {
+                                stage.fire(BuyResourceEvent("green"))
+                            }
+                        })
+                        this.addListener(object : InputListener() {
+                            override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                                this@PlanetView.greenToolTipLabel.isVisible = isOver
+                                super.enter(event, x, y, pointer, fromActor)
+                            }
+                            override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                                this@PlanetView.greenToolTipLabel.isVisible = isOver
+                                super.exit(event, x, y, pointer, toActor)
+                            }
+                        })
+                    }
+                    row()
+                    this@PlanetView.blueButton = textButton(this@PlanetView.updateButtonText("blue"), Buttons.BLUE_BUTTON_SMALL.skinKey) { cell ->
+                        cell.expand().top().left().width(210f).height(55f).pad(3f,5f,3f,0f)
+                        isVisible = false
+                        isDisabled = this@PlanetView.goldCoins < this@PlanetView.blueCost
+                        this.addListener(object : ChangeListener() {
+                            override fun changed(event: ChangeEvent, actor: Actor) {
+                                stage.fire(BuyResourceEvent("blue"))
+                            }
+                        })
+                        this.addListener(object : InputListener() {
+                            override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                                this@PlanetView.blueToolTipLabel.isVisible = isOver
+                                super.enter(event, x, y, pointer, fromActor)
+                            }
+                            override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                                this@PlanetView.blueToolTipLabel.isVisible = isOver
+                                super.exit(event, x, y, pointer, toActor)
+                            }
+                        })
+                    }
+                    row()
+                    this@PlanetView.purpleButton = textButton(this@PlanetView.updateButtonText("purple"), Buttons.PURPLE_BUTTON_SMALL.skinKey) { cell ->
+                        cell.expand().top().left().width(210f).height(55f).pad(3f,5f,3f,0f)
+                        isVisible = false
+                        isDisabled = this@PlanetView.goldCoins < this@PlanetView.purpleCost
+                        this.addListener(object : ChangeListener() {
+                            override fun changed(event: ChangeEvent, actor: Actor) {
+                                stage.fire(BuyResourceEvent("purple"))
+                            }
+                        })
+                        this.addListener(object : InputListener() {
+                            override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                                this@PlanetView.purpleToolTipLabel.isVisible = isOver
+                                super.enter(event, x, y, pointer, fromActor)
+                            }
+                            override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                                this@PlanetView.purpleToolTipLabel.isVisible = isOver
+                                super.exit(event, x, y, pointer, toActor)
+                            }
+                        })
+                    }
+                    row()
+                    this@PlanetView.pinkButton = textButton(this@PlanetView.updateButtonText("pink"), Buttons.PINK_BUTTON_SMALL.skinKey) { cell ->
+                        cell.expand().top().left().width(210f).height(55f).pad(3f,5f,3f,0f)
+                        isVisible = false
+                        isDisabled = this@PlanetView.goldCoins < this@PlanetView.pinkCost
+                        this.addListener(object : ChangeListener() {
+                            override fun changed(event: ChangeEvent, actor: Actor) {
+                                stage.fire(BuyResourceEvent("pink"))
+                            }
+                        })
+                        this.addListener(object : InputListener() {
+                            override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                                this@PlanetView.pinkToolTipLabel.isVisible = isOver
+                                super.enter(event, x, y, pointer, fromActor)
+                            }
+                            override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                                this@PlanetView.pinkToolTipLabel.isVisible = isOver
+                                super.exit(event, x, y, pointer, toActor)
+                            }
+                        })
+                    }
+                    row()
+                    this@PlanetView.brownButton = textButton(this@PlanetView.updateButtonText("brown"), Buttons.BROWN_BUTTON_SMALL.skinKey) { cell ->
+                        cell.expand().top().left().width(210f).height(55f).pad(3f,5f,3f,0f)
+                        isVisible = false
+                        isDisabled = this@PlanetView.goldCoins < this@PlanetView.brownCost
+                        this.addListener(object : ChangeListener() {
+                            override fun changed(event: ChangeEvent, actor: Actor) {
+                                stage.fire(BuyResourceEvent("brown"))
+                            }
+                        })
+                        this.addListener(object : InputListener() {
+                            override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                                this@PlanetView.brownToolTipLabel.isVisible = isOver
+                                super.enter(event, x, y, pointer, fromActor)
+                            }
+                            override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                                this@PlanetView.brownToolTipLabel.isVisible = isOver
+                                super.exit(event, x, y, pointer, toActor)
+                            }
+                        })
+                    }
+                    row()
+                    this@PlanetView.whiteButton = textButton(this@PlanetView.updateButtonText("white"), Buttons.WHITE_BUTTON_SMALL.skinKey) { cell ->
+                        cell.expand().top().left().width(210f).height(55f).pad(3f,5f,3f,0f)
+                        isVisible = false
+                        isDisabled = this@PlanetView.goldCoins < this@PlanetView.whiteCost
+                        this.addListener(object : ChangeListener() {
+                            override fun changed(event: ChangeEvent, actor: Actor) {
+                                stage.fire(BuyResourceEvent("white"))
+                            }
+                        })
+                        this.addListener(object : InputListener() {
+                            override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                                this@PlanetView.whiteToolTipLabel.isVisible = isOver
+                                super.enter(event, x, y, pointer, fromActor)
+                            }
+                            override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                                this@PlanetView.whiteToolTipLabel.isVisible = isOver
+                                super.exit(event, x, y, pointer, toActor)
+                            }
+                        })
+                    }
+                    row()
+                    this@PlanetView.blackButton = textButton(this@PlanetView.updateButtonText("black"), Buttons.BLACK_BUTTON_SMALL.skinKey) { cell ->
+                        cell.expand().top().left().width(210f).height(55f).pad(3f,5f,3f,0f)
+                        isVisible = false
+                        isDisabled = this@PlanetView.goldCoins < this@PlanetView.blackCost
+                        this.addListener(object : ChangeListener() {
+                            override fun changed(event: ChangeEvent, actor: Actor) {
+                                stage.fire(BuyResourceEvent("black"))
+                            }
+                        })
+                        this.addListener(object : InputListener() {
+                            override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                                this@PlanetView.blackToolTipLabel.isVisible = isOver
+                                super.enter(event, x, y, pointer, fromActor)
+                            }
+                            override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                                this@PlanetView.blackToolTipLabel.isVisible = isOver
                                 super.exit(event, x, y, pointer, toActor)
                             }
                         })
@@ -228,13 +490,61 @@ class PlanetView(
                     buttonTableCell.expand().fill().top().left().pad(5f).width(230f)
                 }
                 table { tooltipTableCell ->
-                    this@PlanetView.redToolTip = label(this@PlanetView.updateTooltipText("red"), Labels.SMALL_RED_BGD.skinKey) { cell ->
+                    this@PlanetView.redToolTipLabel = label(this@PlanetView.updateTooltipText("red"), Labels.SMALL_RED_BGD.skinKey) { cell ->
                         cell.expand().top().left().width(150f).height(65f).pad(0f, 5f, 0f, 0f)
                         this.setAlignment(Align.center)
                         this.isVisible = false
                     }
                     row()
-                    this@PlanetView.orangeToolTip = label(this@PlanetView.updateTooltipText("orange"), Labels.SMALL_ORANGE_BGD.skinKey) { cell ->
+                    this@PlanetView.orangeToolTipLabel = label(this@PlanetView.updateTooltipText("orange"), Labels.SMALL_ORANGE_BGD.skinKey) { cell ->
+                        cell.expand().top().left().width(150f).height(65f).pad(0f, 5f, 0f, 0f)
+                        this.setAlignment(Align.center)
+                        this.isVisible = false
+                    }
+                    row()
+                    this@PlanetView.yellowToolTipLabel = label(this@PlanetView.updateTooltipText("yellow"), Labels.SMALL_YELLOW_BGD.skinKey) { cell ->
+                        cell.expand().top().left().width(150f).height(65f).pad(0f, 5f, 0f, 0f)
+                        this.setAlignment(Align.center)
+                        this.isVisible = false
+                    }
+                    row()
+                    this@PlanetView.greenToolTipLabel = label(this@PlanetView.updateTooltipText("green"), Labels.SMALL_GREEN_BGD.skinKey) { cell ->
+                        cell.expand().top().left().width(150f).height(65f).pad(0f, 5f, 0f, 0f)
+                        this.setAlignment(Align.center)
+                        this.isVisible = false
+                    }
+                    row()
+                    this@PlanetView.blueToolTipLabel = label(this@PlanetView.updateTooltipText("blue"), Labels.SMALL_BLUE_BGD.skinKey) { cell ->
+                        cell.expand().top().left().width(150f).height(65f).pad(0f, 5f, 0f, 0f)
+                        this.setAlignment(Align.center)
+                        this.isVisible = false
+                    }
+                    row()
+                    this@PlanetView.purpleToolTipLabel = label(this@PlanetView.updateTooltipText("purple"), Labels.SMALL_PURPLE_BGD.skinKey) { cell ->
+                        cell.expand().top().left().width(150f).height(65f).pad(0f, 5f, 0f, 0f)
+                        this.setAlignment(Align.center)
+                        this.isVisible = false
+                    }
+                    row()
+                    this@PlanetView.pinkToolTipLabel = label(this@PlanetView.updateTooltipText("pink"), Labels.SMALL_PINK_BGD.skinKey) { cell ->
+                        cell.expand().top().left().width(150f).height(65f).pad(0f, 5f, 0f, 0f)
+                        this.setAlignment(Align.center)
+                        this.isVisible = false
+                    }
+                    row()
+                    this@PlanetView.brownToolTipLabel = label(this@PlanetView.updateTooltipText("brown"), Labels.SMALL_BROWN_BGD.skinKey) { cell ->
+                        cell.expand().top().left().width(150f).height(65f).pad(0f, 5f, 0f, 0f)
+                        this.setAlignment(Align.center)
+                        this.isVisible = false
+                    }
+                    row()
+                    this@PlanetView.whiteToolTipLabel = label(this@PlanetView.updateTooltipText("white"), Labels.SMALL_WHITE_BGD.skinKey) { cell ->
+                        cell.expand().top().left().width(150f).height(65f).pad(0f, 5f, 0f, 0f)
+                        this.setAlignment(Align.center)
+                        this.isVisible = false
+                    }
+                    row()
+                    this@PlanetView.blackToolTipLabel = label(this@PlanetView.updateTooltipText("black"), Labels.SMALL_BLACK_BGD.skinKey) { cell ->
                         cell.expand().top().left().width(150f).height(65f).pad(0f, 5f, 0f, 0f)
                         this.setAlignment(Align.center)
                         this.isVisible = false
@@ -263,7 +573,7 @@ class PlanetView(
                         scaleX = 0f
                     }
                     this@PlanetView.productionRateProgressLabel = label(
-                        "${"%.2f".format((this@PlanetView.productionRate / MAX_POP_AMOUNT.toBigDecimal()).toFloat().coerceAtMost(1f) * 100f)} %"
+                        "${"%.2f".format((this@PlanetView.productionRate / PLANETARY_SCORE).toFloat().coerceAtMost(1f) * 100f)} %"
                         , Labels.MEDIUM.skinKey
                     ) { cell ->
                         setAlignment(Align.center)
@@ -280,27 +590,265 @@ class PlanetView(
         model.onPropertyChange(PlanetModel::productionRate) { rate -> productionRateChanged(rate) }
         model.onPropertyChange(PlanetModel::buyAmount) { amount -> buyAmountChange(amount) }
 
-        model.onPropertyChange(PlanetModel::redOwned) { amount -> redOwnedChanged(amount) }
-        model.onPropertyChange(PlanetModel::redCost) { cost -> redCostChanged(cost) }
-        model.onPropertyChange(PlanetModel::redValue) { value -> redValueChanged(value) }
-        model.onPropertyChange(PlanetModel::redRate) { rate -> redRateChanged(rate) }
+        model.onPropertyChange(PlanetModel::redOwned) { amount -> ownedChanged("red", amount) }
+        model.onPropertyChange(PlanetModel::redCost) { cost -> costChanged("red", cost) }
+        model.onPropertyChange(PlanetModel::redValue) { value -> valueChanged("red", value) }
+        model.onPropertyChange(PlanetModel::redRate) { rate -> rateChanged("red", rate) }
 
-        model.onPropertyChange(PlanetModel::orangeOwned) { amount -> orangeOwnedChanged(amount) }
-        model.onPropertyChange(PlanetModel::orangeCost) { cost -> orangeCostChanged(cost) }
-        model.onPropertyChange(PlanetModel::orangeValue) { value -> orangeValueChanged(value) }
-        model.onPropertyChange(PlanetModel::orangeRate) { rate -> orangeRateChanged(rate) }
+        model.onPropertyChange(PlanetModel::orangeOwned) { amount -> ownedChanged("orange", amount) }
+        model.onPropertyChange(PlanetModel::orangeCost) { cost -> costChanged("orange", cost) }
+        model.onPropertyChange(PlanetModel::orangeValue) { value -> valueChanged("orange", value) }
+        model.onPropertyChange(PlanetModel::orangeRate) { rate -> rateChanged("orange", rate) }
+
+        model.onPropertyChange(PlanetModel::yellowOwned) { amount -> ownedChanged("yellow", amount) }
+        model.onPropertyChange(PlanetModel::yellowCost) { cost -> costChanged("yellow", cost) }
+        model.onPropertyChange(PlanetModel::yellowValue) { value -> valueChanged("yellow", value) }
+        model.onPropertyChange(PlanetModel::yellowRate) { rate -> rateChanged("yellow", rate) }
+
+        model.onPropertyChange(PlanetModel::greenOwned) { amount -> ownedChanged("green", amount) }
+        model.onPropertyChange(PlanetModel::greenCost) { cost -> costChanged("green", cost) }
+        model.onPropertyChange(PlanetModel::greenValue) { value -> valueChanged("green", value) }
+        model.onPropertyChange(PlanetModel::greenRate) { rate -> rateChanged("green", rate) }
+
+        model.onPropertyChange(PlanetModel::blueOwned) { amount -> ownedChanged("blue", amount) }
+        model.onPropertyChange(PlanetModel::blueCost) { cost -> costChanged("blue", cost) }
+        model.onPropertyChange(PlanetModel::blueValue) { value -> valueChanged("blue", value) }
+        model.onPropertyChange(PlanetModel::blueRate) { rate -> rateChanged("blue", rate) }
+
+        model.onPropertyChange(PlanetModel::purpleOwned) { amount -> ownedChanged("purple", amount) }
+        model.onPropertyChange(PlanetModel::purpleCost) { cost -> costChanged("purple", cost) }
+        model.onPropertyChange(PlanetModel::purpleValue) { value -> valueChanged("purple", value) }
+        model.onPropertyChange(PlanetModel::purpleRate) { rate -> rateChanged("purple", rate) }
+
+        model.onPropertyChange(PlanetModel::pinkOwned) { amount -> ownedChanged("pink", amount) }
+        model.onPropertyChange(PlanetModel::pinkCost) { cost -> costChanged("pink", cost) }
+        model.onPropertyChange(PlanetModel::pinkValue) { value -> valueChanged("pink", value) }
+        model.onPropertyChange(PlanetModel::pinkRate) { rate -> rateChanged("pink", rate) }
+
+        model.onPropertyChange(PlanetModel::brownOwned) { amount -> ownedChanged("brown", amount) }
+        model.onPropertyChange(PlanetModel::brownCost) { cost -> costChanged("brown", cost) }
+        model.onPropertyChange(PlanetModel::brownValue) { value -> valueChanged("brown", value) }
+        model.onPropertyChange(PlanetModel::brownRate) { rate -> rateChanged("brown", rate) }
+
+        model.onPropertyChange(PlanetModel::whiteOwned) { amount -> ownedChanged("white", amount) }
+        model.onPropertyChange(PlanetModel::whiteCost) { cost -> costChanged("white", cost) }
+        model.onPropertyChange(PlanetModel::whiteValue) { value -> valueChanged("white", value) }
+        model.onPropertyChange(PlanetModel::whiteRate) { rate -> rateChanged("white", rate) }
+
+        model.onPropertyChange(PlanetModel::blackOwned) { amount -> ownedChanged("black", amount) }
+        model.onPropertyChange(PlanetModel::blackCost) { cost -> costChanged("black", cost) }
+        model.onPropertyChange(PlanetModel::blackValue) { value -> valueChanged("black", value) }
+        model.onPropertyChange(PlanetModel::blackRate) { rate -> rateChanged("black", rate) }
 
         model.onPropertyChange(PlanetModel::gameCompleted) { completed -> popupGameCompleted(completed) }
+    }
 
-        // commit tooltip manager properties
-        tooltipManager.hideAll()
+    private fun ownedChanged(name : String, amount : BigDecimal) {
+        when (name) {
+            "red" -> {
+                redOwned = amount
+                redToolTipLabel.txt = updateTooltipText("red")
+                if (amount.toInt() >= 5) {
+                    orangeButton.isVisible = true
+                }
+            }
+            "orange" -> {
+                orangeOwned = amount
+                orangeToolTipLabel.txt = updateTooltipText("orange")
+                if (amount.toInt() >= 5) {
+                    yellowButton.isVisible = true
+                }
+            }
+            "yellow" -> {
+                yellowOwned = amount
+                yellowToolTipLabel.txt = updateTooltipText("yellow")
+                if (amount.toInt() >= 5) {
+                    greenButton.isVisible = true
+                }
+            }
+            "green" -> {
+                greenOwned = amount
+                greenToolTipLabel.txt = updateTooltipText("green")
+                if (amount.toInt() >= 5) {
+                    blueButton.isVisible = true
+                }
+            }
+            "blue" -> {
+                blueOwned = amount
+                blueToolTipLabel.txt = updateTooltipText("blue")
+                if (amount.toInt() >= 5) {
+                    purpleButton.isVisible = true
+                }
+            }
+            "purple" -> {
+                purpleOwned = amount
+                purpleToolTipLabel.txt = updateTooltipText("purple")
+                if (amount.toInt() >= 5) {
+                    pinkButton.isVisible = true
+                }
+            }
+            "pink" -> {
+                pinkOwned = amount
+                pinkToolTipLabel.txt = updateTooltipText("pink")
+                if (amount.toInt() >= 5) {
+                    brownButton.isVisible = true
+                }
+            }
+            "brown" -> {
+                brownOwned = amount
+                brownToolTipLabel.txt = updateTooltipText("brown")
+                if (amount.toInt() >= 5) {
+                    whiteButton.isVisible = true
+                }
+            }
+            "white" -> {
+                whiteOwned = amount
+                whiteToolTipLabel.txt = updateTooltipText("white")
+                if (amount.toInt() >= 5) {
+                    blackButton.isVisible = true
+                }
+            }
+            "black" -> {
+                blackOwned = amount
+                blackToolTipLabel.txt = updateTooltipText("black")
+            }
+        }
+    }
+    private fun costChanged(name : String, cost : BigDecimal) {
+        when (name) {
+            "red" -> {
+                redCost = cost
+            }
+            "orange" -> {
+                orangeCost = cost
+            }
+            "yellow" -> {
+                yellowCost = cost
+            }
+            "green" -> {
+                greenCost = cost
+            }
+            "blue" -> {
+                blueCost = cost
+            }
+            "purple" -> {
+                purpleCost = cost
+            }
+            "pink" -> {
+                pinkCost = cost
+            }
+            "brown" -> {
+                brownCost = cost
+            }
+            "white" -> {
+                whiteCost = cost
+            }
+            "black" -> {
+                blackCost = cost
+            }
+        }
+    }
+    private fun valueChanged(name : String, value : BigDecimal) {
+        when (name) {
+            "red" -> {
+                redValue = value
+                redValueLabel.txt = formatNumberWithLetter(value)
+            }
+            "orange" -> {
+                orangeValue = value
+                orangeValueLabel.txt = formatNumberWithLetter(value)
+            }
+            "yellow" -> {
+                yellowValue = value
+                yellowValueLabel.txt = formatNumberWithLetter(value)
+            }
+            "green" -> {
+                greenValue = value
+                greenValueLabel.txt = formatNumberWithLetter(value)
+            }
+            "blue" -> {
+                blueValue = value
+                blueValueLabel.txt = formatNumberWithLetter(value)
+            }
+            "purple" -> {
+                purpleValue = value
+                purpleValueLabel.txt = formatNumberWithLetter(value)
+            }
+            "pink" -> {
+                pinkValue = value
+                pinkValueLabel.txt = formatNumberWithLetter(value)
+            }
+            "brown" -> {
+                brownValue = value
+                brownValueLabel.txt = formatNumberWithLetter(value)
+            }
+            "white" -> {
+                whiteValue = value
+                whiteValueLabel.txt = formatNumberWithLetter(value)
+            }
+            "black" -> {
+                blackValue = value
+                blackValueLabel.txt = formatNumberWithLetter(value)
+            }
+        }
+    }
+    private fun rateChanged(name : String, rate : BigDecimal) {
+        when (name) {
+            "red" -> {
+                redRate = rate
+                redButton.txt = updateButtonText("red")
+            }
+            "orange" -> {
+                orangeRate = rate
+                orangeButton.txt = updateButtonText("orange")
+            }
+            "yellow" -> {
+                yellowRate = rate
+                yellowButton.txt = updateButtonText("yellow")
+            }
+            "green" -> {
+                greenRate = rate
+                greenButton.txt = updateButtonText("green")
+            }
+            "blue" -> {
+                blueRate = rate
+                blueButton.txt = updateButtonText("blue")
+            }
+            "purple" -> {
+                purpleRate = rate
+                purpleButton.txt = updateButtonText("purple")
+            }
+            "pink" -> {
+                pinkRate = rate
+                pinkButton.txt = updateButtonText("pink")
+            }
+            "brown" -> {
+                brownRate = rate
+                brownButton.txt = updateButtonText("brown")
+            }
+            "white" -> {
+                whiteRate = rate
+                whiteButton.txt = updateButtonText("white")
+            }
+            "black" -> {
+                blackRate = rate
+                blackButton.txt = updateButtonText("black")
+            }
+        }
     }
 
     private fun updateButtonText(buttonName : String) : String {
         return when (buttonName) {
-            "red" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithDecimal(redCost)} gold" }
-            "orange" -> { "Crops/s: ${formatNumberWithDecimal(orangeRate)} (+$orangeRateIncrease)\n${formatNumberWithDecimal(orangeCost)} gold" }
-            "yellow" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithDecimal(redCost)} gold" }
+            "red" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
+            "orange" -> { "Crops/s: ${formatNumberWithDecimal(orangeRate)} (+$orangeRateIncrease)\n${formatNumberWithLetter(orangeCost)} gold" }
+            "yellow" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
+            "green" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
+            "blue" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
+            "purple" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
+            "pink" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
+            "brown" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
+            "white" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
+            "black" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
             else -> {
                 "Invalid Button Name"
             }
@@ -311,6 +859,13 @@ class PlanetView(
             "red" -> { "Name: Red\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
             "orange" -> { "Name: Orange\nAmount: ${formatNumberNoDecimal(orangeOwned)} \nValue: ${formatNumberWithDecimal(orangeValueIncrease)}" }
             "yellow" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
+            "green" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
+            "blue" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
+            "purple" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
+            "pink" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
+            "brown" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
+            "white" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
+            "black" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
             else -> {
                 "Invalid Tooltip Name"
             }
@@ -318,11 +873,7 @@ class PlanetView(
     }
     private fun goldCoinAmountChanged(amount : BigDecimal) {
         goldCoins = amount
-        if (amount < BigDecimal("1000")) {
-            goldCoinsLabel.txt = "You have ${formatNumberWithDecimal(amount)} gold coins."
-        } else {
-            goldCoinsLabel.txt = "You have ${formatExponent2Dec(amount)} gold coins."
-        }
+        goldCoinsLabel.txt = "You have ${formatNumberWithLetter(amount)} gold coins."
         updateAvailable(amount)
     }
     private fun productionRateChanged(amount : BigDecimal) {
@@ -341,7 +892,7 @@ class PlanetView(
     }
     private fun redOwnedChanged(amount : BigDecimal) {
         redOwned = amount
-        redToolTip.txt = updateTooltipText("red")
+        redToolTipLabel.txt = updateTooltipText("red")
         if (amount.toInt() >= 5) {
             orangeButton.isVisible = true
         }
@@ -351,7 +902,7 @@ class PlanetView(
     }
     private fun redValueChanged(value : BigDecimal) {
         redValue = value
-        redValueLabel.txt = formatNumberWithDecimal(value)
+        redValueLabel.txt = formatNumberWithLetter(value)
     }
     private fun redRateChanged(rate : BigDecimal) {
         redRate = rate
@@ -360,7 +911,7 @@ class PlanetView(
 
     private fun orangeOwnedChanged(amount : BigDecimal) {
         orangeOwned = amount
-        orangeToolTip.txt = updateTooltipText("orange")
+        orangeToolTipLabel.txt = updateTooltipText("orange")
         if (amount.toInt() >= 5) {
             //yellowButton.isVisible = true
         }
@@ -384,6 +935,34 @@ class PlanetView(
             "Buy ${buyAmount.roundToInt()}\nAssign: ${formatNumberNoDecimal(cost)} AP"
         }
     }
+
+    private fun formatNumberWithLetter(number : BigDecimal) : String {
+        return if (number < MILLION) {
+            twoDecimalWithCommasFormat.format(number)
+        } else if (number < BILLION) {
+            twoDecimalWithCommasFormat.format(number.divide(MILLION)) + " M"
+        } else if (number < TRILLION) {
+            twoDecimalWithCommasFormat.format(number.divide(BILLION)) + " B"
+        } else if (number < QUADRILLION) {
+            twoDecimalWithCommasFormat.format(number.divide(TRILLION)) + " T"
+        } else if (number < QUINTILLION) {
+            twoDecimalWithCommasFormat.format(number.divide(QUADRILLION)) + " Qa"
+        } else if (number < SEXTILLION) {
+            twoDecimalWithCommasFormat.format(number.divide(QUINTILLION)) + " Qi"
+        } else if (number < SEPTILLION) {
+            twoDecimalWithCommasFormat.format(number.divide(SEXTILLION)) + " Sx"
+        } else if (number < OCTILLION) {
+            twoDecimalWithCommasFormat.format(number.divide(SEPTILLION)) + " Sp"
+        } else if (number < NONILLION) {
+            twoDecimalWithCommasFormat.format(number.divide(OCTILLION)) + " Oc"
+        } else if (number < DECILLION) {
+            twoDecimalWithCommasFormat.format(number.divide(NONILLION)) + " No"
+        } else if (number < UNDECILLION) {
+            twoDecimalWithCommasFormat.format(number.divide(DECILLION)) + " Dc"
+        } else {
+            formatExponent2Dec(number)
+        }
+    }
     private fun formatNumberWithDecimal(number : BigDecimal) : String {
         return decimalFormat.format(number)
     }
@@ -396,7 +975,7 @@ class PlanetView(
 
     private fun checkForGameEnd(amount : BigDecimal) {
         // check that the game is not already ended so we dont call multiple times
-        if (amount >= MAX_POP_AMOUNT.toBigDecimal()) {
+        if (amount >= PLANETARY_SCORE) {
             fire(GameCompletedEvent())
         }
     }
@@ -421,7 +1000,18 @@ class PlanetView(
 
     companion object {
         val log = logger<PlanetView>()
-        private val MAX_POP_AMOUNT = BigInteger("1000000000000")
+        private val PLANETARY_SCORE = BigDecimal(1e308)
+        private val MILLION = BigDecimal(1e6)
+        private val BILLION = BigDecimal(1e9)
+        private val TRILLION = BigDecimal(1e12)
+        private val QUADRILLION = BigDecimal(1e15)
+        private val QUINTILLION = BigDecimal(1e18)
+        private val SEXTILLION = BigDecimal(1e21)
+        private val SEPTILLION = BigDecimal(1e24)
+        private val OCTILLION = BigDecimal(1e27)
+        private val NONILLION = BigDecimal(1e30)
+        private val DECILLION = BigDecimal(1e33)
+        private val UNDECILLION = BigDecimal(1e36)
     }
 }
 

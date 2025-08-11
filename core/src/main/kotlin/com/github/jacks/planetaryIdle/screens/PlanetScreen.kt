@@ -83,6 +83,6 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
     }
 
     companion object {
-        private val log = logger<PlanetaryIdle>()
+        val log = logger<PlanetaryIdle>()
     }
 }

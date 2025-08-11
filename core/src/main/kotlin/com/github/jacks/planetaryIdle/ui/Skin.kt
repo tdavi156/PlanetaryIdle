@@ -109,7 +109,15 @@ enum class Labels {
     BLACK,
 
     SMALL_RED_BGD,
-    SMALL_ORANGE_BGD;
+    SMALL_ORANGE_BGD,
+    SMALL_YELLOW_BGD,
+    SMALL_GREEN_BGD,
+    SMALL_BLUE_BGD,
+    SMALL_PURPLE_BGD,
+    SMALL_PINK_BGD,
+    SMALL_BROWN_BGD,
+    SMALL_WHITE_BGD,
+    SMALL_BLACK_BGD;
 
     val skinKey = this.name.lowercase()
 }
@@ -270,6 +278,46 @@ private fun @SkinDsl Skin.loadLabels(skin : Skin) {
         font = skin[Fonts.SMALL_BUTTON]
         fontColor = Color.BLACK
         background = skin.get(Drawables.BUTTON_ORANGE_UP)
+    }
+    label(Labels.SMALL_YELLOW_BGD.skinKey) {
+        font = skin[Fonts.SMALL_BUTTON]
+        fontColor = Color.BLACK
+        background = skin.get(Drawables.BUTTON_YELLOW_UP)
+    }
+    label(Labels.SMALL_GREEN_BGD.skinKey) {
+        font = skin[Fonts.SMALL_BUTTON]
+        fontColor = Color.BLACK
+        background = skin.get(Drawables.BUTTON_GREEN_UP)
+    }
+    label(Labels.SMALL_BLUE_BGD.skinKey) {
+        font = skin[Fonts.SMALL_BUTTON]
+        fontColor = Color.BLACK
+        background = skin.get(Drawables.BUTTON_BLUE_UP)
+    }
+    label(Labels.SMALL_PURPLE_BGD.skinKey) {
+        font = skin[Fonts.SMALL_BUTTON]
+        fontColor = Color.BLACK
+        background = skin.get(Drawables.BUTTON_PURPLE_UP)
+    }
+    label(Labels.SMALL_PINK_BGD.skinKey) {
+        font = skin[Fonts.SMALL_BUTTON]
+        fontColor = Color.BLACK
+        background = skin.get(Drawables.BUTTON_PINK_UP)
+    }
+    label(Labels.SMALL_BROWN_BGD.skinKey) {
+        font = skin[Fonts.SMALL_BUTTON]
+        fontColor = Color.BLACK
+        background = skin.get(Drawables.BUTTON_BROWN_UP)
+    }
+    label(Labels.SMALL_WHITE_BGD.skinKey) {
+        font = skin[Fonts.SMALL_BUTTON]
+        fontColor = Color.BLACK
+        background = skin.get(Drawables.BUTTON_WHITE_UP)
+    }
+    label(Labels.SMALL_BLACK_BGD.skinKey) {
+        font = skin[Fonts.SMALL_BUTTON]
+        fontColor = Color.BLACK
+        background = skin.get(Drawables.BUTTON_BLACK_UP)
     }
 }
 
