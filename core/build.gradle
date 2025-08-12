@@ -19,6 +19,7 @@ dependencies {
   api "io.github.quillraven.fleks:Fleks:$fleksVersion"
   api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
   api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion"
+  api "ch.obermuhlner:big-math:$bigMathVersion"
 
   testApi "org.jetbrains.kotlin:kotlin-test"
   testImplementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"

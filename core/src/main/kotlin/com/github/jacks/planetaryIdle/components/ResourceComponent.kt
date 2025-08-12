@@ -1,8 +1,10 @@
 package com.github.jacks.planetaryIdle.components
 
+import com.badlogic.gdx.math.MathUtils
 import com.github.jacks.planetaryIdle.PlanetaryIdle.Companion.FRAMES_PER_SECOND_INT
 import com.github.jacks.planetaryIdle.screens.PlanetScreen
 import java.math.*
+import kotlin.io.path.Path
 
 enum class ScoreResources(
     val resourceName : String
@@ -56,7 +58,15 @@ data class ResourceComponent(
         get() = baseCost.multiply((ONE + costScaling).pow(amountOwned.toInt()))
 
     val value : BigDecimal
-        get() = baseValue + (valueScaling * amountSold)
+        get() {
+            return if (amountOwned == ZERO) {
+                ZERO
+            } else if (amountOwned == ONE) {
+                baseValue
+            } else {
+                baseValue + (valueScaling * amountSold)
+            }
+        }
 
     val rate : BigDecimal
         get() = baseRate + (rateScaling * amountOwned)
@@ -70,6 +80,7 @@ data class ResourceComponent(
         }
 
     companion object {
-        val ONE = BigDecimal("1")
+        val ZERO = BigDecimal(0)
+        val ONE = BigDecimal(1)
     }
 }

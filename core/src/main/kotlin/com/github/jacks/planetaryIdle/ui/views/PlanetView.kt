@@ -1,5 +1,6 @@
 package com.github.jacks.planetaryIdle.ui.views
 
+import ch.obermuhlner.math.big.BigDecimalMath
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Actor
@@ -26,6 +27,8 @@ import ktx.log.logger
 import ktx.preferences.get
 import ktx.scene2d.*
 import java.math.BigDecimal
+import java.math.MathContext
+import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
@@ -40,6 +43,7 @@ class PlanetView(
     private var currentView : String = "planetView"
     private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
 
+    private val mathCx : MathContext = MathContext(3)
     private val twoDecimalWithCommasFormat : NumberFormat = DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance())
 
     private val decimalFormat : NumberFormat = NumberFormat.getInstance()
@@ -836,7 +840,6 @@ class PlanetView(
             }
         }
     }
-
     private fun updateButtonText(buttonName : String) : String {
         return when (buttonName) {
             "red" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
@@ -876,12 +879,24 @@ class PlanetView(
         goldCoinsLabel.txt = "You have ${formatNumberWithLetter(amount)} gold coins."
         updateAvailable(amount)
     }
-    private fun productionRateChanged(amount : BigDecimal) {
-        if (amount < BigDecimal("1000")) {
-            productionRateLabel.txt = "You are producing ${formatNumberWithDecimal(amount)} food per second."
-        } else {
-            productionRateLabel.txt = "You are producing ${formatExponent2Dec(amount)} food per second."
+    private fun productionRateChanged(rate : BigDecimal) {
+        productionRate = rate
+        productionRateLabel.txt = "You are producing ${formatNumberWithLetter(rate)} food per second."
+        val prodMan = BigDecimalMath.mantissa(productionRate)
+        val prodExp = BigDecimalMath.exponent(productionRate).toBigDecimal()
+        val expPercent = prodExp.divide(PLANETARY_EXPONENT, 6, RoundingMode.UP)
+        val manPercent = expPercent * prodMan.divide(BigDecimal(10))
+        var prodPercent = 0f
+
+        if (expPercent != null && expPercent < BigDecimal(1 / 308)) {
+
         }
+
+        if (productionRate > ONE && expPercent != null) {
+            prodPercent = (expPercent + manPercent).toFloat()
+        }
+        productionRateProgressLabel.txt = "${"%.2f".format(prodPercent.coerceAtMost(1f) * 100f)} %"
+        colonizationProgress.scaleX = prodPercent
     }
     private fun buyAmountChange(amount : Float) {
         //setBuyAmountButton.txt = "Buy ${amount.roundToInt()}"
@@ -1008,6 +1023,9 @@ class PlanetView(
 
     companion object {
         val log = logger<PlanetView>()
+        private val ZERO = BigDecimal(0)
+        private val ONE = BigDecimal(1)
+        private val PLANETARY_EXPONENT = BigDecimal(308)
         private val PLANETARY_SCORE = BigDecimal(1e308)
         private val MILLION = BigDecimal(1e6)
         private val BILLION = BigDecimal(1e9)

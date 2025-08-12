@@ -128,9 +128,9 @@ class PlanetModel(
                 updateModelCost(rscComp)
                 updateModelValue(rscComp)
                 updateModelRate(rscComp)
-                updateModelProductionRate()
             }
             is ResourceUpdateEvent -> {
+                updateModelProductionRate()
                 updateModelValue(event.rscComp)
                 goldCoins += event.rscComp.value
                 preferences.flush { this["gold_coins"] = goldCoins.toString() }
@@ -370,14 +370,14 @@ class PlanetModel(
      * productionRate
      */
     private fun updateModelProductionRate() {
-        var productionGain = BigDecimal(0)
+        var productionRate = BigDecimal(0)
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
             if (rscComp.name == "gold_coins") return@forEach
-            productionGain += (rscComp.baseValue * rscComp.amountOwned)
+            productionRate += (rscComp.value * rscComp.rate)
         }
-        productionRate = productionGain
-        preferences.flush { this["production_rate"] = productionRate.toString() }
+        this@PlanetModel.productionRate = productionRate
+        preferences.flush { this["production_rate"] = this@PlanetModel.productionRate.toString() }
     }
 
     /**
