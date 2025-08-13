@@ -64,72 +64,72 @@ class PlanetView(
     private var redOwned = BigDecimal(preferences["red_owned", "0"])
     private var redCost = BigDecimal(preferences["red_cost", "1"])
     private var redValue = BigDecimal(preferences["red_value", "0.31"])
-    private var redValueIncrease = BigDecimal(preferences["red_value_increase", "0.31"])
+    private var redValueIncrease = BigDecimal(preferences["red_value_increase", "0.04"])
     private var redRate = BigDecimal(preferences["red_rate", "1.3"])
     private var redRateIncrease = BigDecimal(preferences["red_rate_increase", "0.17"])
 
     private var orangeOwned = BigDecimal(preferences["orange_owned", "0"])
     private var orangeCost = BigDecimal(preferences["orange_cost", "100"])
     private var orangeValue = BigDecimal(preferences["orange_value", "2.4"])
-    private var orangeValueIncrease = BigDecimal(preferences["orange_value_increase", "2.4"])
+    private var orangeValueIncrease = BigDecimal(preferences["orange_value_increase", "0.09"])
     private var orangeRate = BigDecimal(preferences["orange_rate", "0.95"])
     private var orangeRateIncrease = BigDecimal(preferences["orange_rate_increase", "0.11"])
 
     private var yellowOwned = BigDecimal(preferences["yellow_owned", "0"])
-    private var yellowCost = BigDecimal(preferences["yellow_cost", "1"])
-    private var yellowValue = BigDecimal(preferences["yellow_value", "0.31"])
-    private var yellowValueIncrease = BigDecimal(preferences["yellow_value_increase", "0.31"])
-    private var yellowRate = BigDecimal(preferences["yellow_rate", "1.3"])
-    private var yellowRateIncrease = BigDecimal(preferences["yellow_rate_increase", "0.17"])
+    private var yellowCost = BigDecimal(preferences["yellow_cost", "1000"])
+    private var yellowValue = BigDecimal(preferences["yellow_value", "18.9"])
+    private var yellowValueIncrease = BigDecimal(preferences["yellow_value_increase", "0.23"])
+    private var yellowRate = BigDecimal(preferences["yellow_rate", "0.67"])
+    private var yellowRateIncrease = BigDecimal(preferences["yellow_rate_increase", "0.07"])
 
     private var greenOwned = BigDecimal(preferences["green_owned", "0"])
-    private var greenCost = BigDecimal(preferences["green_cost", "1"])
-    private var greenValue = BigDecimal(preferences["green_value", "0.31"])
-    private var greenValueIncrease = BigDecimal(preferences["green_value_increase", "0.31"])
-    private var greenRate = BigDecimal(preferences["green_rate", "1.3"])
-    private var greenRateIncrease = BigDecimal(preferences["green_rate_increase", "0.17"])
+    private var greenCost = BigDecimal(preferences["green_cost", "50000"])
+    private var greenValue = BigDecimal(preferences["green_value", "147.1"])
+    private var greenValueIncrease = BigDecimal(preferences["green_value_increase", "3.21"])
+    private var greenRate = BigDecimal(preferences["green_rate", "0.43"])
+    private var greenRateIncrease = BigDecimal(preferences["green_rate_increase", "0.06"])
 
     private var blueOwned = BigDecimal(preferences["blue_owned", "0"])
-    private var blueCost = BigDecimal(preferences["blue_cost", "1"])
-    private var blueValue = BigDecimal(preferences["blue_value", "0.31"])
-    private var blueValueIncrease = BigDecimal(preferences["blue_value_increase", "0.31"])
-    private var blueRate = BigDecimal(preferences["blue_rate", "1.3"])
-    private var blueRateIncrease = BigDecimal(preferences["blue_rate_increase", "0.17"])
+    private var blueCost = BigDecimal(preferences["blue_cost", "1000000"])
+    private var blueValue = BigDecimal(preferences["blue_value", "1147"])
+    private var blueValueIncrease = BigDecimal(preferences["blue_value_increase", "12.5"])
+    private var blueRate = BigDecimal(preferences["blue_rate", "0.21"])
+    private var blueRateIncrease = BigDecimal(preferences["blue_rate_increase", "0.05"])
 
     private var purpleOwned = BigDecimal(preferences["purple_owned", "0"])
-    private var purpleCost = BigDecimal(preferences["purple_cost", "1"])
-    private var purpleValue = BigDecimal(preferences["purple_value", "0.31"])
-    private var purpleValueIncrease = BigDecimal(preferences["purple_value_increase", "0.31"])
-    private var purpleRate = BigDecimal(preferences["purple_rate", "1.3"])
-    private var purpleRateIncrease = BigDecimal(preferences["purple_rate_increase", "0.17"])
+    private var purpleCost = BigDecimal(preferences["purple_cost", "500000000"])
+    private var purpleValue = BigDecimal(preferences["purple_value", "8952"])
+    private var purpleValueIncrease = BigDecimal(preferences["purple_value_increase", "46.3"])
+    private var purpleRate = BigDecimal(preferences["purple_rate", "0.12"])
+    private var purpleRateIncrease = BigDecimal(preferences["purple_rate_increase", "0.04"])
 
     private var pinkOwned = BigDecimal(preferences["pink_owned", "0"])
-    private var pinkCost = BigDecimal(preferences["pink_cost", "1"])
-    private var pinkValue = BigDecimal(preferences["pink_value", "0.31"])
-    private var pinkValueIncrease = BigDecimal(preferences["pink_value_increase", "0.31"])
-    private var pinkRate = BigDecimal(preferences["pink_rate", "1.3"])
-    private var pinkRateIncrease = BigDecimal(preferences["pink_rate_increase", "0.17"])
+    private var pinkCost = BigDecimal(preferences["pink_cost", "10000000000"])
+    private var pinkValue = BigDecimal(preferences["pink_value", "69811"])
+    private var pinkValueIncrease = BigDecimal(preferences["pink_value_increase", "374.8"])
+    private var pinkRate = BigDecimal(preferences["pink_rate", "0.08"])
+    private var pinkRateIncrease = BigDecimal(preferences["pink_rate_increase", "0.03"])
 
     private var brownOwned = BigDecimal(preferences["brown_owned", "0"])
-    private var brownCost = BigDecimal(preferences["brown_cost", "1"])
-    private var brownValue = BigDecimal(preferences["brown_value", "0.31"])
-    private var brownValueIncrease = BigDecimal(preferences["brown_value_increase", "0.31"])
-    private var brownRate = BigDecimal(preferences["brown_rate", "1.3"])
-    private var brownRateIncrease = BigDecimal(preferences["brown_rate_increase", "0.17"])
+    private var brownCost = BigDecimal(preferences["brown_cost", "100000000000000"])
+    private var brownValue = BigDecimal(preferences["brown_value", "544532"])
+    private var brownValueIncrease = BigDecimal(preferences["brown_value_increase", "2567"])
+    private var brownRate = BigDecimal(preferences["brown_rate", "0.05"])
+    private var brownRateIncrease = BigDecimal(preferences["brown_rate_increase", "0.02"])
 
     private var whiteOwned = BigDecimal(preferences["white_owned", "0"])
-    private var whiteCost = BigDecimal(preferences["white_cost", "1"])
-    private var whiteValue = BigDecimal(preferences["white_value", "0.31"])
-    private var whiteValueIncrease = BigDecimal(preferences["white_value_increase", "0.31"])
-    private var whiteRate = BigDecimal(preferences["white_rate", "1.3"])
-    private var whiteRateIncrease = BigDecimal(preferences["white_rate_increase", "0.17"])
+    private var whiteCost = BigDecimal(preferences["white_cost", "1000000000000000000"])
+    private var whiteValue = BigDecimal(preferences["white_value", "4247354"])
+    private var whiteValueIncrease = BigDecimal(preferences["white_value_increase", "74502"])
+    private var whiteRate = BigDecimal(preferences["white_rate", "0.03"])
+    private var whiteRateIncrease = BigDecimal(preferences["white_rate_increase", "0.01"])
 
     private var blackOwned = BigDecimal(preferences["black_owned", "0"])
-    private var blackCost = BigDecimal(preferences["black_cost", "1"])
-    private var blackValue = BigDecimal(preferences["black_value", "0.31"])
-    private var blackValueIncrease = BigDecimal(preferences["black_value_increase", "0.31"])
-    private var blackRate = BigDecimal(preferences["black_rate", "1.3"])
-    private var blackRateIncrease = BigDecimal(preferences["black_rate_increase", "0.17"])
+    private var blackCost = BigDecimal(preferences["black_cost", "1000000000000000000000000"])
+    private var blackValue = BigDecimal(preferences["black_value", "33129365"])
+    private var blackValueIncrease = BigDecimal(preferences["black_value_increase", "3312936"])
+    private var blackRate = BigDecimal(preferences["black_rate", "0.01"])
+    private var blackRateIncrease = BigDecimal(preferences["black_rate_increase", "0.005"])
     // tables
 
     // buttons
@@ -963,25 +963,25 @@ class PlanetView(
         return if (number < MILLION) {
             twoDecimalWithCommasFormat.format(number)
         } else if (number < BILLION) {
-            twoDecimalWithCommasFormat.format(number.divide(MILLION)) + " M"
+            twoDecimalWithCommasFormat.format(number.divide(MILLION, 6, RoundingMode.UP)) + " M"
         } else if (number < TRILLION) {
-            twoDecimalWithCommasFormat.format(number.divide(BILLION)) + " B"
+            twoDecimalWithCommasFormat.format(number.divide(BILLION, 6, RoundingMode.UP)) + " B"
         } else if (number < QUADRILLION) {
-            twoDecimalWithCommasFormat.format(number.divide(TRILLION)) + " T"
+            twoDecimalWithCommasFormat.format(number.divide(TRILLION, 6, RoundingMode.UP)) + " T"
         } else if (number < QUINTILLION) {
-            twoDecimalWithCommasFormat.format(number.divide(QUADRILLION)) + " Qa"
+            twoDecimalWithCommasFormat.format(number.divide(QUADRILLION, 6, RoundingMode.UP)) + " Qa"
         } else if (number < SEXTILLION) {
-            twoDecimalWithCommasFormat.format(number.divide(QUINTILLION)) + " Qi"
+            twoDecimalWithCommasFormat.format(number.divide(QUINTILLION, 6, RoundingMode.UP)) + " Qi"
         } else if (number < SEPTILLION) {
-            twoDecimalWithCommasFormat.format(number.divide(SEXTILLION)) + " Sx"
+            twoDecimalWithCommasFormat.format(number.divide(SEXTILLION, 6, RoundingMode.UP)) + " Sx"
         } else if (number < OCTILLION) {
-            twoDecimalWithCommasFormat.format(number.divide(SEPTILLION)) + " Sp"
+            twoDecimalWithCommasFormat.format(number.divide(SEPTILLION, 6, RoundingMode.UP)) + " Sp"
         } else if (number < NONILLION) {
-            twoDecimalWithCommasFormat.format(number.divide(OCTILLION)) + " Oc"
+            twoDecimalWithCommasFormat.format(number.divide(OCTILLION, 6, RoundingMode.UP)) + " Oc"
         } else if (number < DECILLION) {
-            twoDecimalWithCommasFormat.format(number.divide(NONILLION)) + " No"
+            twoDecimalWithCommasFormat.format(number.divide(NONILLION, 6, RoundingMode.UP)) + " No"
         } else if (number < UNDECILLION) {
-            twoDecimalWithCommasFormat.format(number.divide(DECILLION)) + " Dc"
+            twoDecimalWithCommasFormat.format(number.divide(DECILLION, 6, RoundingMode.UP)) + " Dc"
         } else {
             formatExponent2Dec(number)
         }
