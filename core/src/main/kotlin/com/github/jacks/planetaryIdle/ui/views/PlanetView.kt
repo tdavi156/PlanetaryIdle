@@ -287,7 +287,6 @@ class PlanetView(
                         isDisabled = this@PlanetView.goldCoins < this@PlanetView.redCost
                         this.addListener(object : ChangeListener() {
                             override fun changed(event: ChangeEvent, actor: Actor) {
-                                this@PlanetView.redToolTipLabel.isVisible = isOver
                                 stage.fire(BuyResourceEvent("red"))
                             }
                         })
@@ -889,7 +888,7 @@ class PlanetView(
         var prodPercent = 0f
 
         if (expPercent != null && expPercent < BigDecimal(1 / 308)) {
-
+            prodPercent = manPercent.toFloat()
         }
 
         if (productionRate > ONE && expPercent != null) {
@@ -912,43 +911,6 @@ class PlanetView(
         brownButton.isDisabled = amount < brownCost
         whiteButton.isDisabled = amount < whiteCost
         blackButton.isDisabled = amount < blackCost
-    }
-    private fun redOwnedChanged(amount : BigDecimal) {
-        redOwned = amount
-        redToolTipLabel.txt = updateTooltipText("red")
-        if (amount.toInt() >= 5) {
-            orangeButton.isVisible = true
-        }
-    }
-    private fun redCostChanged(cost : BigDecimal) {
-        redCost = cost
-    }
-    private fun redValueChanged(value : BigDecimal) {
-        redValue = value
-        redValueLabel.txt = formatNumberWithLetter(value)
-    }
-    private fun redRateChanged(rate : BigDecimal) {
-        redRate = rate
-        redButton.txt = updateButtonText("red")
-    }
-
-    private fun orangeOwnedChanged(amount : BigDecimal) {
-        orangeOwned = amount
-        orangeToolTipLabel.txt = updateTooltipText("orange")
-        if (amount.toInt() >= 5) {
-            //yellowButton.isVisible = true
-        }
-    }
-    private fun orangeCostChanged(cost : BigDecimal) {
-        orangeCost = cost
-    }
-    private fun orangeValueChanged(value : BigDecimal) {
-        orangeValue = value
-        orangeValueLabel.txt = formatNumberWithDecimal(value)
-    }
-    private fun orangeRateChanged(rate : BigDecimal) {
-        orangeRate = rate
-        orangeButton.txt = updateButtonText("orange")
     }
 
     private fun formatBuyButton(cost : BigDecimal) : String {

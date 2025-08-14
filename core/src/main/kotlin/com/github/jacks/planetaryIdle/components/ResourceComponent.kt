@@ -1,10 +1,7 @@
 package com.github.jacks.planetaryIdle.components
 
-import com.badlogic.gdx.math.MathUtils
 import com.github.jacks.planetaryIdle.PlanetaryIdle.Companion.FRAMES_PER_SECOND_INT
-import com.github.jacks.planetaryIdle.screens.PlanetScreen
 import java.math.*
-import kotlin.io.path.Path
 
 enum class ScoreResources(
     val resourceName : String

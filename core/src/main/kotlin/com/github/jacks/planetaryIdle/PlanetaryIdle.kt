@@ -10,7 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.github.jacks.planetaryIdle.events.QuitGameEvent
-import com.github.jacks.planetaryIdle.screens.PlanetScreen
+import com.github.jacks.planetaryIdle.screens.GameScreen
 import com.github.jacks.planetaryIdle.ui.disposeSkin
 import com.github.jacks.planetaryIdle.ui.loadSkin
 import ktx.app.KtxGame
@@ -36,8 +36,8 @@ class PlanetaryIdle : KtxGame<KtxScreen>(), EventListener {
         loadSkin()
 
         stage.addListener(this)
-        addScreen(PlanetScreen(this))
-        setScreen<PlanetScreen>()
+        addScreen(GameScreen(this))
+        setScreen<GameScreen>()
     }
 
     override fun render() {

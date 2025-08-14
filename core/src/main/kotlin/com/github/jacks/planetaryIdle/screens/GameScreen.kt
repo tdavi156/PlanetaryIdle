@@ -11,16 +11,18 @@ import com.github.jacks.planetaryIdle.systems.RenderSystem
 import com.github.jacks.planetaryIdle.systems.ResourceUpdateSystem
 import com.github.jacks.planetaryIdle.ui.models.MenuModel
 import com.github.jacks.planetaryIdle.ui.models.PlanetModel
+import com.github.jacks.planetaryIdle.ui.models.ShopModel
 import com.github.jacks.planetaryIdle.ui.views.backgroundView
 import com.github.jacks.planetaryIdle.ui.views.menuView
 import com.github.jacks.planetaryIdle.ui.views.planetView
+import com.github.jacks.planetaryIdle.ui.views.shopView
 import com.github.quillraven.fleks.World
 import com.github.quillraven.fleks.world
 import ktx.app.KtxScreen
 import ktx.log.logger
 import ktx.scene2d.actors
 
-class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
+class GameScreen(game : PlanetaryIdle) : KtxScreen {
 
     private val stage = game.stage
 
@@ -44,14 +46,14 @@ class PlanetScreen(game : PlanetaryIdle) : KtxScreen {
         stage.actors {
             log.debug { "Stage is initialized." }
 
-            // background color
+            // background, actor.get(0)
             backgroundView()
 
-            // top bar information (always present)
-            /* */
+            // planetView, actor.get(1), default view on game start
+            planetView(PlanetModel(entityWorld, stage)) { isVisible = true }
 
-            // middle area (current view)
-            planetView(PlanetModel(entityWorld, stage))
+            // shopView, actor.get(2)
+            shopView(ShopModel(entityWorld, stage)) { isVisible = false }
 
             // right side menu (always present)
             menuView(MenuModel(stage))

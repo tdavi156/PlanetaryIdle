@@ -3,23 +3,31 @@ package com.github.jacks.planetaryIdle.ui.views
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.InputEvent
+import com.badlogic.gdx.scenes.scene2d.InputListener
+import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
+import com.badlogic.gdx.utils.Align
 import com.github.jacks.planetaryIdle.events.QuitGameEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.SaveGameEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.ui.Buttons
+import com.github.jacks.planetaryIdle.ui.Labels
 import com.github.jacks.planetaryIdle.ui.models.MenuModel
+import com.github.jacks.planetaryIdle.ui.views.PlanetView
 import ktx.actors.txt
+import ktx.collections.get
 import ktx.log.logger
 import ktx.scene2d.KTable
 import ktx.scene2d.KWidget
 import ktx.scene2d.Scene2DSkin
 import ktx.scene2d.Scene2dDsl
 import ktx.scene2d.actor
+import ktx.scene2d.label
 import ktx.scene2d.table
 import ktx.scene2d.textButton
 
@@ -35,47 +43,111 @@ class MenuView(
     private val galaxyButton : TextButton
     private val automationButton : TextButton
     private val challengesButton : TextButton
+    private val shopButton : TextButton
     private val achievementsButton : TextButton
     private val statisticsButton : TextButton
     private val settingsButton : TextButton
     private val resetButton : TextButton
     private val quitButton : TextButton
 
+    private lateinit var planetToolTipLabel : Label
+    private lateinit var galaxyToolTipLabel : Label
+    private lateinit var automationToolTipLabel : Label
+    private lateinit var challengesToolTipLabel : Label
+    private lateinit var shopToolTipLabel : Label
+    private lateinit var achievementsToolTipLabel : Label
+    private lateinit var statisticsToolTipLabel : Label
+    private lateinit var settingsToolTipLabel : Label
+    private lateinit var resetToolTipLabel : Label
+    private lateinit var quitToolTipLabel : Label
+
     init {
         setFillParent(true)
         stage = getStage()
 
-        // UI
+        // tooltips
+        table { tooltipTableCell ->
+            this@MenuView.planetToolTipLabel = label("planet", Labels.SMALL_RED_BGD.skinKey) { cell ->
+                cell.expand().top().right().width(150f).height(45f).pad(0f, 5f, 0f, 0f)
+                this.setAlignment(Align.center)
+                this.isVisible = false
+            }
+            row()
+            this@MenuView.shopToolTipLabel = label("shop", Labels.SMALL_RED_BGD.skinKey) { cell ->
+                cell.expand().top().right().width(150f).height(45f).pad(0f, 5f, 0f, 0f)
+                this.setAlignment(Align.center)
+                this.isVisible = false
+            }
+            row()
+            tooltipTableCell.expand().fill().top().left().width(230f)
+        }
+
+        // menu buttons
         table { menuTableCell ->
             this@MenuView.planetButton = textButton("Planet", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(4f,2f,2f,2f)
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
-                        // this@MenuView.currentView = "MenuView"
-                        //log.debug { "currentView -> ${this@MenuView.planetButton.txt}" }
+                        stage.actors.get(1).isVisible = true
+                        stage.actors.get(2).isVisible = false
+                    }
+                })
+                this.addListener(object : InputListener() {
+                    override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                        this@MenuView.planetToolTipLabel.isVisible = isOver
+                        super.enter(event, x, y, pointer, fromActor)
+                    }
+                    override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                        this@MenuView.planetToolTipLabel.isVisible = isOver
+                        super.exit(event, x, y, pointer, toActor)
                     }
                 })
             }
             row()
-            this@MenuView.galaxyButton = textButton("Galaxy", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
+            // galaxy, stage 2
+            this@MenuView.galaxyButton = textButton("Locked", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
+                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
+                isDisabled = true
+                this.addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent, actor: Actor) {
+                        stage.actors.get(1).isVisible = false
+                        // stage.actors.get(2).isVisible = true
+                    }
+                })
+            }
+            row()
+            // automation
+            this@MenuView.automationButton = textButton("Locked", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
+                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
+                isDisabled = true
+            }
+            row()
+            // challenges
+            this@MenuView.challengesButton = textButton("Locked", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
+                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
+                isDisabled = true
+            }
+            row()
+            // shop
+            this@MenuView.shopButton = textButton("Shop", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = false
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
-                        // this@MenuView.currentView = "galaxyView"
-                        //log.debug { "currentView -> ${this@MenuView.galaxyButton.txt}" }
+                        stage.actors.get(1).isVisible = false
+                        stage.actors.get(2).isVisible = true
                     }
                 })
-            }
-            row()
-            this@MenuView.automationButton = textButton("Automation", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
-                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
-                isDisabled = true
-            }
-            row()
-            this@MenuView.challengesButton = textButton("Challenges", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
-                cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
-                isDisabled = true
+                this.addListener(object : InputListener() {
+                    override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                        this@MenuView.shopToolTipLabel.isVisible = isOver
+                        super.enter(event, x, y, pointer, fromActor)
+                    }
+                    override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                        this@MenuView.shopToolTipLabel.isVisible = isOver
+                        super.exit(event, x, y, pointer, toActor)
+                    }
+                })
             }
             row()
             this@MenuView.achievementsButton = textButton("Achievements", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
