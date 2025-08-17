@@ -50,13 +50,18 @@ class GameScreen(game : PlanetaryIdle) : KtxScreen {
             backgroundView()
 
             // planetView, actor.get(1), default view on game start
-            planetView(PlanetModel(entityWorld, stage)) { isVisible = true }
+            planetView(PlanetModel(entityWorld, stage)) {
+                //debugAll()
+                isVisible = true
+            }
 
             // shopView, actor.get(2)
             shopView(ShopModel(entityWorld, stage)) { isVisible = false }
 
             // right side menu (always present)
-            menuView(MenuModel(stage))
+            menuView(MenuModel(stage)) {
+                //debugAll()
+            }
         }
         stage.isDebugAll = false
     }

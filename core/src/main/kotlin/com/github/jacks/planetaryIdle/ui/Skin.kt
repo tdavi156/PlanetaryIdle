@@ -117,7 +117,8 @@ enum class Labels {
     SMALL_PINK_BGD,
     SMALL_BROWN_BGD,
     SMALL_WHITE_BGD,
-    SMALL_BLACK_BGD;
+    SMALL_BLACK_BGD,
+    SMALL_GREY_BGD;
 
     val skinKey = this.name.lowercase()
 }
@@ -316,8 +317,13 @@ private fun @SkinDsl Skin.loadLabels(skin : Skin) {
     }
     label(Labels.SMALL_BLACK_BGD.skinKey) {
         font = skin[Fonts.SMALL_BUTTON]
-        fontColor = Color.BLACK
+        fontColor = Color.WHITE
         background = skin.get(Drawables.BUTTON_BLACK_UP)
+    }
+    label(Labels.SMALL_GREY_BGD.skinKey) {
+        font = skin[Fonts.SMALL_BUTTON]
+        fontColor = Color.WHITE
+        background = skin.get(Drawables.BUTTON_GREY_UP)
     }
 }
 

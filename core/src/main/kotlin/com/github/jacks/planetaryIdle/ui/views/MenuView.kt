@@ -67,19 +67,67 @@ class MenuView(
 
         // tooltips
         table { tooltipTableCell ->
-            this@MenuView.planetToolTipLabel = label("planet", Labels.SMALL_RED_BGD.skinKey) { cell ->
-                cell.expand().top().right().width(150f).height(45f).pad(0f, 5f, 0f, 0f)
+            this@MenuView.planetToolTipLabel = label("planet", Labels.SMALL_GREY_BGD.skinKey) { cell ->
+                cell.expand().top().right().width(150f).height(45f).pad(4f, 2f, 2f, 2f)
                 this.setAlignment(Align.center)
                 this.isVisible = false
             }
             row()
-            this@MenuView.shopToolTipLabel = label("shop", Labels.SMALL_RED_BGD.skinKey) { cell ->
-                cell.expand().top().right().width(150f).height(45f).pad(0f, 5f, 0f, 0f)
+            this@MenuView.galaxyToolTipLabel = label("galaxy", Labels.SMALL_GREY_BGD.skinKey) { cell ->
+                cell.expand().top().right().width(150f).height(45f).pad(2f, 2f, 2f, 2f)
                 this.setAlignment(Align.center)
                 this.isVisible = false
             }
             row()
-            tooltipTableCell.expand().fill().top().left().width(230f)
+            this@MenuView.automationToolTipLabel = label("automation", Labels.SMALL_GREY_BGD.skinKey) { cell ->
+                cell.expand().top().right().width(150f).height(45f).pad(2f, 2f, 2f, 2f)
+                this.setAlignment(Align.center)
+                this.isVisible = false
+            }
+            row()
+            this@MenuView.challengesToolTipLabel = label("challenges", Labels.SMALL_GREY_BGD.skinKey) { cell ->
+                cell.expand().top().right().width(150f).height(45f).pad(2f, 2f, 2f, 2f)
+                this.setAlignment(Align.center)
+                this.isVisible = false
+            }
+            row()
+            this@MenuView.shopToolTipLabel = label("shop", Labels.SMALL_GREY_BGD.skinKey) { cell ->
+                cell.expand().top().right().width(150f).height(45f).pad(2f, 2f, 2f, 2f)
+                this.setAlignment(Align.center)
+                this.isVisible = false
+            }
+            row()
+            this@MenuView.achievementsToolTipLabel = label("achievements", Labels.SMALL_GREY_BGD.skinKey) { cell ->
+                cell.expand().top().right().width(150f).height(45f).pad(2f, 2f, 2f, 2f)
+                this.setAlignment(Align.center)
+                this.isVisible = false
+            }
+            row()
+            this@MenuView.statisticsToolTipLabel = label("statistics", Labels.SMALL_GREY_BGD.skinKey) { cell ->
+                cell.expand().top().right().width(150f).height(45f).pad(2f, 2f, 2f, 2f)
+                this.setAlignment(Align.center)
+                this.isVisible = false
+            }
+            row()
+            this@MenuView.settingsToolTipLabel = label("settings", Labels.SMALL_GREY_BGD.skinKey) { cell ->
+                cell.expand().top().right().width(150f).height(45f).pad(2f, 2f, 2f, 2f)
+                this.setAlignment(Align.center)
+                this.isVisible = false
+            }
+            row()
+            this@MenuView.resetToolTipLabel = label("reset", Labels.SMALL_GREY_BGD.skinKey) { cell ->
+                cell.expand().top().right().width(150f).height(45f).pad(2f, 2f, 2f, 2f)
+                this.setAlignment(Align.center)
+                this.isVisible = false
+            }
+            row()
+            this@MenuView.quitToolTipLabel = label("quit", Labels.SMALL_GREY_BGD.skinKey) { cell ->
+                cell.expand().top().right().width(150f).height(45f).pad(2f, 2f, 2f, 2f)
+                this.setAlignment(Align.center)
+                this.isVisible = false
+            }
+            row()
+            tooltipTableCell.expand().top().right().width(230f).padTop(44f)
         }
 
         // menu buttons
@@ -114,18 +162,60 @@ class MenuView(
                         // stage.actors.get(2).isVisible = true
                     }
                 })
+                this.addListener(object : InputListener() {
+                    override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                        this@MenuView.galaxyToolTipLabel.isVisible = isOver
+                        super.enter(event, x, y, pointer, fromActor)
+                    }
+                    override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                        this@MenuView.galaxyToolTipLabel.isVisible = isOver
+                        super.exit(event, x, y, pointer, toActor)
+                    }
+                })
             }
             row()
             // automation
             this@MenuView.automationButton = textButton("Locked", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = true
+                this.addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent, actor: Actor) {
+                        //stage.actors.get(1).isVisible = false
+                        // stage.actors.get(2).isVisible = true
+                    }
+                })
+                this.addListener(object : InputListener() {
+                    override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                        this@MenuView.automationToolTipLabel.isVisible = isOver
+                        super.enter(event, x, y, pointer, fromActor)
+                    }
+                    override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                        this@MenuView.automationToolTipLabel.isVisible = isOver
+                        super.exit(event, x, y, pointer, toActor)
+                    }
+                })
             }
             row()
             // challenges
             this@MenuView.challengesButton = textButton("Locked", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = true
+                this.addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent, actor: Actor) {
+                        stage.actors.get(1).isVisible = false
+                        // stage.actors.get(2).isVisible = true
+                    }
+                })
+                this.addListener(object : InputListener() {
+                    override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                        this@MenuView.challengesToolTipLabel.isVisible = isOver
+                        super.enter(event, x, y, pointer, fromActor)
+                    }
+                    override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                        this@MenuView.challengesToolTipLabel.isVisible = isOver
+                        super.exit(event, x, y, pointer, toActor)
+                    }
+                })
             }
             row()
             // shop
@@ -153,16 +243,64 @@ class MenuView(
             this@MenuView.achievementsButton = textButton("Achievements", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = true
+                this.addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent, actor: Actor) {
+                        stage.actors.get(1).isVisible = false
+                        // stage.actors.get(2).isVisible = true
+                    }
+                })
+                this.addListener(object : InputListener() {
+                    override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                        this@MenuView.achievementsToolTipLabel.isVisible = isOver
+                        super.enter(event, x, y, pointer, fromActor)
+                    }
+                    override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                        this@MenuView.achievementsToolTipLabel.isVisible = isOver
+                        super.exit(event, x, y, pointer, toActor)
+                    }
+                })
             }
             row()
             this@MenuView.statisticsButton = textButton("Statistics", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = true
+                this.addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent, actor: Actor) {
+                        stage.actors.get(1).isVisible = false
+                        // stage.actors.get(2).isVisible = true
+                    }
+                })
+                this.addListener(object : InputListener() {
+                    override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                        this@MenuView.statisticsToolTipLabel.isVisible = isOver
+                        super.enter(event, x, y, pointer, fromActor)
+                    }
+                    override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                        this@MenuView.statisticsToolTipLabel.isVisible = isOver
+                        super.exit(event, x, y, pointer, toActor)
+                    }
+                })
             }
             row()
             this@MenuView.settingsButton = textButton("Settings", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = true
+                this.addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent, actor: Actor) {
+                        stage.actors.get(1).isVisible = false
+                        // stage.actors.get(2).isVisible = true
+                    }
+                })
+                this.addListener(object : InputListener() {
+                    override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                        this@MenuView.settingsToolTipLabel.isVisible = isOver
+                        super.enter(event, x, y, pointer, fromActor)
+                    }
+                    override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                        this@MenuView.settingsToolTipLabel.isVisible = isOver
+                        super.exit(event, x, y, pointer, toActor)
+                    }
+                })
             }
             row()
             this@MenuView.resetButton = textButton("Reset Game", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
@@ -172,6 +310,16 @@ class MenuView(
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         log.debug { "Reset Game" }
                         stage.fire(ResetGameEvent())
+                    }
+                })
+                this.addListener(object : InputListener() {
+                    override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                        this@MenuView.resetToolTipLabel.isVisible = isOver
+                        super.enter(event, x, y, pointer, fromActor)
+                    }
+                    override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                        this@MenuView.resetToolTipLabel.isVisible = isOver
+                        super.exit(event, x, y, pointer, toActor)
                     }
                 })
             }
@@ -186,8 +334,18 @@ class MenuView(
                         stage.fire(QuitGameEvent())
                     }
                 })
+                this.addListener(object : InputListener() {
+                    override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                        this@MenuView.quitToolTipLabel.isVisible = isOver
+                        super.enter(event, x, y, pointer, fromActor)
+                    }
+                    override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                        this@MenuView.quitToolTipLabel.isVisible = isOver
+                        super.exit(event, x, y, pointer, toActor)
+                    }
+                })
             }
-            menuTableCell.expand().top().right().width(204f).padTop(60f)
+            menuTableCell.top().right().width(204f).padTop(44f)
         }
 
 

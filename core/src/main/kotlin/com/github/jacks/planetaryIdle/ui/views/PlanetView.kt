@@ -585,7 +585,7 @@ class PlanetView(
                 }
                 tableCell.expandX().top().height(40f).padTop(15f)
             }
-            gameTableCell.expand().fill().pad(5f, 0f, 5f, 200f)
+            gameTableCell.expand().fill().pad(5f, 0f, 5f, 0f)
         }
 
         // Data Binding
