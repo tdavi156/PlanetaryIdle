@@ -3,7 +3,7 @@ package com.github.jacks.planetaryIdle.ui.views
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.github.jacks.planetaryIdle.ui.Labels
-import com.github.jacks.planetaryIdle.ui.models.ShopModel
+import com.github.jacks.planetaryIdle.ui.models.AchievementsModel
 import ktx.scene2d.KTable
 import ktx.scene2d.KWidget
 import ktx.scene2d.Scene2DSkin
@@ -12,8 +12,8 @@ import ktx.scene2d.actor
 import ktx.scene2d.label
 import ktx.scene2d.table
 
-class ShopView(
-    model : ShopModel,
+class AchievementsView(
+    model : AchievementsModel,
     skin : Skin,
 ) : Table(skin), KTable {
 
@@ -22,7 +22,7 @@ class ShopView(
         stage = getStage()
 
         table {
-            label("test label on shop view", Labels.RED.skinKey) { cell ->
+            label("test label on Achievements view", Labels.RED.skinKey) { cell ->
                 cell.center().pad(3f)
             }
         }
@@ -31,8 +31,8 @@ class ShopView(
 }
 
 @Scene2dDsl
-fun <S> KWidget<S>.shopView(
-    model : ShopModel,
+fun <S> KWidget<S>.achievementsView(
+    model : AchievementsModel,
     skin : Skin = Scene2DSkin.defaultSkin,
-    init : ShopView.(S) -> Unit = { }
-) : ShopView = actor(ShopView(model, skin), init)
+    init : AchievementsView.(S) -> Unit = { }
+) : AchievementsView = actor(AchievementsView(model, skin), init)
