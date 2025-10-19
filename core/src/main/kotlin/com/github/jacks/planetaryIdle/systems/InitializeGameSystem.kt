@@ -5,6 +5,9 @@ import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.github.jacks.planetaryIdle.components.AchievementComponent
+import com.github.jacks.planetaryIdle.components.AchievementConfiguration
+import com.github.jacks.planetaryIdle.components.AchievementType
+import com.github.jacks.planetaryIdle.components.Achievements
 import com.github.jacks.planetaryIdle.components.ConfigurationComponent
 import com.github.jacks.planetaryIdle.components.ConfigurationType.*
 import com.github.jacks.planetaryIdle.components.PlanetResources
@@ -60,13 +63,13 @@ class InitializeGameSystem(
                         }
                     }
                 }
-                MULTIPLIER -> {
+                ACHIEVEMENT -> {
+                    val config = getAchievementConfiguration(configurationName)
                     world.entity {
                         add<AchievementComponent> {
-                            // load completed achievements
-                        }
-                        add<UpgradeComponent> {
-                            // load upgrade counts and scaling
+                            if (config.ach1) { completedAchievements.add(Achievements.ACH_1) }
+                            if (config.ach2) { completedAchievements.add(Achievements.ACH_2) }
+                            if (config.ach3) { completedAchievements.add(Achievements.ACH_3) }
                         }
                     }
                 }
@@ -102,10 +105,12 @@ class InitializeGameSystem(
                         }
                     }
                 }
-                world.entity {
-                    add<ConfigurationComponent> {
-                        configurationName = "multiplier"
-                        configurationType = MULTIPLIER
+                AchievementType.entries.forEach { type ->
+                    world.entity {
+                        add<ConfigurationComponent> {
+                            configurationName = type.typeName
+                            configurationType = ACHIEVEMENT
+                        }
                     }
                 }
             }
@@ -136,6 +141,12 @@ class InitializeGameSystem(
             PlanetResources.WHITE.resourceName -> WHITE_CONFIGURATION
             PlanetResources.BLACK.resourceName -> BLACK_CONFIGURATION
             else -> ResourceConfiguration()
+        }
+    }
+    private fun getAchievementConfiguration(configName : String) : AchievementConfiguration {
+        return when (configName) {
+            AchievementType.BASIC_ACHIEVEMENT.typeName -> ACHIEVEMENT_CONFIGURATION
+            else -> AchievementConfiguration()
         }
     }
 
@@ -176,7 +187,7 @@ class InitializeGameSystem(
             baseCost = BigDecimal("1"),
             costScaling = BigDecimal("0.2"),
             baseValue = BigDecimal("0.31"),
-            valueScaling = BigDecimal("10.04"),
+            valueScaling = BigDecimal("0.04"),
             baseRate = BigDecimal("1.3"),
             rateScaling = BigDecimal("0.17"),
             currentTicks = preferences["red_current_ticks", 0],
@@ -188,7 +199,7 @@ class InitializeGameSystem(
             baseCost = BigDecimal("100"),
             costScaling = BigDecimal("0.225"),
             baseValue = BigDecimal("2.4"),
-            valueScaling = BigDecimal("100.09"),
+            valueScaling = BigDecimal("0.09"),
             baseRate = BigDecimal("0.95"),
             rateScaling = BigDecimal("0.11"),
             currentTicks = preferences["orange_current_ticks", 0],
@@ -282,6 +293,12 @@ class InitializeGameSystem(
             baseRate = BigDecimal("0.01"),
             rateScaling = BigDecimal("0.005"),
             isUnlocked = preferences["black_unlocked", false]
+        )
+        val ACHIEVEMENT_CONFIGURATION = AchievementConfiguration(
+            name = "basic_achievement",
+            ach1 = preferences["ach1", false],
+            ach2 = preferences["ach2", false],
+            ach3 = preferences["ach3", false]
         )
     }
 }

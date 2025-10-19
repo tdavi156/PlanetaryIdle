@@ -132,12 +132,12 @@ class MenuView(
 
         // menu buttons
         table { menuTableCell ->
+            // planet, stage(1)
             this@MenuView.planetButton = textButton("Planet", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(4f,2f,2f,2f)
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
-                        stage.actors.get(1).isVisible = true
-                        stage.actors.get(2).isVisible = false
+                        this@MenuView.changeActiveActor(1)
                     }
                 })
                 this.addListener(object : InputListener() {
@@ -152,14 +152,13 @@ class MenuView(
                 })
             }
             row()
-            // galaxy, stage 2
+            // galaxy
             this@MenuView.galaxyButton = textButton("Locked", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = true
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
-                        stage.actors.get(1).isVisible = false
-                        // stage.actors.get(2).isVisible = true
+                        //this@MenuView.changeActiveActor(2)
                     }
                 })
                 this.addListener(object : InputListener() {
@@ -180,8 +179,7 @@ class MenuView(
                 isDisabled = true
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
-                        //stage.actors.get(1).isVisible = false
-                        // stage.actors.get(2).isVisible = true
+                        //this@MenuView.changeActiveActor(3)
                     }
                 })
                 this.addListener(object : InputListener() {
@@ -202,8 +200,7 @@ class MenuView(
                 isDisabled = true
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
-                        stage.actors.get(1).isVisible = false
-                        // stage.actors.get(2).isVisible = true
+                        //this@MenuView.changeActiveActor(4)
                     }
                 })
                 this.addListener(object : InputListener() {
@@ -218,14 +215,13 @@ class MenuView(
                 })
             }
             row()
-            // shop
+            // shop, stage(2)
             this@MenuView.shopButton = textButton("Shop", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
                 isDisabled = false
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
-                        stage.actors.get(1).isVisible = false
-                        stage.actors.get(2).isVisible = true
+                        this@MenuView.changeActiveActor(2)
                     }
                 })
                 this.addListener(object : InputListener() {
@@ -240,13 +236,13 @@ class MenuView(
                 })
             }
             row()
+            // achievements, stage(3)
             this@MenuView.achievementsButton = textButton("Achievements", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f,2f,2f,2f)
-                isDisabled = true
+                isDisabled = false
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
-                        stage.actors.get(1).isVisible = false
-                        // stage.actors.get(2).isVisible = true
+                        this@MenuView.changeActiveActor(3)
                     }
                 })
                 this.addListener(object : InputListener() {
@@ -266,8 +262,7 @@ class MenuView(
                 isDisabled = true
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
-                        stage.actors.get(1).isVisible = false
-                        // stage.actors.get(2).isVisible = true
+                        //this@MenuView.changeActiveActor(6)
                     }
                 })
                 this.addListener(object : InputListener() {
@@ -287,8 +282,7 @@ class MenuView(
                 isDisabled = true
                 this.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
-                        stage.actors.get(1).isVisible = false
-                        // stage.actors.get(2).isVisible = true
+                        //this@MenuView.changeActiveActor(7)
                     }
                 })
                 this.addListener(object : InputListener() {
@@ -348,9 +342,14 @@ class MenuView(
             menuTableCell.top().right().width(204f).padTop(44f)
         }
 
-
         // Data Binding
         // model.onPropertyChange(PlanetModel::totalPopulationAmount) { amount -> totalPopAmountChange(amount) }
+    }
+
+    private fun changeActiveActor(actorId : Int) {
+        stage.actors.get(1).isVisible = actorId == 1
+        stage.actors.get(2).isVisible = actorId == 2
+        stage.actors.get(3).isVisible = actorId == 3
     }
 
     companion object {

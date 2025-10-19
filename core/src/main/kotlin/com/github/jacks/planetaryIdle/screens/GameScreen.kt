@@ -9,9 +9,11 @@ import com.github.jacks.planetaryIdle.input.gdxInputProcessor
 import com.github.jacks.planetaryIdle.systems.InitializeGameSystem
 import com.github.jacks.planetaryIdle.systems.RenderSystem
 import com.github.jacks.planetaryIdle.systems.ResourceUpdateSystem
+import com.github.jacks.planetaryIdle.ui.models.AchievementsModel
 import com.github.jacks.planetaryIdle.ui.models.MenuModel
 import com.github.jacks.planetaryIdle.ui.models.PlanetModel
 import com.github.jacks.planetaryIdle.ui.models.ShopModel
+import com.github.jacks.planetaryIdle.ui.views.achievementsView
 import com.github.jacks.planetaryIdle.ui.views.backgroundView
 import com.github.jacks.planetaryIdle.ui.views.menuView
 import com.github.jacks.planetaryIdle.ui.views.planetView
@@ -55,8 +57,26 @@ class GameScreen(game : PlanetaryIdle) : KtxScreen {
                 isVisible = true
             }
 
+            // galaxyView, actor.get(x)
+            // galaxyView(GalaxyModel(entityWorld, stage)) { isVisible = false }
+
+            // automationView, actor.get(x)
+            // automationView(AutomationModel(entityWorld, stage)) { isVisible = false }
+
+            // challengesView, actor.get(x)
+            // challengesView(ChallengesModel(entityWorld, stage)) { isVisible = false }
+
             // shopView, actor.get(2)
             shopView(ShopModel(entityWorld, stage)) { isVisible = false }
+
+            // achievementView, actor.get(3)
+            achievementsView(AchievementsModel(entityWorld, stage)) { isVisible = false }
+
+            // statisticsView, actor.get(x)
+            // statisticsView(StatisticsModel(entityWorld, stage)) { isVisible = false }
+
+            // settingsView, actor.get(x)
+            // settingsView(SettingsModel(entityWorld, stage)) { isVisible = false }
 
             // right side menu (always present)
             menuView(MenuModel(stage)) {

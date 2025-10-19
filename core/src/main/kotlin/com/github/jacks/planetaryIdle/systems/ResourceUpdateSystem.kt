@@ -20,27 +20,7 @@ import java.math.RoundingMode
 class ResourceUpdateSystem(
     private val stage : Stage,
     private val resourceComponents : ComponentMapper<ResourceComponent>,
-    private val upgradeComponents : ComponentMapper<UpgradeComponent>,
-    private val achievementComponents : ComponentMapper<AchievementComponent>
 ) : IteratingSystem(interval = Fixed(1 / FRAMES_PER_SECOND_FLOAT)) {
-
-    private val resourceEntities =  world.family(allOf = arrayOf(ResourceComponent::class))
-    //private val multiplierEntity = world.family(allOf = arrayOf(UpgradeComponent::class, AchievementComponent::class)).firstOrNull()
-
-    /*
-    override fun onTick() {
-        var goldCoins = BigDecimal(0)
-        //val upgMultiplier = multiplierEntity?.let { upgradeComponents[it].multiplier.toBigDecimal() }
-        //val achMultiplier = multiplierEntity?.let { achievementComponents[it].multiplier.toBigDecimal() }
-        resourceEntities.forEach { entity ->
-            val rscComp = resourceComponents[entity]
-            if (rscComp.name == "gold_coins") return@forEach
-            if (rscComp.amountOwned.toInt() < 1) return@forEach
-            goldCoins += (rscComp.value).divide(BigDecimal(20), 2, RoundingMode.HALF_UP)
-        }
-        stage.fire(ResourceUpdateEvent(goldCoins))
-    }
-     */
 
     override fun onTickEntity(entity: Entity) {
         val rscComp = resourceComponents[entity]
