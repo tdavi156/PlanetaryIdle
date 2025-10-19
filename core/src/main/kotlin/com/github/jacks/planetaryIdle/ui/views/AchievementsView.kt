@@ -2,13 +2,16 @@ package com.github.jacks.planetaryIdle.ui.views
 
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.github.jacks.planetaryIdle.ui.Drawables
 import com.github.jacks.planetaryIdle.ui.Labels
+import com.github.jacks.planetaryIdle.ui.get
 import com.github.jacks.planetaryIdle.ui.models.AchievementsModel
 import ktx.scene2d.KTable
 import ktx.scene2d.KWidget
 import ktx.scene2d.Scene2DSkin
 import ktx.scene2d.Scene2dDsl
 import ktx.scene2d.actor
+import ktx.scene2d.image
 import ktx.scene2d.label
 import ktx.scene2d.table
 
@@ -21,10 +24,19 @@ class AchievementsView(
         setFillParent(true)
         stage = getStage()
 
-        table {
-            label("test label on Achievements view", Labels.RED.skinKey) { cell ->
-                cell.center().pad(3f)
+        table { achievementsTableCell ->
+            table { tableCell ->
+                label("test label on Statistics view", Labels.RED.skinKey) { cell ->
+                    cell.center().pad(3f)
+                }
+                tableCell.expandX().top().height(40f)
             }
+
+            row()
+            image(skin[Drawables.BAR_BLACK_THIN]) { cell ->
+                cell.expandX().fillX().height(2f)
+            }
+            achievementsTableCell.expand().fill().pad(5f, 0f, 5f, 0f)
         }
     }
 
