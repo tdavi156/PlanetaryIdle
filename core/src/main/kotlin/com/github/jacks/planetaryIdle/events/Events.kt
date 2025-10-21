@@ -22,3 +22,5 @@ class ResourceUpdateEvent(val rscComp : ResourceComponent) : Event()
 class BuyResourceEvent(val resourceType : String) : Event()
 class UpdateBuyAmountEvent(val amount : Float) : Event()
 class UpgradeSoilEvent(val amount : Int = 1) : Event()
+
+class AchievementEvent(val achId : Int = -1) : Event()

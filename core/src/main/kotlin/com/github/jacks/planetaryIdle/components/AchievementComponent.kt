@@ -9,10 +9,10 @@ enum class AchievementType(
 }
 
 enum class Achievements(
-    val achievementId : Int,
-    val achievementName : String,
-    val achievementDescription : String,
-    val bonusDescription : String = ""
+    val achId : Int,
+    val achName : String,
+    val achDesc : String,
+    val bonusDesc : String = ""
 ) {
     ACH_1(0, "Red 1", "Buy 1 red resource."),
     ACH_2(1, "Orange 1", "Buy 1 orange resource."),
@@ -28,7 +28,7 @@ data class AchievementConfiguration(
 
 data class AchievementComponent(
     var multiplierScale : BigDecimal = BigDecimal(1.05),
-    var completedAchievements : MutableList<Achievements> = mutableListOf<Achievements>()
+    var completedAchievements : MutableList<Int> = mutableListOf<Int>()
 ) {
 
     val achMultiplier : BigDecimal

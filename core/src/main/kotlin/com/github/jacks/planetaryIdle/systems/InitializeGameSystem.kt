@@ -14,7 +14,6 @@ import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.components.ResourceConfiguration
 import com.github.jacks.planetaryIdle.components.ScoreResources
-import com.github.jacks.planetaryIdle.components.UpgradeComponent
 import com.github.jacks.planetaryIdle.events.InitializeGameEvent
 import com.github.jacks.planetaryIdle.events.LoadGameEvent
 import com.github.quillraven.fleks.AllOf
@@ -67,9 +66,9 @@ class InitializeGameSystem(
                     val config = getAchievementConfiguration(configurationName)
                     world.entity {
                         add<AchievementComponent> {
-                            if (config.ach1) { completedAchievements.add(Achievements.ACH_1) }
-                            if (config.ach2) { completedAchievements.add(Achievements.ACH_2) }
-                            if (config.ach3) { completedAchievements.add(Achievements.ACH_3) }
+                            if (config.ach1) { completedAchievements.add(Achievements.ACH_1.achId) }
+                            if (config.ach2) { completedAchievements.add(Achievements.ACH_2.achId) }
+                            if (config.ach3) { completedAchievements.add(Achievements.ACH_3.achId) }
                         }
                     }
                 }

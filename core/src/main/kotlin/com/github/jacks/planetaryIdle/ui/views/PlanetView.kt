@@ -14,6 +14,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.Align
+import com.github.jacks.planetaryIdle.components.Achievements
+import com.github.jacks.planetaryIdle.events.AchievementEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
 import com.github.jacks.planetaryIdle.events.fire
@@ -654,6 +656,9 @@ class PlanetView(
                 if (amount.toInt() >= 5) {
                     orangeButton.isVisible = true
                 }
+                if (amount.toInt() >= 1) {
+                    stage.fire(AchievementEvent(Achievements.ACH_1.achId))
+                }
             }
             "orange" -> {
                 orangeOwned = amount
@@ -661,12 +666,18 @@ class PlanetView(
                 if (amount.toInt() >= 5) {
                     yellowButton.isVisible = true
                 }
+                if (amount.toInt() >= 1) {
+                    stage.fire(AchievementEvent(Achievements.ACH_2.achId))
+                }
             }
             "yellow" -> {
                 yellowOwned = amount
                 yellowToolTipLabel.txt = updateTooltipText("yellow")
                 if (amount.toInt() >= 5) {
                     greenButton.isVisible = true
+                }
+                if (amount.toInt() >= 1) {
+                    stage.fire(AchievementEvent(Achievements.ACH_3.achId))
                 }
             }
             "green" -> {

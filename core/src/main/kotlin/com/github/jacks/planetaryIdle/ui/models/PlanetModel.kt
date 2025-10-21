@@ -6,7 +6,6 @@ import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.github.jacks.planetaryIdle.components.AchievementComponent
-import com.github.jacks.planetaryIdle.components.Achievements
 import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
@@ -34,7 +33,7 @@ class PlanetModel(
     private val resourceComponents : ComponentMapper<ResourceComponent> = world.mapper()
     private val achievementComponents : ComponentMapper<AchievementComponent> = world.mapper()
     private val resourceEntities = world.family(allOf = arrayOf(ResourceComponent::class))
-    private val achievementEntity = world.family(allOf = arrayOf(AchievementComponent::class))
+    private val achievementEntities = world.family(allOf = arrayOf(AchievementComponent::class))
 
     var goldCoins by propertyNotify(BigDecimal(preferences["gold_coins", "5"]))
     var productionRate by propertyNotify(BigDecimal(preferences["production_rate", "0"]))
@@ -409,11 +408,18 @@ class PlanetModel(
      * @return BigDecimal
      */
     private fun getValueMultiplier() : BigDecimal {
-        val valueMultiplier: BigDecimal = achievementComponents[achievementEntity.first()].achMultiplier
+        var valueMultiplier = BigDecimal(1)
+
+        achievementEntities.forEach { achievement ->
+            valueMultiplier = valueMultiplier * achievementComponents[achievement].achMultiplier
+        }
 
         return valueMultiplier
     }
 
+    /**
+     * Reset all game values. Used for debugging and testing.
+     */
     private fun resetGameValues() {
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
