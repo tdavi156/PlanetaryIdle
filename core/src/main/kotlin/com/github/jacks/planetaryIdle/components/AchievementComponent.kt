@@ -14,9 +14,9 @@ enum class Achievements(
     val achDesc : String,
     val bonusDesc : String = ""
 ) {
-    ACH_1(0, "Red 1", "Buy 1 red resource."),
-    ACH_2(1, "Orange 1", "Buy 1 orange resource."),
-    ACH_3(2, "Yellow 1", "Buy 1 yellow resource.");
+    ACH_1(1, "Red 1", "Buy 1 red resource."),
+    ACH_2(2, "Orange 1", "Buy 1 orange resource."),
+    ACH_3(3, "Yellow 1", "Buy 1 yellow resource.");
 }
 
 data class AchievementConfiguration(

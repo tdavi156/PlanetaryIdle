@@ -14,8 +14,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.Align
-import com.github.jacks.planetaryIdle.components.Achievements
-import com.github.jacks.planetaryIdle.events.AchievementEvent
+import com.github.jacks.planetaryIdle.events.AchievementCompletedEvent
+import com.github.jacks.planetaryIdle.events.AchievementNotificationEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
 import com.github.jacks.planetaryIdle.events.fire
@@ -649,6 +649,7 @@ class PlanetView(
     }
 
     private fun ownedChanged(name : String, amount : BigDecimal) {
+        stage = getStage()
         when (name) {
             "red" -> {
                 redOwned = amount
@@ -657,7 +658,8 @@ class PlanetView(
                     orangeButton.isVisible = true
                 }
                 if (amount.toInt() >= 1) {
-                    stage.fire(AchievementEvent(Achievements.ACH_1.achId))
+                    stage.actors.filterIsInstance<NotificationView>().first().isVisible = true
+                    stage.fire(AchievementNotificationEvent(1))
                 }
             }
             "orange" -> {
@@ -667,7 +669,7 @@ class PlanetView(
                     yellowButton.isVisible = true
                 }
                 if (amount.toInt() >= 1) {
-                    stage.fire(AchievementEvent(Achievements.ACH_2.achId))
+                    stage.fire(AchievementNotificationEvent(2))
                 }
             }
             "yellow" -> {
@@ -677,7 +679,7 @@ class PlanetView(
                     greenButton.isVisible = true
                 }
                 if (amount.toInt() >= 1) {
-                    stage.fire(AchievementEvent(Achievements.ACH_3.achId))
+                    stage.fire(AchievementNotificationEvent(3))
                 }
             }
             "green" -> {

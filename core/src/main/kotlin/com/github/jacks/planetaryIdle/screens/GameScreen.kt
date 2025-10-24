@@ -11,6 +11,7 @@ import com.github.jacks.planetaryIdle.systems.RenderSystem
 import com.github.jacks.planetaryIdle.systems.ResourceUpdateSystem
 import com.github.jacks.planetaryIdle.ui.models.AchievementsModel
 import com.github.jacks.planetaryIdle.ui.models.MenuModel
+import com.github.jacks.planetaryIdle.ui.models.NotificationModel
 import com.github.jacks.planetaryIdle.ui.models.PlanetModel
 import com.github.jacks.planetaryIdle.ui.models.ShopModel
 import com.github.jacks.planetaryIdle.ui.views.achievementsView
@@ -84,8 +85,8 @@ class GameScreen(game : PlanetaryIdle) : KtxScreen {
                 //debugAll()
             }
 
-            // notificationView, actor.get(x)
-            notificationView() { isVisible = false }
+            // notificationView, actor.get(5)
+            notificationView(NotificationModel(entityWorld, stage)) { isVisible = false }
         }
         stage.isDebugAll = false
     }
