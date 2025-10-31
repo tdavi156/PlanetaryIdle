@@ -7,6 +7,8 @@ import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.github.jacks.planetaryIdle.components.AchievementComponent
 import com.github.jacks.planetaryIdle.components.ResourceComponent
+import com.github.jacks.planetaryIdle.components.UpgradeComponent
+import com.github.jacks.planetaryIdle.events.AchievementCompletedEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
@@ -32,14 +34,14 @@ class PlanetModel(
     private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
     private val resourceComponents : ComponentMapper<ResourceComponent> = world.mapper()
     private val achievementComponents : ComponentMapper<AchievementComponent> = world.mapper()
+    private val upgradeComponents : ComponentMapper<UpgradeComponent> = world.mapper()
     private val resourceEntities = world.family(allOf = arrayOf(ResourceComponent::class))
     private val achievementEntities = world.family(allOf = arrayOf(AchievementComponent::class))
+    private val upgradeEntities = world.family(allOf = arrayOf(UpgradeComponent::class))
 
     var goldCoins by propertyNotify(BigDecimal(preferences["gold_coins", "5"]))
     var productionRate by propertyNotify(BigDecimal(preferences["production_rate", "0"]))
     var buyAmount by propertyNotify(preferences["buy_amount", 1f])
-
-    // var soilUpgrades by propertyNotify(preferences["soilUpgrades", 0])
 
     var redOwned by propertyNotify(BigDecimal(preferences["red_owned", "0"]))
     var redCost by propertyNotify(BigDecimal(preferences["red_cost", "1"]))
@@ -111,13 +113,17 @@ class PlanetModel(
     var blackRate by propertyNotify(BigDecimal(preferences["black_rate", "1.3"]))
     var blackRateIncrease by propertyNotify(BigDecimal(preferences["black_rate_increase", "0.17"]))
 
+    var achievementMultiplier by propertyNotify(BigDecimal(preferences["achievement_multiplier", "1"]))
+
+    var soilUpgrades by propertyNotify(BigDecimal(preferences["soilUpgrades", "0"]))
+
     var gameCompleted by propertyNotify(false)
 
     init {
         stage.addListener(this)
     }
 
-    override fun handle(event: Event?): Boolean {
+    override fun handle(event: Event): Boolean {
         when (event) {
             is BuyResourceEvent -> {
                 val entity = getResourceEntityByName(event.resourceType) ?: gdxError("No Entity with type: ${event.resourceType}")
@@ -130,19 +136,24 @@ class PlanetModel(
                 updateModelRate(rscComp)
             }
             is ResourceUpdateEvent -> {
-                val valueMultiplier = getValueMultiplier()
+                val valueMultiplier = calculateValueMultiplier()
                 updateModelProductionRate()
                 updateModelValue(event.rscComp)
                 goldCoins += (event.rscComp.value * valueMultiplier)
                 preferences.flush { this["gold_coins"] = goldCoins.toString() }
             }
             is UpgradeSoilEvent -> {
-                //soilUpgrades += event.amount
+                updateUpgradeComponents(event.amount)
+                soilUpgrades += event.amount
                 //upgradeComponents[multiplierEntity].soilUpgrades += event.amount
                 // reset all crops amounts
                 // reset AP
                 // reset total AP
 
+            }
+            is AchievementCompletedEvent -> {
+                achievementMultiplier = calculateAchievementMultiplier()
+                preferences.flush { this["achievement_multiplier"] = achievementMultiplier }
             }
             is UpdateBuyAmountEvent -> {
                 buyAmount = event.amount
@@ -237,6 +248,13 @@ class PlanetModel(
      */
     private fun updateResourceComponent(rscComp : ResourceComponent) {
         rscComp.amountOwned += buyAmount.toBigDecimal()
+    }
+
+    private fun updateUpgradeComponents(amount : BigDecimal) {
+        upgradeEntities.forEach { entity ->
+            val upgComp = upgradeComponents[entity]
+            upgComp.soilUpgrades += amount
+        }
     }
 
     /**
@@ -407,14 +425,24 @@ class PlanetModel(
      * Get the Value Multiplier based on achievements, soil upgrades, etc.
      * @return BigDecimal
      */
-    private fun getValueMultiplier() : BigDecimal {
+    private fun calculateValueMultiplier() : BigDecimal {
         var valueMultiplier = BigDecimal(1)
-
-        achievementEntities.forEach { achievement ->
-            valueMultiplier = valueMultiplier * achievementComponents[achievement].achMultiplier
-        }
+        valueMultiplier = valueMultiplier * calculateAchievementMultiplier()
 
         return valueMultiplier
+    }
+
+    /**
+     * Get the Achievement Multiplier
+     * @return BigDecimal
+     */
+    private fun calculateAchievementMultiplier() : BigDecimal {
+        var achievementMultiplier = BigDecimal(1)
+
+        achievementEntities.forEach { entity ->
+            achievementMultiplier = achievementMultiplier * achievementComponents[entity].achMultiplier
+        }
+        return achievementMultiplier
     }
 
     /**

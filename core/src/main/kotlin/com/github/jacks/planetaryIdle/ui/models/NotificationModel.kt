@@ -6,7 +6,6 @@ import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.github.jacks.planetaryIdle.components.AchievementComponent
-import com.github.jacks.planetaryIdle.components.Achievements
 import com.github.jacks.planetaryIdle.events.AchievementNotificationEvent
 import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.World

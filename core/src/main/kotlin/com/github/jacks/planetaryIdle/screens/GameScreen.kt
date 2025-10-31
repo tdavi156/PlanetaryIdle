@@ -86,7 +86,7 @@ class GameScreen(game : PlanetaryIdle) : KtxScreen {
             }
 
             // notificationView, actor.get(5)
-            notificationView(NotificationModel(entityWorld, stage)) { isVisible = false }
+            notificationView(NotificationModel(entityWorld, stage)) { isVisible = true }
         }
         stage.isDebugAll = false
     }

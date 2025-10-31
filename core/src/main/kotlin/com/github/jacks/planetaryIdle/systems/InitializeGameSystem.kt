@@ -14,6 +14,9 @@ import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.components.ResourceConfiguration
 import com.github.jacks.planetaryIdle.components.ScoreResources
+import com.github.jacks.planetaryIdle.components.UpgradeComponent
+import com.github.jacks.planetaryIdle.components.UpgradeConfiguration
+import com.github.jacks.planetaryIdle.components.UpgradeType
 import com.github.jacks.planetaryIdle.events.InitializeGameEvent
 import com.github.jacks.planetaryIdle.events.LoadGameEvent
 import com.github.quillraven.fleks.AllOf
@@ -69,6 +72,34 @@ class InitializeGameSystem(
                             if (config.ach1) { completedAchievements.add(Achievements.ACH_1.achId) }
                             if (config.ach2) { completedAchievements.add(Achievements.ACH_2.achId) }
                             if (config.ach3) { completedAchievements.add(Achievements.ACH_3.achId) }
+                            if (config.ach4) { completedAchievements.add(Achievements.ACH_4.achId) }
+                            if (config.ach5) { completedAchievements.add(Achievements.ACH_5.achId) }
+                            if (config.ach6) { completedAchievements.add(Achievements.ACH_6.achId) }
+                            if (config.ach7) { completedAchievements.add(Achievements.ACH_7.achId) }
+                            if (config.ach8) { completedAchievements.add(Achievements.ACH_8.achId) }
+                            if (config.ach9) { completedAchievements.add(Achievements.ACH_9.achId) }
+                            if (config.ach10) { completedAchievements.add(Achievements.ACH_10.achId) }
+                            if (config.ach11) { completedAchievements.add(Achievements.ACH_11.achId) }
+                            if (config.ach12) { completedAchievements.add(Achievements.ACH_12.achId) }
+                            if (config.ach13) { completedAchievements.add(Achievements.ACH_13.achId) }
+                            if (config.ach14) { completedAchievements.add(Achievements.ACH_14.achId) }
+                            if (config.ach15) { completedAchievements.add(Achievements.ACH_15.achId) }
+                            if (config.ach16) { completedAchievements.add(Achievements.ACH_16.achId) }
+                            if (config.ach17) { completedAchievements.add(Achievements.ACH_17.achId) }
+                            if (config.ach18) { completedAchievements.add(Achievements.ACH_18.achId) }
+                            if (config.ach19) { completedAchievements.add(Achievements.ACH_19.achId) }
+                            if (config.ach20) { completedAchievements.add(Achievements.ACH_20.achId) }
+                            if (config.ach21) { completedAchievements.add(Achievements.ACH_21.achId) }
+                            if (config.ach22) { completedAchievements.add(Achievements.ACH_22.achId) }
+                        }
+                    }
+                }
+                UPGRADE -> {
+                    val config = getUpgradeConfiguration(configurationName)
+                    world.entity {
+                        add<UpgradeComponent> {
+                            isUnlocked = config.isUnlocked
+                            soilUpgrades = config.soilUpgrades
                         }
                     }
                 }
@@ -112,6 +143,14 @@ class InitializeGameSystem(
                         }
                     }
                 }
+                UpgradeType.entries.forEach { type ->
+                    world.entity {
+                        add<ConfigurationComponent> {
+                            configurationName = type.typeName
+                            configurationType = UPGRADE
+                        }
+                    }
+                }
             }
             is LoadGameEvent -> {
 
@@ -146,6 +185,12 @@ class InitializeGameSystem(
         return when (configName) {
             AchievementType.BASIC_ACHIEVEMENT.typeName -> ACHIEVEMENT_CONFIGURATION
             else -> AchievementConfiguration()
+        }
+    }
+    private fun getUpgradeConfiguration(configName : String) : UpgradeConfiguration {
+        return when (configName) {
+            UpgradeType.SOIL_UPGRADE.typeName -> UPGRADE_CONFIGURATION
+            else -> UpgradeConfiguration()
         }
     }
 
@@ -297,7 +342,31 @@ class InitializeGameSystem(
             name = "basic_achievement",
             ach1 = preferences["ach1", false],
             ach2 = preferences["ach2", false],
-            ach3 = preferences["ach3", false]
+            ach3 = preferences["ach3", false],
+            ach4 = preferences["ach4", false],
+            ach5 = preferences["ach5", false],
+            ach6 = preferences["ach6", false],
+            ach7 = preferences["ach7", false],
+            ach8 = preferences["ach8", false],
+            ach9 = preferences["ach9", false],
+            ach10 = preferences["ach10", false],
+            ach11 = preferences["ach11", false],
+            ach12 = preferences["ach12", false],
+            ach13 = preferences["ach13", false],
+            ach14 = preferences["ach14", false],
+            ach15 = preferences["ach15", false],
+            ach16 = preferences["ach16", false],
+            ach17 = preferences["ach17", false],
+            ach18 = preferences["ach18", false],
+            ach19 = preferences["ach19", false],
+            ach20 = preferences["ach20", false],
+            ach21 = preferences["ach21", false],
+            ach22 = preferences["ach22", false],
+        )
+        val UPGRADE_CONFIGURATION = UpgradeConfiguration(
+            name = "soil_upgrade",
+            isUnlocked = preferences["soil_is_unlocked", false],
+            soilUpgrades = preferences["soil_upgrades", BigDecimal(0)]
         )
     }
 }
