@@ -115,7 +115,8 @@ class PlanetModel(
 
     var achievementMultiplier by propertyNotify(BigDecimal(preferences["achievement_multiplier", "1"]))
 
-    var soilUpgrades by propertyNotify(BigDecimal(preferences["soilUpgrades", "0"]))
+    var soilCost by propertyNotify(BigDecimal(preferences["soil_cost", "1000000"]))
+    var soilUpgrades by propertyNotify(BigDecimal(preferences["soi_upgrades", "0"]))
 
     var gameCompleted by propertyNotify(false)
 
@@ -131,9 +132,7 @@ class PlanetModel(
                 updateGoldCoins(rscComp)
                 updateModelAmount(rscComp)
                 updateResourceComponent(rscComp)
-                updateModelCost(rscComp)
-                updateModelValue(rscComp)
-                updateModelRate(rscComp)
+                updateModel(rscComp)
             }
             is ResourceUpdateEvent -> {
                 val valueMultiplier = calculateValueMultiplier()
@@ -145,11 +144,7 @@ class PlanetModel(
             is UpgradeSoilEvent -> {
                 updateUpgradeComponents(event.amount)
                 soilUpgrades += event.amount
-                //upgradeComponents[multiplierEntity].soilUpgrades += event.amount
-                // reset all crops amounts
-                // reset AP
-                // reset total AP
-
+                resetValuesFromSoilUpgrade()
             }
             is AchievementCompletedEvent -> {
                 achievementMultiplier = calculateAchievementMultiplier()
@@ -158,7 +153,7 @@ class PlanetModel(
             is UpdateBuyAmountEvent -> {
                 buyAmount = event.amount
                 preferences.flush { this["buy_amount"] = buyAmount }
-                updateModel()
+                updateModelCost()
             }
             is SaveGameEvent -> {
 
@@ -254,6 +249,7 @@ class PlanetModel(
         upgradeEntities.forEach { entity ->
             val upgComp = upgradeComponents[entity]
             upgComp.soilUpgrades += amount
+            soilCost = upgComp.cost
         }
     }
 
@@ -403,11 +399,21 @@ class PlanetModel(
      * Update the Model values for:
      * cost for each ResourceComponent
      */
-    private fun updateModel() {
+    private fun updateModelCost() {
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
             updateModelCost(rscComp)
         }
+    }
+
+    /**
+     * Update the Model values for:
+     * cost, value, and rate of a given ResourceComponent
+     */
+    private fun updateModel(rscComp : ResourceComponent) {
+        updateModelCost(rscComp)
+        updateModelValue(rscComp)
+        updateModelRate(rscComp)
     }
 
     /**
@@ -443,6 +449,132 @@ class PlanetModel(
             achievementMultiplier = achievementMultiplier * achievementComponents[entity].achMultiplier
         }
         return achievementMultiplier
+    }
+
+    /**
+     * Reset values from upgrading Soil.
+     */
+    private fun resetValuesFromSoilUpgrade() {
+        resourceEntities.forEach { entity ->
+            val rscComp = resourceComponents[entity]
+            rscComp.amountOwned = BigDecimal("0")
+            rscComp.amountSold = BigDecimal("0")
+            rscComp.currentTicks = 0
+        }
+
+        resetRedCropValues()
+        resetOrangeCropValues()
+        resetYellowCropValues()
+        resetGreenCropValues()
+        resetBlueCropValues()
+        resetPurpleCropValues()
+        resetPinkCropValues()
+        resetBrownCropValues()
+        resetWhiteCropValues()
+        resetBlackCropValues()
+
+        goldCoins = BigDecimal("5")
+        productionRate = BigDecimal("0")
+    }
+
+    /**
+     * Reset all values for Red Crops to their original values at Initial Game Start.
+     */
+    private fun resetRedCropValues() {
+        val entity = getResourceEntityByName("red") ?: gdxError("No Entity with type: red")
+        val rscComp = resourceComponents[entity]
+        redOwned = BigDecimal("0")
+        updateModel(rscComp)
+    }
+
+    /**
+     * Reset all values for Orange Crops to their original values at Initial Game Start.
+     */
+    private fun resetOrangeCropValues() {
+        val entity = getResourceEntityByName("orange") ?: gdxError("No Entity with type: orange")
+        val rscComp = resourceComponents[entity]
+        orangeOwned = BigDecimal("0")
+        updateModel(rscComp)
+    }
+
+    /**
+     * Reset all values for Yellow Crops to their original values at Initial Game Start.
+     */
+    private fun resetYellowCropValues() {
+        val entity = getResourceEntityByName("yellow") ?: gdxError("No Entity with type: red")
+        val rscComp = resourceComponents[entity]
+        yellowOwned = BigDecimal("0")
+        updateModel(rscComp)
+    }
+
+    /**
+     * Reset all values for Green Crops to their original values at Initial Game Start.
+     */
+    private fun resetGreenCropValues() {
+        val entity = getResourceEntityByName("green") ?: gdxError("No Entity with type: green")
+        val rscComp = resourceComponents[entity]
+        greenOwned = BigDecimal("0")
+        updateModel(rscComp)
+    }
+
+    /**
+     * Reset all values for Blue Crops to their original values at Initial Game Start.
+     */
+    private fun resetBlueCropValues() {
+        val entity = getResourceEntityByName("blue") ?: gdxError("No Entity with type: blue")
+        val rscComp = resourceComponents[entity]
+        blueOwned = BigDecimal("0")
+        updateModel(rscComp)
+    }
+
+    /**
+     * Reset all values for Purple Crops to their original values at Initial Game Start.
+     */
+    private fun resetPurpleCropValues() {
+        val entity = getResourceEntityByName("purple") ?: gdxError("No Entity with type: purple")
+        val rscComp = resourceComponents[entity]
+        purpleOwned = BigDecimal("0")
+        updateModel(rscComp)
+    }
+
+    /**
+     * Reset all values for Pink Crops to their original values at Initial Game Start.
+     */
+    private fun resetPinkCropValues() {
+        val entity = getResourceEntityByName("pink") ?: gdxError("No Entity with type: pink")
+        val rscComp = resourceComponents[entity]
+        pinkOwned = BigDecimal("0")
+        updateModel(rscComp)
+    }
+
+    /**
+     * Reset all values for Brown Crops to their original values at Initial Game Start.
+     */
+    private fun resetBrownCropValues() {
+        val entity = getResourceEntityByName("brown") ?: gdxError("No Entity with type: brown")
+        val rscComp = resourceComponents[entity]
+        brownOwned = BigDecimal("0")
+        updateModel(rscComp)
+    }
+
+    /**
+     * Reset all values for White Crops to their original values at Initial Game Start.
+     */
+    private fun resetWhiteCropValues() {
+        val entity = getResourceEntityByName("white") ?: gdxError("No Entity with type: white")
+        val rscComp = resourceComponents[entity]
+        whiteOwned = BigDecimal("0")
+        updateModel(rscComp)
+    }
+
+    /**
+     * Reset all values for Black Crops to their original values at Initial Game Start.
+     */
+    private fun resetBlackCropValues() {
+        val entity = getResourceEntityByName("black") ?: gdxError("No Entity with type: black")
+        val rscComp = resourceComponents[entity]
+        blackOwned = BigDecimal("0")
+        updateModel(rscComp)
     }
 
     /**

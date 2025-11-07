@@ -134,8 +134,8 @@ class PlanetView(
     private var blackRate = BigDecimal(preferences["black_rate", "0.01"])
     private var blackRateIncrease = BigDecimal(preferences["black_rate_increase", "0.005"])
 
-    private var soilUpgrades = BigDecimal(preferences["soil_upgrades", "0"])
     private var soilCost = BigDecimal(preferences["soil_cost", "1000000"])
+    private var soilUpgrades = BigDecimal(preferences["soil_upgrades", "0"])
 
     // tables
 
@@ -504,7 +504,7 @@ class PlanetView(
                         })
                     }
                     row()
-                    this@PlanetView.soilButton = textButton("Upgrade Soil (${this@PlanetView.soilUpgrades})", Buttons.BLACK_BUTTON_SMALL.skinKey) { cell ->
+                    this@PlanetView.soilButton = textButton("Upgrade Soil (${this@PlanetView.soilUpgrades})\n${this@PlanetView.getSoilCost()}", Buttons.BLACK_BUTTON_SMALL.skinKey) { cell ->
                         cell.expand().bottom().left().width(210f).height(55f).pad(3f,5f,3f,0f)
                         isVisible = false
                         isDisabled = this@PlanetView.goldCoins < this@PlanetView.soilCost
@@ -686,6 +686,7 @@ class PlanetView(
 
         model.onPropertyChange(PlanetModel::achievementMultiplier) { mult -> achMultChanged(mult) }
 
+        model.onPropertyChange(PlanetModel::soilCost) { cost -> soilCostChanged(cost) }
         model.onPropertyChange(PlanetModel::soilUpgrades) { amount -> soilUpgradesChanged(amount) }
 
         model.onPropertyChange(PlanetModel::gameCompleted) { completed -> popupGameCompleted(completed) }
@@ -703,10 +704,10 @@ class PlanetView(
                 if (amount.toInt() >= 5) {
                     stage.fire(AchievementNotificationEvent(1))
                 }
-                if (amount.toInt() >= 100) {
+                if (amount.toInt() >= 50) {
                     stage.fire(AchievementNotificationEvent(5))
                 }
-                if (amount.toInt() >= 1000) {
+                if (amount.toInt() >= 250) {
                     stage.fire(AchievementNotificationEvent(17))
                 }
             }
@@ -746,7 +747,7 @@ class PlanetView(
             "blue" -> {
                 blueOwned = amount
                 blueToolTipLabel.txt = updateTooltipText("blue")
-                if (amount.toInt() >= 5) {
+                if (amount.toInt() >= 5 && soilUpgrades.toInt() >= 3) {
                     purpleButton.isVisible = true
                 }
                 if (amount.toInt() >= 1) {
@@ -756,7 +757,7 @@ class PlanetView(
             "purple" -> {
                 purpleOwned = amount
                 purpleToolTipLabel.txt = updateTooltipText("purple")
-                if (amount.toInt() >= 5) {
+                if (amount.toInt() >= 5 && soilUpgrades.toInt() >= 5) {
                     pinkButton.isVisible = true
                 }
                 if (amount.toInt() >= 1) {
@@ -766,7 +767,7 @@ class PlanetView(
             "pink" -> {
                 pinkOwned = amount
                 pinkToolTipLabel.txt = updateTooltipText("pink")
-                if (amount.toInt() >= 5) {
+                if (amount.toInt() >= 5 && soilUpgrades.toInt() >= 7) {
                     brownButton.isVisible = true
                 }
                 if (amount.toInt() >= 1) {
@@ -776,7 +777,7 @@ class PlanetView(
             "brown" -> {
                 brownOwned = amount
                 brownToolTipLabel.txt = updateTooltipText("brown")
-                if (amount.toInt() >= 5) {
+                if (amount.toInt() >= 5 && soilUpgrades.toInt() >= 9) {
                     whiteButton.isVisible = true
                 }
                 if (amount.toInt() >= 1) {
@@ -786,7 +787,7 @@ class PlanetView(
             "white" -> {
                 whiteOwned = amount
                 whiteToolTipLabel.txt = updateTooltipText("white")
-                if (amount.toInt() >= 5) {
+                if (amount.toInt() >= 5 && soilUpgrades.toInt() >= 11) {
                     blackButton.isVisible = true
                 }
                 if (amount.toInt() >= 1) {
@@ -926,16 +927,16 @@ class PlanetView(
     }
     private fun updateButtonText(buttonName : String) : String {
         return when (buttonName) {
-            "red" -> { "Crops/s: ${formatNumberWithDecimal(redRate)} (+$redRateIncrease)\n${formatNumberWithLetter(redCost)} gold" }
-            "orange" -> { "Crops/s: ${formatNumberWithDecimal(orangeRate)} (+$orangeRateIncrease)\n${formatNumberWithLetter(orangeCost)} gold" }
-            "yellow" -> { "Crops/s: ${formatNumberWithDecimal(yellowRate)} (+$yellowRateIncrease)\n${formatNumberWithLetter(yellowCost)} gold" }
-            "green" -> { "Crops/s: ${formatNumberWithDecimal(greenRate)} (+$greenRateIncrease)\n${formatNumberWithLetter(greenCost)} gold" }
-            "blue" -> { "Crops/s: ${formatNumberWithDecimal(blueRate)} (+$blueRateIncrease)\n${formatNumberWithLetter(blueCost)} gold" }
-            "purple" -> { "Crops/s: ${formatNumberWithDecimal(purpleRate)} (+$purpleRateIncrease)\n${formatNumberWithLetter(purpleCost)} gold" }
-            "pink" -> { "Crops/s: ${formatNumberWithDecimal(pinkRate)} (+$pinkRateIncrease)\n${formatNumberWithLetter(pinkCost)} gold" }
-            "brown" -> { "Crops/s: ${formatNumberWithDecimal(brownRate)} (+$brownRateIncrease)\n${formatNumberWithLetter(brownCost)} gold" }
-            "white" -> { "Crops/s: ${formatNumberWithDecimal(whiteRate)} (+$whiteRateIncrease)\n${formatNumberWithLetter(whiteCost)} gold" }
-            "black" -> { "Crops/s: ${formatNumberWithDecimal(blackRate)} (+$blackRateIncrease)\n${formatNumberWithLetter(blackCost)} gold" }
+            "red" -> { "Red (${formatNumberNoDecimal(redOwned)})\n${formatNumberWithLetter(redCost)} gold" }
+            "orange" -> { "Orange (${formatNumberNoDecimal(orangeOwned)})\n${formatNumberWithLetter(orangeCost)} gold" }
+            "yellow" -> { "Yellow (${formatNumberNoDecimal(yellowOwned)})\n${formatNumberWithLetter(yellowCost)} gold" }
+            "green" -> { "Green (${formatNumberNoDecimal(greenOwned)})\n${formatNumberWithLetter(greenCost)} gold" }
+            "blue" -> { "Blue (${formatNumberNoDecimal(blueOwned)})\n${formatNumberWithLetter(blueCost)} gold" }
+            "purple" -> { "Purple (${formatNumberNoDecimal(purpleOwned)})\n${formatNumberWithLetter(purpleCost)} gold" }
+            "pink" -> { "Pink (${formatNumberNoDecimal(pinkOwned)})\n${formatNumberWithLetter(pinkCost)} gold" }
+            "brown" -> { "Brown (${formatNumberNoDecimal(brownOwned)})\n${formatNumberWithLetter(brownCost)} gold" }
+            "white" -> { "White (${formatNumberNoDecimal(whiteOwned)})\n${formatNumberWithLetter(whiteCost)} gold" }
+            "black" -> { "Black (${formatNumberNoDecimal(blackOwned)})\n${formatNumberWithLetter(blackCost)} gold" }
             else -> {
                 "Invalid Button Name"
             }
@@ -943,7 +944,7 @@ class PlanetView(
     }
     private fun updateTooltipText(tooltipName : String) : String {
         return when (tooltipName) {
-            "red" -> { "Name: Red\nAmount: ${formatNumberNoDecimal(redOwned)} \nValue: ${formatNumberWithDecimal(redValueIncrease)}" }
+            "red" -> { "Rate: ${formatNumberWithDecimal(redRate)}\nValue: ${formatNumberWithDecimal(redValue)}" }
             "orange" -> { "Name: Orange\nAmount: ${formatNumberNoDecimal(orangeOwned)} \nValue: ${formatNumberWithDecimal(orangeValueIncrease)}" }
             "yellow" -> { "Name: Yellow\nAmount: ${formatNumberNoDecimal(yellowOwned)} \nValue: ${formatNumberWithDecimal(yellowValueIncrease)}" }
             "green" -> { "Name: Green\nAmount: ${formatNumberNoDecimal(greenOwned)} \nValue: ${formatNumberWithDecimal(greenValueIncrease)}" }
@@ -1008,14 +1009,38 @@ class PlanetView(
         brownButton.isDisabled = amount < brownCost
         whiteButton.isDisabled = amount < whiteCost
         blackButton.isDisabled = amount < blackCost
+        soilButton.isDisabled = amount < soilCost
     }
     private fun achMultChanged(mult : BigDecimal) {
         // not displaying properly, but i think the value is correct and the multiplier is in effect
         multiplierValueLabel.txt = formatNumberWithDecimal(mult)
     }
     private fun soilUpgradesChanged(amount : BigDecimal) {
-        soilButton.txt = "Upgrade Soil (${amount.toInt()})"
         soilUpgrades = amount
+        soilButton.txt = "Upgrade Soil (${amount})\n${getSoilCost()}"
+        resetButtonVisibility()
+        if (amount.toInt() >= 1) { stage.fire(AchievementNotificationEvent(7)) }
+        if (amount.toInt() >= 5) { stage.fire(AchievementNotificationEvent(12)) }
+        if (amount.toInt() >= 10) { stage.fire(AchievementNotificationEvent(16)) }
+        if (amount.toInt() >= 25) { stage.fire(AchievementNotificationEvent(21)) }
+    }
+    private fun soilCostChanged(cost : BigDecimal) {
+        soilCost = cost
+        soilButton.txt = "Upgrade Soil (${soilUpgrades})\n${getSoilCost()}"
+    }
+    private fun getSoilCost() : String {
+        return formatNumberWithLetter(soilCost)
+    }
+    private fun resetButtonVisibility() {
+        orangeButton.isVisible = false
+        yellowButton.isVisible = false
+        greenButton.isVisible = false
+        blueButton.isVisible = false
+        purpleButton.isVisible = false
+        pinkButton.isVisible = false
+        brownButton.isVisible = false
+        whiteButton.isVisible = false
+        blackButton.isVisible = false
     }
 
     private fun formatBuyButton(cost : BigDecimal) : String {

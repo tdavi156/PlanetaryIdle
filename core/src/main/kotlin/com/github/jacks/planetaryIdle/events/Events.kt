@@ -20,7 +20,7 @@ class GameCompletedEvent : Event()
 class ResourceUpdateEvent(val rscComp : ResourceComponent) : Event()
 class BuyResourceEvent(val resourceType : String) : Event()
 class UpdateBuyAmountEvent(val amount : Float) : Event()
-class UpgradeSoilEvent(val amount : BigDecimal = BigDecimal(-1)) : Event()
+class UpgradeSoilEvent(val amount : BigDecimal = BigDecimal(1)) : Event()
 
 class AchievementNotificationEvent(val achId : Int = -1) : Event()
 class AchievementCompletedEvent(val achId : Int = -1) : Event()

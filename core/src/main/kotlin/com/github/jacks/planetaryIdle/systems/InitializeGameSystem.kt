@@ -231,7 +231,7 @@ class InitializeGameSystem(
             baseCost = BigDecimal("1"),
             costScaling = BigDecimal("0.2"),
             baseValue = BigDecimal("0.31"),
-            valueScaling = BigDecimal("0.04"),
+            valueScaling = BigDecimal("10.04"),
             baseRate = BigDecimal("1.3"),
             rateScaling = BigDecimal("0.17"),
             currentTicks = preferences["red_current_ticks", 0],

@@ -18,6 +18,8 @@ import ktx.app.KtxScreen
 import ktx.app.clearScreen
 import ktx.assets.disposeSafely
 import ktx.preferences.flush
+import java.math.MathContext
+import java.math.RoundingMode
 
 class PlanetaryIdle : KtxGame<KtxScreen>(), EventListener {
 
@@ -69,5 +71,6 @@ class PlanetaryIdle : KtxGame<KtxScreen>(), EventListener {
     companion object {
         const val FRAMES_PER_SECOND_FLOAT : Float = 60f
         const val FRAMES_PER_SECOND_INT : Int = 60
+        val MATH_CONTEXT : MathContext = MathContext(10, RoundingMode.HALF_UP)
     }
 }

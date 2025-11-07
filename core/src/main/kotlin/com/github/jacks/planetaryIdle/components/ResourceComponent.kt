@@ -10,18 +10,23 @@ enum class ScoreResources(
 }
 
 enum class PlanetResources(
-    val resourceName : String
+    val resourceName : String,
+    val baseCost : String,
+    val baseValue : String,
+    val valueScaling : String,
+    val baseRate : String,
+    val rateScaling : String
 ) {
-    RED("red"),
-    ORANGE("orange"),
-    YELLOW("yellow"),
-    GREEN("green"),
-    BLUE("blue"),
-    PURPLE("purple"),
-    PINK("pink"),
-    BROWN("brown"),
-    WHITE("white"),
-    BLACK("black");
+    RED("red","1","0.31","10.04","1.3","0.17"),
+    ORANGE("orange","100","2.4","0.09","0.95","0.11"),
+    YELLOW("yellow","1000","18.9","0.23","0.67","0.07"),
+    GREEN("green","50000","147.1","3.21","0.43","0.06"),
+    BLUE("blue","1000000","1147","12.5","0.21","0.05"),
+    PURPLE("purple","500000000","8952","46.3","0.12","0.04"),
+    PINK("pink","10000000000","69811","374.8","0.08","0.03"),
+    BROWN("brown","100000000000000","544532","2567","0.05","0.02"),
+    WHITE("white","1000000000000000000","4247354","74502","0.03","0.01"),
+    BLACK("black","1000000000000000000000000","33129365","3312936","0.01","0.005");
 }
 
 data class ResourceConfiguration(
@@ -66,7 +71,8 @@ data class ResourceComponent(
         }
 
     val rate : BigDecimal
-        get() = baseRate + (rateScaling * amountOwned)
+        // might add additional scaling here later to improve the rate based on amount owned (scaling * owned)
+        get() = baseRate
 
     val tickCount : Int
         get() {
