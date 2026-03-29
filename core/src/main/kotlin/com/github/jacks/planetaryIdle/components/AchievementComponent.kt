@@ -40,28 +40,7 @@ enum class Achievements(
 
 data class AchievementConfiguration(
     val name : String = "",
-    val ach1 : Boolean = false,
-    val ach2 : Boolean = false,
-    val ach3 : Boolean = false,
-    val ach4 : Boolean = false,
-    val ach5 : Boolean = false,
-    val ach6 : Boolean = false,
-    val ach7 : Boolean = false,
-    val ach8 : Boolean = false,
-    val ach9 : Boolean = false,
-    val ach10 : Boolean = false,
-    val ach11 : Boolean = false,
-    val ach12 : Boolean = false,
-    val ach13 : Boolean = false,
-    val ach14 : Boolean = false,
-    val ach15 : Boolean = false,
-    val ach16 : Boolean = false,
-    val ach17 : Boolean = false,
-    val ach18 : Boolean = false,
-    val ach19 : Boolean = false,
-    val ach20 : Boolean = false,
-    val ach21 : Boolean = false,
-    val ach22 : Boolean = false,
+    val completedAchievements : Set<Int> = emptySet()
 )
 
 data class AchievementComponent(
@@ -73,10 +52,8 @@ data class AchievementComponent(
         get() {
             return if (completedAchievements.isEmpty()) {
                 BigDecimal(1)
-            } else if (completedAchievements.count() == 1) {
-                BigDecimal(1.05)
             } else {
-        multiplierScale.pow(completedAchievements.count())
-    }
+                multiplierScale.pow(completedAchievements.count())
+            }
         }
 }

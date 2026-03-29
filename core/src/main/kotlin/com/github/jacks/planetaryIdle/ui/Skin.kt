@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.TextureAtlas
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable
 import ktx.assets.disposeSafely
@@ -184,6 +185,8 @@ fun loadSkin() {
         loadFonts(skin)
         loadLabels(skin)
         loadButtons(skin)
+        // Functional-only scroll pane style — no visible drawables needed
+        skin.add("default", ScrollPane.ScrollPaneStyle())
     }
 }
 

@@ -3,6 +3,7 @@ package com.github.jacks.planetaryIdle.systems
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.github.jacks.planetaryIdle.PlanetaryIdle.Companion.FRAMES_PER_SECOND_FLOAT
 import com.github.jacks.planetaryIdle.components.ResourceComponent
+import com.github.jacks.planetaryIdle.components.ScoreResources
 import com.github.jacks.planetaryIdle.components.UpgradeComponent
 import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
 import com.github.jacks.planetaryIdle.events.fire
@@ -26,10 +27,9 @@ class ResourceUpdateSystem(
 
     override fun onTickEntity(entity: Entity) {
         val rscComp = resourceComponents[entity]
-        if (rscComp.name == "gold_coins") { return }
+        if (rscComp.name == ScoreResources.GOLD_COINS.resourceName) { return }
         if (rscComp.amountOwned.toInt() < 1) { return }
         val tickCount = getAdjustedTickCount(rscComp.tickCount)
-        if (tickCount == 1) { stage.fire(ResourceUpdateEvent(rscComp)) }
         if (rscComp.currentTicks < tickCount) { rscComp.currentTicks++ }
         if (rscComp.currentTicks >= tickCount) {
             // may need to set it to 1 here to account for the tick that we process on

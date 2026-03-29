@@ -57,13 +57,13 @@ data class ResourceComponent(
 ) {
 
     val cost : BigDecimal
-        get() = baseCost.multiply((ONE + costScaling).pow(amountOwned.toInt()))
+        get() = baseCost.multiply((BigDecimal.ONE + costScaling).pow(amountOwned.toInt()))
 
     val value : BigDecimal
         get() {
-            return if (amountOwned == ZERO) {
-                ZERO
-            } else if (amountOwned == ONE) {
+            return if (amountOwned == BigDecimal.ZERO) {
+                BigDecimal.ZERO
+            } else if (amountOwned == BigDecimal.ONE) {
                 baseValue
             } else {
                 baseValue + (valueScaling * amountSold)
@@ -79,12 +79,7 @@ data class ResourceComponent(
             // if the rate is greater then the frame cap, increase the value proportionally based on the exceeding rate
             return if (rate.toInt() >= FRAMES_PER_SECOND_INT) { 1 }
             else {
-                (ONE.divide((rate / BigDecimal(FRAMES_PER_SECOND_INT)), 2, RoundingMode.UP)).toInt()
+                (BigDecimal.ONE.divide((rate / BigDecimal(FRAMES_PER_SECOND_INT)), 2, RoundingMode.UP)).toInt()
             }
         }
-
-    companion object {
-        val ZERO = BigDecimal(0)
-        val ONE = BigDecimal(1)
-    }
 }

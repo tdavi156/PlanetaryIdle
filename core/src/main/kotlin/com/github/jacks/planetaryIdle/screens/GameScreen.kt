@@ -54,7 +54,7 @@ class GameScreen(game : PlanetaryIdle) : KtxScreen {
             backgroundView()
 
             // planetView, actor.get(1), default view on game start
-            planetView(PlanetModel(entityWorld, stage)) {
+            val pView = planetView(PlanetModel(entityWorld, stage)) {
                 //debugAll()
                 isVisible = true
             }
@@ -69,10 +69,10 @@ class GameScreen(game : PlanetaryIdle) : KtxScreen {
             // challengesView(ChallengesModel(entityWorld, stage)) { isVisible = false }
 
             // shopView, actor.get(2)
-            shopView(ShopModel(entityWorld, stage)) { isVisible = false }
+            val sView = shopView(ShopModel(entityWorld, stage)) { isVisible = false }
 
             // achievementView, actor.get(3)
-            achievementsView(AchievementsModel(entityWorld, stage)) { isVisible = false }
+            val aView = achievementsView(AchievementsModel(entityWorld, stage)) { isVisible = false }
 
             // statisticsView, actor.get(x)
             // statisticsView(StatisticsModel(entityWorld, stage)) { isVisible = false }
@@ -80,8 +80,8 @@ class GameScreen(game : PlanetaryIdle) : KtxScreen {
             // settingsView, actor.get(x)
             // settingsView(SettingsModel(entityWorld, stage)) { isVisible = false }
 
-            // right side menu (always present)
-            menuView(MenuModel(stage)) {
+            // right side menu (always present) — receives named view refs to avoid index-based lookup
+            menuView(MenuModel(stage), pView, sView, aView) {
                 //debugAll()
             }
 

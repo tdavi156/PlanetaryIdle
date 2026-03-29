@@ -18,7 +18,6 @@ import com.github.jacks.planetaryIdle.components.UpgradeComponent
 import com.github.jacks.planetaryIdle.components.UpgradeConfiguration
 import com.github.jacks.planetaryIdle.components.UpgradeType
 import com.github.jacks.planetaryIdle.events.InitializeGameEvent
-import com.github.jacks.planetaryIdle.events.LoadGameEvent
 import com.github.quillraven.fleks.AllOf
 import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.Entity
@@ -33,8 +32,6 @@ import java.math.*
 class InitializeGameSystem(
     private val configurationComponents : ComponentMapper<ConfigurationComponent>
 ) : EventListener, IteratingSystem() {
-
-    private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
 
     override fun onTickEntity(entity: Entity) {
         with(configurationComponents[entity]) {
@@ -69,28 +66,7 @@ class InitializeGameSystem(
                     val config = getAchievementConfiguration(configurationName)
                     world.entity {
                         add<AchievementComponent> {
-                            if (config.ach1) { completedAchievements.add(Achievements.ACH_1.achId) }
-                            if (config.ach2) { completedAchievements.add(Achievements.ACH_2.achId) }
-                            if (config.ach3) { completedAchievements.add(Achievements.ACH_3.achId) }
-                            if (config.ach4) { completedAchievements.add(Achievements.ACH_4.achId) }
-                            if (config.ach5) { completedAchievements.add(Achievements.ACH_5.achId) }
-                            if (config.ach6) { completedAchievements.add(Achievements.ACH_6.achId) }
-                            if (config.ach7) { completedAchievements.add(Achievements.ACH_7.achId) }
-                            if (config.ach8) { completedAchievements.add(Achievements.ACH_8.achId) }
-                            if (config.ach9) { completedAchievements.add(Achievements.ACH_9.achId) }
-                            if (config.ach10) { completedAchievements.add(Achievements.ACH_10.achId) }
-                            if (config.ach11) { completedAchievements.add(Achievements.ACH_11.achId) }
-                            if (config.ach12) { completedAchievements.add(Achievements.ACH_12.achId) }
-                            if (config.ach13) { completedAchievements.add(Achievements.ACH_13.achId) }
-                            if (config.ach14) { completedAchievements.add(Achievements.ACH_14.achId) }
-                            if (config.ach15) { completedAchievements.add(Achievements.ACH_15.achId) }
-                            if (config.ach16) { completedAchievements.add(Achievements.ACH_16.achId) }
-                            if (config.ach17) { completedAchievements.add(Achievements.ACH_17.achId) }
-                            if (config.ach18) { completedAchievements.add(Achievements.ACH_18.achId) }
-                            if (config.ach19) { completedAchievements.add(Achievements.ACH_19.achId) }
-                            if (config.ach20) { completedAchievements.add(Achievements.ACH_20.achId) }
-                            if (config.ach21) { completedAchievements.add(Achievements.ACH_21.achId) }
-                            if (config.ach22) { completedAchievements.add(Achievements.ACH_22.achId) }
+                            completedAchievements.addAll(config.completedAchievements)
                         }
                     }
                 }
@@ -115,7 +91,7 @@ class InitializeGameSystem(
     override fun handle(event: Event): Boolean {
         when (event) {
             is InitializeGameEvent -> {
-                if (!preferences["isGameInitialized", false]) {
+                if (!preferences["is_game_initialized", false]) {
                     preferences.clear()
                     setupPreferences()
                 }
@@ -151,9 +127,6 @@ class InitializeGameSystem(
                         }
                     }
                 }
-            }
-            is LoadGameEvent -> {
-
             }
             else -> return false
         }
@@ -201,6 +174,7 @@ class InitializeGameSystem(
             this["gold_coins"] = "5"
             this["production_rate"] = "0"
             this["buy_amount"] = 1f
+            this["achievement_multiplier"] = "1"
 
             this["red_owned"] = "0"
             this["red_cost"] = "1"
@@ -215,12 +189,74 @@ class InitializeGameSystem(
             this["orange_rate"] = "0.95"
             this["orange_current_ticks"] = 0
             this["orange_unlocked"] = false
+
+            this["yellow_owned"] = "0"
+            this["yellow_cost"] = "1000"
+            this["yellow_value"] = "18.9"
+            this["yellow_rate"] = "0.67"
+            this["yellow_current_ticks"] = 0
+            this["yellow_unlocked"] = false
+
+            this["green_owned"] = "0"
+            this["green_cost"] = "50000"
+            this["green_value"] = "147.1"
+            this["green_rate"] = "0.43"
+            this["green_current_ticks"] = 0
+            this["green_unlocked"] = false
+
+            this["blue_owned"] = "0"
+            this["blue_cost"] = "1000000"
+            this["blue_value"] = "1147"
+            this["blue_rate"] = "0.21"
+            this["blue_current_ticks"] = 0
+            this["blue_unlocked"] = false
+
+            this["purple_owned"] = "0"
+            this["purple_cost"] = "500000000"
+            this["purple_value"] = "8952"
+            this["purple_rate"] = "0.12"
+            this["purple_current_ticks"] = 0
+            this["purple_unlocked"] = false
+
+            this["pink_owned"] = "0"
+            this["pink_cost"] = "10000000000"
+            this["pink_value"] = "69811"
+            this["pink_rate"] = "0.08"
+            this["pink_current_ticks"] = 0
+            this["pink_unlocked"] = false
+
+            this["brown_owned"] = "0"
+            this["brown_cost"] = "100000000000000"
+            this["brown_value"] = "544532"
+            this["brown_rate"] = "0.05"
+            this["brown_current_ticks"] = 0
+            this["brown_unlocked"] = false
+
+            this["white_owned"] = "0"
+            this["white_cost"] = "1000000000000000000"
+            this["white_value"] = "4247354"
+            this["white_rate"] = "0.03"
+            this["white_current_ticks"] = 0
+            this["white_unlocked"] = false
+
+            this["black_owned"] = "0"
+            this["black_cost"] = "1000000000000000000000000"
+            this["black_value"] = "33129365"
+            this["black_rate"] = "0.01"
+            this["black_current_ticks"] = 0
+            this["black_unlocked"] = false
+
+            this["soil_is_unlocked"] = false
+            this["soil_upgrades"] = "0"
+            this["soil_cost"] = "1000000"
+
+            for (i in 1..22) { this["ach$i"] = false }
         }
     }
 
     companion object {
         private val log = logger<InitializeGameSystem>()
-        private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
+        val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
         val GOLD_SCORE_CONFIGURATION = ResourceConfiguration(
             name = "gold_coins",
             amountOwned = BigDecimal(preferences["gold_coins", "5"])
@@ -340,28 +376,10 @@ class InitializeGameSystem(
         )
         val ACHIEVEMENT_CONFIGURATION = AchievementConfiguration(
             name = "basic_achievement",
-            ach1 = preferences["ach1", false],
-            ach2 = preferences["ach2", false],
-            ach3 = preferences["ach3", false],
-            ach4 = preferences["ach4", false],
-            ach5 = preferences["ach5", false],
-            ach6 = preferences["ach6", false],
-            ach7 = preferences["ach7", false],
-            ach8 = preferences["ach8", false],
-            ach9 = preferences["ach9", false],
-            ach10 = preferences["ach10", false],
-            ach11 = preferences["ach11", false],
-            ach12 = preferences["ach12", false],
-            ach13 = preferences["ach13", false],
-            ach14 = preferences["ach14", false],
-            ach15 = preferences["ach15", false],
-            ach16 = preferences["ach16", false],
-            ach17 = preferences["ach17", false],
-            ach18 = preferences["ach18", false],
-            ach19 = preferences["ach19", false],
-            ach20 = preferences["ach20", false],
-            ach21 = preferences["ach21", false],
-            ach22 = preferences["ach22", false],
+            completedAchievements = Achievements.entries
+                .filter { preferences["ach${it.achId}", false] }
+                .map { it.achId }
+                .toSet()
         )
         val UPGRADE_CONFIGURATION = UpgradeConfiguration(
             name = "soil_upgrade",

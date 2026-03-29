@@ -1,8 +1,6 @@
 package com.github.jacks.planetaryIdle.ui.views
 
 import ch.obermuhlner.math.big.BigDecimalMath
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.InputListener
@@ -27,7 +25,6 @@ import com.github.jacks.planetaryIdle.ui.get
 import com.github.jacks.planetaryIdle.ui.models.PlanetModel
 import ktx.actors.txt
 import ktx.log.logger
-import ktx.preferences.get
 import ktx.scene2d.*
 import java.math.BigDecimal
 import java.math.MathContext
@@ -43,8 +40,6 @@ class PlanetView(
 ) : Table(skin), KTable {
 
     private lateinit var stage : Stage
-    private var currentView : String = "planetView"
-    private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
 
     private val mathCx : MathContext = MathContext(3)
     private val twoDecimalWithCommasFormat : NumberFormat = DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance())
@@ -59,83 +54,83 @@ class PlanetView(
     private val amtNumFormat : NumberFormat = NumberFormat.getInstance()
     private val costNumFormat : NumberFormat = NumberFormat.getInstance()
 
-    // initial values from preferences
-    private var goldCoins = BigDecimal(preferences["gold_coins", "5"])
-    private var productionRate = BigDecimal(preferences["production_rate", "0"])
-    private var buyAmount : Float = preferences["buy_amount", 1f]
+    // initial values sourced from model (model reads preferences on init)
+    private var goldCoins = model.goldCoins
+    private var productionRate = model.productionRate
+    private var buyAmount : Float = model.buyAmount
 
-    private var redOwned = BigDecimal(preferences["red_owned", "0"])
-    private var redCost = BigDecimal(preferences["red_cost", "1"])
-    private var redValue = BigDecimal(preferences["red_value", "0.31"])
-    private var redValueIncrease = BigDecimal(preferences["red_value_increase", "0.04"])
-    private var redRate = BigDecimal(preferences["red_rate", "1.3"])
-    private var redRateIncrease = BigDecimal(preferences["red_rate_increase", "0.17"])
+    private var redOwned = model.redOwned
+    private var redCost = model.redCost
+    private var redValue = model.redValue
+    private var redValueIncrease = model.redValueIncrease
+    private var redRate = model.redRate
+    private var redRateIncrease = model.redRateIncrease
 
-    private var orangeOwned = BigDecimal(preferences["orange_owned", "0"])
-    private var orangeCost = BigDecimal(preferences["orange_cost", "100"])
-    private var orangeValue = BigDecimal(preferences["orange_value", "2.4"])
-    private var orangeValueIncrease = BigDecimal(preferences["orange_value_increase", "0.09"])
-    private var orangeRate = BigDecimal(preferences["orange_rate", "0.95"])
-    private var orangeRateIncrease = BigDecimal(preferences["orange_rate_increase", "0.11"])
+    private var orangeOwned = model.orangeOwned
+    private var orangeCost = model.orangeCost
+    private var orangeValue = model.orangeValue
+    private var orangeValueIncrease = model.orangeValueIncrease
+    private var orangeRate = model.orangeRate
+    private var orangeRateIncrease = model.orangeRateIncrease
 
-    private var yellowOwned = BigDecimal(preferences["yellow_owned", "0"])
-    private var yellowCost = BigDecimal(preferences["yellow_cost", "1000"])
-    private var yellowValue = BigDecimal(preferences["yellow_value", "18.9"])
-    private var yellowValueIncrease = BigDecimal(preferences["yellow_value_increase", "0.23"])
-    private var yellowRate = BigDecimal(preferences["yellow_rate", "0.67"])
-    private var yellowRateIncrease = BigDecimal(preferences["yellow_rate_increase", "0.07"])
+    private var yellowOwned = model.yellowOwned
+    private var yellowCost = model.yellowCost
+    private var yellowValue = model.yellowValue
+    private var yellowValueIncrease = model.yellowValueIncrease
+    private var yellowRate = model.yellowRate
+    private var yellowRateIncrease = model.yellowRateIncrease
 
-    private var greenOwned = BigDecimal(preferences["green_owned", "0"])
-    private var greenCost = BigDecimal(preferences["green_cost", "50000"])
-    private var greenValue = BigDecimal(preferences["green_value", "147.1"])
-    private var greenValueIncrease = BigDecimal(preferences["green_value_increase", "3.21"])
-    private var greenRate = BigDecimal(preferences["green_rate", "0.43"])
-    private var greenRateIncrease = BigDecimal(preferences["green_rate_increase", "0.06"])
+    private var greenOwned = model.greenOwned
+    private var greenCost = model.greenCost
+    private var greenValue = model.greenValue
+    private var greenValueIncrease = model.greenValueIncrease
+    private var greenRate = model.greenRate
+    private var greenRateIncrease = model.greenRateIncrease
 
-    private var blueOwned = BigDecimal(preferences["blue_owned", "0"])
-    private var blueCost = BigDecimal(preferences["blue_cost", "1000000"])
-    private var blueValue = BigDecimal(preferences["blue_value", "1147"])
-    private var blueValueIncrease = BigDecimal(preferences["blue_value_increase", "12.5"])
-    private var blueRate = BigDecimal(preferences["blue_rate", "0.21"])
-    private var blueRateIncrease = BigDecimal(preferences["blue_rate_increase", "0.05"])
+    private var blueOwned = model.blueOwned
+    private var blueCost = model.blueCost
+    private var blueValue = model.blueValue
+    private var blueValueIncrease = model.blueValueIncrease
+    private var blueRate = model.blueRate
+    private var blueRateIncrease = model.blueRateIncrease
 
-    private var purpleOwned = BigDecimal(preferences["purple_owned", "0"])
-    private var purpleCost = BigDecimal(preferences["purple_cost", "500000000"])
-    private var purpleValue = BigDecimal(preferences["purple_value", "8952"])
-    private var purpleValueIncrease = BigDecimal(preferences["purple_value_increase", "46.3"])
-    private var purpleRate = BigDecimal(preferences["purple_rate", "0.12"])
-    private var purpleRateIncrease = BigDecimal(preferences["purple_rate_increase", "0.04"])
+    private var purpleOwned = model.purpleOwned
+    private var purpleCost = model.purpleCost
+    private var purpleValue = model.purpleValue
+    private var purpleValueIncrease = model.purpleValueIncrease
+    private var purpleRate = model.purpleRate
+    private var purpleRateIncrease = model.purpleRateIncrease
 
-    private var pinkOwned = BigDecimal(preferences["pink_owned", "0"])
-    private var pinkCost = BigDecimal(preferences["pink_cost", "10000000000"])
-    private var pinkValue = BigDecimal(preferences["pink_value", "69811"])
-    private var pinkValueIncrease = BigDecimal(preferences["pink_value_increase", "374.8"])
-    private var pinkRate = BigDecimal(preferences["pink_rate", "0.08"])
-    private var pinkRateIncrease = BigDecimal(preferences["pink_rate_increase", "0.03"])
+    private var pinkOwned = model.pinkOwned
+    private var pinkCost = model.pinkCost
+    private var pinkValue = model.pinkValue
+    private var pinkValueIncrease = model.pinkValueIncrease
+    private var pinkRate = model.pinkRate
+    private var pinkRateIncrease = model.pinkRateIncrease
 
-    private var brownOwned = BigDecimal(preferences["brown_owned", "0"])
-    private var brownCost = BigDecimal(preferences["brown_cost", "100000000000000"])
-    private var brownValue = BigDecimal(preferences["brown_value", "544532"])
-    private var brownValueIncrease = BigDecimal(preferences["brown_value_increase", "2567"])
-    private var brownRate = BigDecimal(preferences["brown_rate", "0.05"])
-    private var brownRateIncrease = BigDecimal(preferences["brown_rate_increase", "0.02"])
+    private var brownOwned = model.brownOwned
+    private var brownCost = model.brownCost
+    private var brownValue = model.brownValue
+    private var brownValueIncrease = model.brownValueIncrease
+    private var brownRate = model.brownRate
+    private var brownRateIncrease = model.brownRateIncrease
 
-    private var whiteOwned = BigDecimal(preferences["white_owned", "0"])
-    private var whiteCost = BigDecimal(preferences["white_cost", "1000000000000000000"])
-    private var whiteValue = BigDecimal(preferences["white_value", "4247354"])
-    private var whiteValueIncrease = BigDecimal(preferences["white_value_increase", "74502"])
-    private var whiteRate = BigDecimal(preferences["white_rate", "0.03"])
-    private var whiteRateIncrease = BigDecimal(preferences["white_rate_increase", "0.01"])
+    private var whiteOwned = model.whiteOwned
+    private var whiteCost = model.whiteCost
+    private var whiteValue = model.whiteValue
+    private var whiteValueIncrease = model.whiteValueIncrease
+    private var whiteRate = model.whiteRate
+    private var whiteRateIncrease = model.whiteRateIncrease
 
-    private var blackOwned = BigDecimal(preferences["black_owned", "0"])
-    private var blackCost = BigDecimal(preferences["black_cost", "1000000000000000000000000"])
-    private var blackValue = BigDecimal(preferences["black_value", "33129365"])
-    private var blackValueIncrease = BigDecimal(preferences["black_value_increase", "3312936"])
-    private var blackRate = BigDecimal(preferences["black_rate", "0.01"])
-    private var blackRateIncrease = BigDecimal(preferences["black_rate_increase", "0.005"])
+    private var blackOwned = model.blackOwned
+    private var blackCost = model.blackCost
+    private var blackValue = model.blackValue
+    private var blackValueIncrease = model.blackValueIncrease
+    private var blackRate = model.blackRate
+    private var blackRateIncrease = model.blackRateIncrease
 
-    private var soilCost = BigDecimal(preferences["soil_cost", "1000000"])
-    private var soilUpgrades = BigDecimal(preferences["soil_upgrades", "0"])
+    private var soilCost = model.soilCost
+    private var soilUpgrades = model.soilUpgrades
 
     // tables
 

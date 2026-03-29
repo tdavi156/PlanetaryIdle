@@ -5,8 +5,6 @@ import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.github.jacks.planetaryIdle.events.ResetGameEvent
-import com.github.jacks.planetaryIdle.events.SaveGameEvent
 import ktx.log.logger
 
 class MenuModel(
@@ -20,15 +18,7 @@ class MenuModel(
     }
 
     override fun handle(event: Event): Boolean {
-        when (event) {
-            is SaveGameEvent -> {
-
-            }
-            is ResetGameEvent -> {
-
-            }
-        }
-        return true
+        return false
     }
 
     companion object {

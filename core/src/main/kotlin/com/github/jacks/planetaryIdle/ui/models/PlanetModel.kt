@@ -6,14 +6,16 @@ import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.github.jacks.planetaryIdle.components.AchievementComponent
+import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.components.ResourceComponent
+import com.github.jacks.planetaryIdle.components.ScoreResources
 import com.github.jacks.planetaryIdle.components.UpgradeComponent
+import kotlin.reflect.KMutableProperty0
 import com.github.jacks.planetaryIdle.events.AchievementCompletedEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
-import com.github.jacks.planetaryIdle.events.SaveGameEvent
 import com.github.jacks.planetaryIdle.events.UpdateBuyAmountEvent
 import com.github.jacks.planetaryIdle.events.UpgradeSoilEvent
 import com.github.quillraven.fleks.ComponentMapper
@@ -113,6 +115,55 @@ class PlanetModel(
     var blackRate by propertyNotify(BigDecimal(preferences["black_rate", "1.3"]))
     var blackRateIncrease by propertyNotify(BigDecimal(preferences["black_rate_increase", "0.17"]))
 
+    private val ownedProps : Map<String, KMutableProperty0<BigDecimal>> = mapOf(
+        PlanetResources.RED.resourceName    to ::redOwned,
+        PlanetResources.ORANGE.resourceName to ::orangeOwned,
+        PlanetResources.YELLOW.resourceName to ::yellowOwned,
+        PlanetResources.GREEN.resourceName  to ::greenOwned,
+        PlanetResources.BLUE.resourceName   to ::blueOwned,
+        PlanetResources.PURPLE.resourceName to ::purpleOwned,
+        PlanetResources.PINK.resourceName   to ::pinkOwned,
+        PlanetResources.BROWN.resourceName  to ::brownOwned,
+        PlanetResources.WHITE.resourceName  to ::whiteOwned,
+        PlanetResources.BLACK.resourceName  to ::blackOwned,
+    )
+    private val costProps : Map<String, KMutableProperty0<BigDecimal>> = mapOf(
+        PlanetResources.RED.resourceName    to ::redCost,
+        PlanetResources.ORANGE.resourceName to ::orangeCost,
+        PlanetResources.YELLOW.resourceName to ::yellowCost,
+        PlanetResources.GREEN.resourceName  to ::greenCost,
+        PlanetResources.BLUE.resourceName   to ::blueCost,
+        PlanetResources.PURPLE.resourceName to ::purpleCost,
+        PlanetResources.PINK.resourceName   to ::pinkCost,
+        PlanetResources.BROWN.resourceName  to ::brownCost,
+        PlanetResources.WHITE.resourceName  to ::whiteCost,
+        PlanetResources.BLACK.resourceName  to ::blackCost,
+    )
+    private val valueProps : Map<String, KMutableProperty0<BigDecimal>> = mapOf(
+        PlanetResources.RED.resourceName    to ::redValue,
+        PlanetResources.ORANGE.resourceName to ::orangeValue,
+        PlanetResources.YELLOW.resourceName to ::yellowValue,
+        PlanetResources.GREEN.resourceName  to ::greenValue,
+        PlanetResources.BLUE.resourceName   to ::blueValue,
+        PlanetResources.PURPLE.resourceName to ::purpleValue,
+        PlanetResources.PINK.resourceName   to ::pinkValue,
+        PlanetResources.BROWN.resourceName  to ::brownValue,
+        PlanetResources.WHITE.resourceName  to ::whiteValue,
+        PlanetResources.BLACK.resourceName  to ::blackValue,
+    )
+    private val rateProps : Map<String, KMutableProperty0<BigDecimal>> = mapOf(
+        PlanetResources.RED.resourceName    to ::redRate,
+        PlanetResources.ORANGE.resourceName to ::orangeRate,
+        PlanetResources.YELLOW.resourceName to ::yellowRate,
+        PlanetResources.GREEN.resourceName  to ::greenRate,
+        PlanetResources.BLUE.resourceName   to ::blueRate,
+        PlanetResources.PURPLE.resourceName to ::purpleRate,
+        PlanetResources.PINK.resourceName   to ::pinkRate,
+        PlanetResources.BROWN.resourceName  to ::brownRate,
+        PlanetResources.WHITE.resourceName  to ::whiteRate,
+        PlanetResources.BLACK.resourceName  to ::blackRate,
+    )
+
     var achievementMultiplier by propertyNotify(BigDecimal(preferences["achievement_multiplier", "1"]))
 
     var soilCost by propertyNotify(BigDecimal(preferences["soil_cost", "1000000"]))
@@ -155,9 +206,6 @@ class PlanetModel(
                 preferences.flush { this["buy_amount"] = buyAmount }
                 updateModelCost()
             }
-            is SaveGameEvent -> {
-
-            }
             is ResetGameEvent -> {
                 resetGameValues()
             }
@@ -193,47 +241,9 @@ class PlanetModel(
      */
     private fun updateModelAmount(rscComp: ResourceComponent) {
         val bigBuyAmount = buyAmount.toBigDecimal()
-        when (rscComp.name) {
-            "red" -> {
-                redOwned += bigBuyAmount
-                preferences.flush { this["red_owned"] = redOwned.toString() }
-            }
-            "orange" -> {
-                orangeOwned += bigBuyAmount
-                preferences.flush { this["orange_owned"] = orangeOwned.toString() }
-            }
-            "yellow" -> {
-                yellowOwned += bigBuyAmount
-                preferences.flush { this["yellow_owned"] = yellowOwned.toString() }
-            }
-            "green" -> {
-                greenOwned += bigBuyAmount
-                preferences.flush { this["green_owned"] = greenOwned.toString() }
-            }
-            "blue" -> {
-                blueOwned += bigBuyAmount
-                preferences.flush { this["blue_owned"] = blueOwned.toString() }
-            }
-            "purple" -> {
-                purpleOwned += bigBuyAmount
-                preferences.flush { this["purple_owned"] = purpleOwned.toString() }
-            }
-            "pink" -> {
-                pinkOwned += bigBuyAmount
-                preferences.flush { this["pink_owned"] = pinkOwned.toString() }
-            }
-            "brown" -> {
-                brownOwned += bigBuyAmount
-                preferences.flush { this["brown_owned"] = brownOwned.toString() }
-            }
-            "white" -> {
-                whiteOwned += bigBuyAmount
-                preferences.flush { this["white_owned"] = whiteOwned.toString() }
-            }
-            "black" -> {
-                blackOwned += bigBuyAmount
-                preferences.flush { this["black_owned"] = blackOwned.toString() }
-            }
+        ownedProps[rscComp.name]?.let { prop ->
+            prop.set(prop.get() + bigBuyAmount)
+            preferences.flush { this["${rscComp.name}_owned"] = prop.get().toString() }
         }
     }
 
@@ -258,47 +268,9 @@ class PlanetModel(
      * cost for a given ResourceComponent
      */
     private fun updateModelCost(rscComp : ResourceComponent) {
-        when (rscComp.name) {
-            "red" -> {
-                redCost = rscComp.cost
-                preferences.flush { this["red_cost"] = redCost.toString() }
-            }
-            "orange" -> {
-                orangeCost = rscComp.cost
-                preferences.flush { this["orange_cost"] = orangeCost.toString() }
-            }
-            "yellow" -> {
-                yellowCost = rscComp.cost
-                preferences.flush { this["yellow_cost"] = yellowCost.toString() }
-            }
-            "green" -> {
-                greenCost = rscComp.cost
-                preferences.flush { this["green_cost"] = greenCost.toString() }
-            }
-            "blue" -> {
-                blueCost = rscComp.cost
-                preferences.flush { this["blue_cost"] = blueCost.toString() }
-            }
-            "purple" -> {
-                purpleCost = rscComp.cost
-                preferences.flush { this["purple_cost"] = purpleCost.toString() }
-            }
-            "pink" -> {
-                pinkCost = rscComp.cost
-                preferences.flush { this["pink_cost"] = pinkCost.toString() }
-            }
-            "brown" -> {
-                brownCost = rscComp.cost
-                preferences.flush { this["brown_cost"] = brownCost.toString() }
-            }
-            "white" -> {
-                whiteCost = rscComp.cost
-                preferences.flush { this["white_cost"] = whiteCost.toString() }
-            }
-            "black" -> {
-                blackCost = rscComp.cost
-                preferences.flush { this["black_cost"] = blackCost.toString() }
-            }
+        costProps[rscComp.name]?.let { prop ->
+            prop.set(rscComp.cost)
+            preferences.flush { this["${rscComp.name}_cost"] = prop.get().toString() }
         }
     }
 
@@ -307,38 +279,7 @@ class PlanetModel(
      * value for a given ResourceComponent
      */
     private fun updateModelValue(rscComp : ResourceComponent) {
-        when (rscComp.name) {
-            "red" -> {
-                redValue = rscComp.value
-            }
-            "orange" -> {
-                orangeValue = rscComp.value
-            }
-            "yellow" -> {
-                yellowValue = rscComp.value
-            }
-            "green" -> {
-                greenValue = rscComp.value
-            }
-            "blue" -> {
-                blueValue = rscComp.value
-            }
-            "purple" -> {
-                purpleValue = rscComp.value
-            }
-            "pink" -> {
-                pinkValue = rscComp.value
-            }
-            "brown" -> {
-                brownValue = rscComp.value
-            }
-            "white" -> {
-                whiteValue = rscComp.value
-            }
-            "black" -> {
-                blackValue = rscComp.value
-            }
-        }
+        valueProps[rscComp.name]?.set(rscComp.value)
     }
 
     /**
@@ -346,38 +287,7 @@ class PlanetModel(
      * rate for a given ResourceComponent
      */
     private fun updateModelRate(rscComp : ResourceComponent) {
-        when (rscComp.name) {
-            "red" -> {
-                redRate = rscComp.rate
-            }
-            "orange" -> {
-                orangeRate = rscComp.rate
-            }
-            "yellow" -> {
-                yellowRate = rscComp.rate
-            }
-            "green" -> {
-                greenRate = rscComp.rate
-            }
-            "blue" -> {
-                blueRate = rscComp.rate
-            }
-            "purple" -> {
-                purpleRate = rscComp.rate
-            }
-            "pink" -> {
-                pinkRate = rscComp.rate
-            }
-            "brown" -> {
-                brownRate = rscComp.rate
-            }
-            "white" -> {
-                whiteRate = rscComp.rate
-            }
-            "black" -> {
-                blackRate = rscComp.rate
-            }
-        }
+        rateProps[rscComp.name]?.set(rscComp.rate)
     }
 
     /**
@@ -388,7 +298,7 @@ class PlanetModel(
         var productionRate = BigDecimal(0)
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
-            if (rscComp.name == "gold_coins") return@forEach
+            if (rscComp.name == ScoreResources.GOLD_COINS.resourceName) return@forEach
             productionRate += (rscComp.value * rscComp.rate)
         }
         this@PlanetModel.productionRate = productionRate
@@ -462,119 +372,16 @@ class PlanetModel(
             rscComp.currentTicks = 0
         }
 
-        resetRedCropValues()
-        resetOrangeCropValues()
-        resetYellowCropValues()
-        resetGreenCropValues()
-        resetBlueCropValues()
-        resetPurpleCropValues()
-        resetPinkCropValues()
-        resetBrownCropValues()
-        resetWhiteCropValues()
-        resetBlackCropValues()
+        PlanetResources.entries.forEach { resource ->
+            val entity = getResourceEntityByName(resource.resourceName)
+                ?: gdxError("No Entity with type: ${resource.resourceName}")
+            val rscComp = resourceComponents[entity]
+            ownedProps[resource.resourceName]?.set(BigDecimal("0"))
+            updateModel(rscComp)
+        }
 
         goldCoins = BigDecimal("5")
         productionRate = BigDecimal("0")
-    }
-
-    /**
-     * Reset all values for Red Crops to their original values at Initial Game Start.
-     */
-    private fun resetRedCropValues() {
-        val entity = getResourceEntityByName("red") ?: gdxError("No Entity with type: red")
-        val rscComp = resourceComponents[entity]
-        redOwned = BigDecimal("0")
-        updateModel(rscComp)
-    }
-
-    /**
-     * Reset all values for Orange Crops to their original values at Initial Game Start.
-     */
-    private fun resetOrangeCropValues() {
-        val entity = getResourceEntityByName("orange") ?: gdxError("No Entity with type: orange")
-        val rscComp = resourceComponents[entity]
-        orangeOwned = BigDecimal("0")
-        updateModel(rscComp)
-    }
-
-    /**
-     * Reset all values for Yellow Crops to their original values at Initial Game Start.
-     */
-    private fun resetYellowCropValues() {
-        val entity = getResourceEntityByName("yellow") ?: gdxError("No Entity with type: red")
-        val rscComp = resourceComponents[entity]
-        yellowOwned = BigDecimal("0")
-        updateModel(rscComp)
-    }
-
-    /**
-     * Reset all values for Green Crops to their original values at Initial Game Start.
-     */
-    private fun resetGreenCropValues() {
-        val entity = getResourceEntityByName("green") ?: gdxError("No Entity with type: green")
-        val rscComp = resourceComponents[entity]
-        greenOwned = BigDecimal("0")
-        updateModel(rscComp)
-    }
-
-    /**
-     * Reset all values for Blue Crops to their original values at Initial Game Start.
-     */
-    private fun resetBlueCropValues() {
-        val entity = getResourceEntityByName("blue") ?: gdxError("No Entity with type: blue")
-        val rscComp = resourceComponents[entity]
-        blueOwned = BigDecimal("0")
-        updateModel(rscComp)
-    }
-
-    /**
-     * Reset all values for Purple Crops to their original values at Initial Game Start.
-     */
-    private fun resetPurpleCropValues() {
-        val entity = getResourceEntityByName("purple") ?: gdxError("No Entity with type: purple")
-        val rscComp = resourceComponents[entity]
-        purpleOwned = BigDecimal("0")
-        updateModel(rscComp)
-    }
-
-    /**
-     * Reset all values for Pink Crops to their original values at Initial Game Start.
-     */
-    private fun resetPinkCropValues() {
-        val entity = getResourceEntityByName("pink") ?: gdxError("No Entity with type: pink")
-        val rscComp = resourceComponents[entity]
-        pinkOwned = BigDecimal("0")
-        updateModel(rscComp)
-    }
-
-    /**
-     * Reset all values for Brown Crops to their original values at Initial Game Start.
-     */
-    private fun resetBrownCropValues() {
-        val entity = getResourceEntityByName("brown") ?: gdxError("No Entity with type: brown")
-        val rscComp = resourceComponents[entity]
-        brownOwned = BigDecimal("0")
-        updateModel(rscComp)
-    }
-
-    /**
-     * Reset all values for White Crops to their original values at Initial Game Start.
-     */
-    private fun resetWhiteCropValues() {
-        val entity = getResourceEntityByName("white") ?: gdxError("No Entity with type: white")
-        val rscComp = resourceComponents[entity]
-        whiteOwned = BigDecimal("0")
-        updateModel(rscComp)
-    }
-
-    /**
-     * Reset all values for Black Crops to their original values at Initial Game Start.
-     */
-    private fun resetBlackCropValues() {
-        val entity = getResourceEntityByName("black") ?: gdxError("No Entity with type: black")
-        val rscComp = resourceComponents[entity]
-        blackOwned = BigDecimal("0")
-        updateModel(rscComp)
     }
 
     /**
