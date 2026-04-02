@@ -44,6 +44,7 @@ class ResourceUpdateSystem(
         upgradeEntities.forEach { entity ->
             soilUpgradeMultiplier = soilUpgradeMultiplier * upgradeComponents[entity].multiplier
         }
+        if (soilUpgradeMultiplier <= BigDecimal.ZERO) return tickCount
         return BigDecimal(tickCount).divide(soilUpgradeMultiplier, 2, RoundingMode.UP).toInt()
     }
 

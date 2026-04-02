@@ -9,6 +9,8 @@ import com.github.jacks.planetaryIdle.input.gdxInputProcessor
 import com.github.jacks.planetaryIdle.systems.InitializeGameSystem
 import com.github.jacks.planetaryIdle.systems.RenderSystem
 import com.github.jacks.planetaryIdle.systems.ResourceUpdateSystem
+import com.github.jacks.planetaryIdle.ui.Drawables
+import com.github.jacks.planetaryIdle.ui.get
 import com.github.jacks.planetaryIdle.ui.models.AchievementsModel
 import com.github.jacks.planetaryIdle.ui.models.MenuModel
 import com.github.jacks.planetaryIdle.ui.models.NotificationModel
@@ -24,11 +26,16 @@ import com.github.quillraven.fleks.World
 import com.github.quillraven.fleks.world
 import ktx.app.KtxScreen
 import ktx.log.logger
+import ktx.scene2d.Scene2DSkin
 import ktx.scene2d.actors
+import ktx.scene2d.image
+import ktx.scene2d.stack
+import ktx.scene2d.table
 
 class GameScreen(game : PlanetaryIdle) : KtxScreen {
 
     private val stage = game.stage
+    private val skin = Scene2DSkin.defaultSkin
 
     private val entityWorld : World = world {
         injectables {
@@ -48,45 +55,46 @@ class GameScreen(game : PlanetaryIdle) : KtxScreen {
 
     init {
         stage.actors {
-            log.debug { "Stage is initialized." }
-
-            // background, actor.get(0)
+            // Background fills the entire stage behind everything
             backgroundView()
 
-            // planetView, actor.get(1), default view on game start
-            val pView = planetView(PlanetModel(entityWorld, stage)) {
-                //debugAll()
-                isVisible = true
+            // Root layout
+            table {
+                setFillParent(true)
+
+                // Row 1: full-width header bar (spans all 3 columns)
+                table { headerCell ->
+                    headerCell.expandX().fillX().height(HEADER_HEIGHT).colspan(3)
+                }
+                row()
+
+                // Row 2: horizontal separator under the header (spans all 3 columns)
+                image(skin[Drawables.BAR_BLACK_THIN]) { cell ->
+                    cell.expandX().fillX().height(2f).colspan(3)
+                }
+                row()
+
+                // Row 3: content stack | vertical divider | menu column
+                var pView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var sView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var aView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+
+                stack { stackCell ->
+                    pView = planetView(PlanetModel(entityWorld, stage)) { isVisible = true }
+                    sView = shopView(ShopModel(entityWorld, stage)) { isVisible = false }
+                    aView = achievementsView(AchievementsModel(entityWorld, stage)) { isVisible = false }
+                    notificationView(NotificationModel(entityWorld, stage))
+                    stackCell.expand().fill()
+                }
+
+                image(skin[Drawables.BAR_BLACK_THIN]) { cell ->
+                    cell.fillY().width(2f)
+                }
+
+                menuView(MenuModel(stage), pView!!, sView!!, aView!!) { cell ->
+                    cell.top().fillY().width(MENU_WIDTH)
+                }
             }
-
-            // galaxyView, actor.get(x)
-            // galaxyView(GalaxyModel(entityWorld, stage)) { isVisible = false }
-
-            // automationView, actor.get(x)
-            // automationView(AutomationModel(entityWorld, stage)) { isVisible = false }
-
-            // challengesView, actor.get(x)
-            // challengesView(ChallengesModel(entityWorld, stage)) { isVisible = false }
-
-            // shopView, actor.get(2)
-            val sView = shopView(ShopModel(entityWorld, stage)) { isVisible = false }
-
-            // achievementView, actor.get(3)
-            val aView = achievementsView(AchievementsModel(entityWorld, stage)) { isVisible = false }
-
-            // statisticsView, actor.get(x)
-            // statisticsView(StatisticsModel(entityWorld, stage)) { isVisible = false }
-
-            // settingsView, actor.get(x)
-            // settingsView(SettingsModel(entityWorld, stage)) { isVisible = false }
-
-            // right side menu (always present) — receives named view refs to avoid index-based lookup
-            menuView(MenuModel(stage), pView, sView, aView) {
-                //debugAll()
-            }
-
-            // notificationView, actor.get(5)
-            notificationView(NotificationModel(entityWorld, stage)) { isVisible = true }
         }
         stage.isDebugAll = false
     }
@@ -116,5 +124,7 @@ class GameScreen(game : PlanetaryIdle) : KtxScreen {
 
     companion object {
         val log = logger<PlanetaryIdle>()
+        const val MENU_WIDTH = 204f
+        const val HEADER_HEIGHT = 44f
     }
 }

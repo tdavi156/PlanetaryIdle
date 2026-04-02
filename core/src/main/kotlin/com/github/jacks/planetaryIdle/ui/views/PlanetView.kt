@@ -977,7 +977,7 @@ class PlanetView(
         val prodMan = BigDecimalMath.mantissa(productionRate)
         val prodExp = BigDecimalMath.exponent(productionRate).toBigDecimal()
         val expPercent = prodExp.divide(PLANETARY_EXPONENT, 6, RoundingMode.UP)
-        val manPercent = expPercent * prodMan.divide(BigDecimal(10))
+        val manPercent = expPercent * prodMan.divide(BigDecimal(10), 10, RoundingMode.HALF_UP)
         var prodPercent = 0f
 
         if (expPercent != null && expPercent < BigDecimal(1 / 308)) {

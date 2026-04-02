@@ -76,10 +76,12 @@ data class ResourceComponent(
 
     val tickCount : Int
         get() {
+            if (rate <= BigDecimal.ZERO) return Int.MAX_VALUE
             // if the rate is greater then the frame cap, increase the value proportionally based on the exceeding rate
             return if (rate.toInt() >= FRAMES_PER_SECOND_INT) { 1 }
             else {
-                (BigDecimal.ONE.divide((rate / BigDecimal(FRAMES_PER_SECOND_INT)), 2, RoundingMode.UP)).toInt()
+                val rateFraction = rate.divide(BigDecimal(FRAMES_PER_SECOND_INT), 10, RoundingMode.HALF_UP)
+                BigDecimal.ONE.divide(rateFraction, 2, RoundingMode.UP).toInt()
             }
         }
 }

@@ -24,7 +24,7 @@ enum class Achievements(
     ACH_8(8, "Blue 1", "Own 1 of any Blue resource"),
     ACH_9(9, "Purple 1", "Own 1 of any Purple resource"),
     ACH_10(10, "Pink 1", "Own 1 of any Pink resource"),
-    ACH_11(11, "It's a Rainbow!", "Own 10 of each of the first 7 resource colors"),
+    ACH_11(11, "It's a Rainbow!", "Own 10 of each of the first 7 colors"),
     ACH_12(12, "Excellent Soil", "Have 5 soil upgrades"),
     ACH_13(13, "Trillionaire!", "Have 1,000,000,000,000 Gold Coins"),
     ACH_14(14, "Brown 1", "Own 1 of any Brown resource"),
