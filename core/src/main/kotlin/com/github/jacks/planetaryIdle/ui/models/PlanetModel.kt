@@ -71,7 +71,8 @@ class PlanetModel(
 
     var achievementMultiplier by propertyNotify(BigDecimal(preferences["achievement_multiplier", "1"]))
     var soilCost by propertyNotify(BigDecimal(preferences["soil_cost", "1000000"]))
-    var soilUpgrades by propertyNotify(BigDecimal(preferences["soi_upgrades", "0"]))
+    var soilUpgrades by propertyNotify(BigDecimal(preferences["soil_upgrades", "0"]))
+    var soilIsUnlocked by propertyNotify(preferences["soil_is_unlocked", false])
     var gameCompleted by propertyNotify(false)
 
     private val stateProps: Map<String, KMutableProperty0<ResourceModelState>> = mapOf(
@@ -119,8 +120,8 @@ class PlanetModel(
                 resetValuesFromSoilUpgrade()
             }
             is AchievementCompletedEvent -> {
-                achievementMultiplier = calculateAchievementMultiplier()
-                preferences.flush { this["achievement_multiplier"] = achievementMultiplier }
+                achievementMultiplier = achievementMultiplier.multiply(BigDecimal("1.05"))
+                preferences.flush { this["achievement_multiplier"] = achievementMultiplier.toString() }
             }
             is UpdateBuyAmountEvent -> {
                 buyAmount = event.amount
@@ -194,8 +195,10 @@ class PlanetModel(
         upgradeEntities.forEach { entity ->
             val upgComp = upgradeComponents[entity]
             upgComp.soilUpgrades += amount
+            upgComp.isUnlocked = true
             soilCost = upgComp.cost
         }
+        soilIsUnlocked = true
     }
 
     private fun calculateAchievementMultiplier(): BigDecimal {
@@ -222,6 +225,9 @@ class PlanetModel(
         preferences.flush {
             this["gold_coins"] = goldCoins.toString()
             this["production_rate"] = productionRate.toString()
+            this["soil_upgrades"] = soilUpgrades.toString()
+            this["soil_cost"] = soilCost.toString()
+            this["soil_is_unlocked"] = true
             PlanetResources.entries.forEach { resource ->
                 this["${resource.resourceName}_owned"] = "0"
                 this["${resource.resourceName}_cost"] = resource.baseCost

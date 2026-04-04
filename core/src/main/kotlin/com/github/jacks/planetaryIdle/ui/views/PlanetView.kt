@@ -66,9 +66,10 @@ class PlanetView(
     private val localStates     = mutableMapOf<PlanetResources, ResourceModelState>()
     private val elapsedSeconds  = mutableMapOf<PlanetResources, Float>()
 
-    private var goldCoins    = model.goldCoins
-    private var soilUpgrades = model.soilUpgrades
-    private var soilCost     = model.soilCost
+    private var goldCoins      = model.goldCoins
+    private var soilUpgrades   = model.soilUpgrades
+    private var soilCost       = model.soilCost
+    private var soilIsUnlocked = model.soilIsUnlocked
 
     private lateinit var soilButton: TextButton
     private lateinit var productionRateLabel: Label
@@ -224,6 +225,10 @@ class PlanetView(
             reapplyUnlockVisibility()
             checkSoilAchievements(amount)
         }
+        model.onPropertyChange(PlanetModel::soilIsUnlocked) { unlocked ->
+            soilIsUnlocked = unlocked
+            reapplyUnlockVisibility()
+        }
         model.onPropertyChange(PlanetModel::gameCompleted) { completed ->
             if (completed) stage.fire(GameCompletedEvent())
         }
@@ -292,7 +297,7 @@ class PlanetView(
         resourceWidgets[PlanetResources.BROWN]?.rowTable?.isVisible  = owned(PlanetResources.PINK)   >= 5 && soil >= 7
         resourceWidgets[PlanetResources.WHITE]?.rowTable?.isVisible  = owned(PlanetResources.BROWN)  >= 5 && soil >= 9
         resourceWidgets[PlanetResources.BLACK]?.rowTable?.isVisible  = owned(PlanetResources.WHITE)  >= 5 && soil >= 11
-        soilButton.isVisible = owned(PlanetResources.GREEN) >= 5
+        soilButton.isVisible = soilIsUnlocked || owned(PlanetResources.YELLOW) >= 5
     }
 
     private fun resetButtonVisibility() {

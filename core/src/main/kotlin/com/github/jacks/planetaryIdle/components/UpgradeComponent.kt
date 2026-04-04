@@ -19,11 +19,11 @@ data class UpgradeComponent(
     var isUnlocked : Boolean = false,
     var soilUpgradeBaseCost : BigDecimal = BigDecimal(1000000),
     var soilUpgrades : BigDecimal = BigDecimal(0),
-    var soilSpeedMultiplier : BigDecimal = BigDecimal(2),
+    var soilSpeedMultiplier : BigDecimal = BigDecimal("1.5"),
 ) {
 
     val cost : BigDecimal
-        get() = soilUpgradeBaseCost.multiply(BigDecimal(10).pow(soilUpgrades.toInt(), MATH_CONTEXT))
+        get() = soilUpgradeBaseCost.multiply(BigDecimal(5).pow(soilUpgrades.toInt(), MATH_CONTEXT))
 
     val multiplier : BigDecimal
         get() {
