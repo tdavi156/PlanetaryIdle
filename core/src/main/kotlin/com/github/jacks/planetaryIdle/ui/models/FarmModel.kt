@@ -37,7 +37,7 @@ data class ResourceModelState(
     val cycleDuration: BigDecimal = BigDecimal.ZERO
 )
 
-class PlanetModel(
+class FarmModel(
     world: World,
     stage: Stage
 ) : PropertyChangeSource(), EventListener {
@@ -65,7 +65,7 @@ class PlanetModel(
     var whiteState  by propertyNotify(initialState(PlanetResources.WHITE))
     var blackState  by propertyNotify(initialState(PlanetResources.BLACK))
 
-    // Set by ResourceUpdateEvent; PlanetView binds to this to trigger floating text animation.
+    // Set by ResourceUpdateEvent; FarmView binds to this to trigger floating text animation.
     // An empty resourceName signals no payout has fired yet — bindings should ignore it.
     var lastProductionPayout by propertyNotify(Pair("", BigDecimal.ZERO))
 
@@ -270,6 +270,6 @@ class PlanetModel(
     }
 
     companion object {
-        private val log = logger<PlanetModel>()
+        private val log = logger<FarmModel>()
     }
 }

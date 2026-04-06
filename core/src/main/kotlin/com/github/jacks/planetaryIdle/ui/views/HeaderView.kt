@@ -5,7 +5,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.github.jacks.planetaryIdle.ui.Colors
 import com.github.jacks.planetaryIdle.ui.Labels
-import com.github.jacks.planetaryIdle.ui.models.PlanetModel
+import com.github.jacks.planetaryIdle.ui.models.FarmModel
 import ktx.actors.txt
 import ktx.log.logger
 import ktx.scene2d.KTable
@@ -20,7 +20,7 @@ import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 
 class HeaderView(
-    model: PlanetModel,
+    model: FarmModel,
     skin: Skin,
 ) : Table(skin), KTable {
 
@@ -37,11 +37,11 @@ class HeaderView(
             cell.right().padRight(16f)
         }
 
-        model.onPropertyChange(PlanetModel::goldCoins) { amount ->
+        model.onPropertyChange(FarmModel::goldCoins) { amount ->
             goldLabel.txt = formatGold(amount)
         }
 
-        model.onPropertyChange(PlanetModel::achievementMultiplier) { mult ->
+        model.onPropertyChange(FarmModel::achievementMultiplier) { mult ->
             achMultLabel.txt = "x${formatMult(mult)}"
         }
     }
@@ -72,7 +72,7 @@ class HeaderView(
 
 @Scene2dDsl
 fun <S> KWidget<S>.headerView(
-    model: PlanetModel,
+    model: FarmModel,
     skin: Skin = Scene2DSkin.defaultSkin,
     init: HeaderView.(S) -> Unit = {},
 ): HeaderView = actor(HeaderView(model, skin), init)

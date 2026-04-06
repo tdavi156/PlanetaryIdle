@@ -1,21 +1,23 @@
 package com.github.jacks.planetaryIdle.systems
 
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.github.quillraven.fleks.AllOf
-import com.github.quillraven.fleks.Entity
+import com.github.jacks.planetaryIdle.rendering.IsometricMapRenderer
 import com.github.quillraven.fleks.IntervalSystem
-import com.github.quillraven.fleks.IteratingSystem
 import ktx.log.logger
 
 class RenderSystem(
-    private val stage : Stage
+    private val stage: Stage,
+    private val mapRenderer: IsometricMapRenderer,
 ) : EventListener, IntervalSystem() {
 
     override fun onTick() {
         with(stage) {
             viewport.apply()
+            // Render isometric map before the stage so it appears behind all UI
+            mapRenderer.render(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
             act(deltaTime)
             draw()
         }

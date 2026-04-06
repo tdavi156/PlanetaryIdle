@@ -24,7 +24,7 @@ import com.github.jacks.planetaryIdle.ui.Colors
 import com.github.jacks.planetaryIdle.ui.Drawables
 import com.github.jacks.planetaryIdle.ui.Labels
 import com.github.jacks.planetaryIdle.ui.get
-import com.github.jacks.planetaryIdle.ui.models.PlanetModel
+import com.github.jacks.planetaryIdle.ui.models.FarmModel
 import com.github.jacks.planetaryIdle.ui.models.ResourceModelState
 import com.github.jacks.planetaryIdle.ui.views.HeaderView.Companion.formatShort
 import ktx.actors.txt
@@ -45,7 +45,7 @@ import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 
-/** Holds all mutable UI widgets for one planet-resource row. */
+/** Holds all mutable UI widgets for one farm-resource row. */
 private data class ResourceWidgets(
     val rowTable: Table,
     val button: TextButton,
@@ -53,8 +53,8 @@ private data class ResourceWidgets(
     val tooltipLabel: Label,
 )
 
-class PlanetView(
-    private val model: PlanetModel,
+class FarmView(
+    private val model: FarmModel,
     private val stage: Stage,
     private val goldLabel: Label,
     skin: Skin,
@@ -78,7 +78,7 @@ class PlanetView(
 
     init {
         setFillParent(true)
-        val view = this@PlanetView   // explicit capture for use inside DSL lambdas
+        val view = this@FarmView   // explicit capture for use inside DSL lambdas
 
         PlanetResources.entries.forEach { resource ->
             localStates[resource] = stateFor(resource)
@@ -205,47 +205,47 @@ class PlanetView(
         }
 
         // ── Model bindings ─────────────────────────────────────────────────
-        model.onPropertyChange(PlanetModel::goldCoins) { amount ->
+        model.onPropertyChange(FarmModel::goldCoins) { amount ->
             goldCoins = amount
             updateAllButtonDisabledState()
             checkGoldAchievements(amount)
         }
-        model.onPropertyChange(PlanetModel::productionRate) { rate ->
+        model.onPropertyChange(FarmModel::productionRate) { rate ->
             productionRateLabel.txt = "Production: ${formatShort(rate)}/s"
             updateColonizationBar(rate)
         }
-        model.onPropertyChange(PlanetModel::soilCost) { cost ->
+        model.onPropertyChange(FarmModel::soilCost) { cost ->
             soilCost = cost
             soilButton.txt = makeSoilButtonText()
         }
-        model.onPropertyChange(PlanetModel::soilUpgrades) { amount ->
+        model.onPropertyChange(FarmModel::soilUpgrades) { amount ->
             soilUpgrades = amount
             soilButton.txt = makeSoilButtonText()
             resetButtonVisibility()
             reapplyUnlockVisibility()
             checkSoilAchievements(amount)
         }
-        model.onPropertyChange(PlanetModel::soilIsUnlocked) { unlocked ->
+        model.onPropertyChange(FarmModel::soilIsUnlocked) { unlocked ->
             soilIsUnlocked = unlocked
             reapplyUnlockVisibility()
         }
-        model.onPropertyChange(PlanetModel::gameCompleted) { completed ->
+        model.onPropertyChange(FarmModel::gameCompleted) { completed ->
             if (completed) stage.fire(GameCompletedEvent())
         }
 
-        model.onPropertyChange(PlanetModel::redState)    { stateChanged(PlanetResources.RED,    it) }
-        model.onPropertyChange(PlanetModel::orangeState) { stateChanged(PlanetResources.ORANGE, it) }
-        model.onPropertyChange(PlanetModel::yellowState) { stateChanged(PlanetResources.YELLOW, it) }
-        model.onPropertyChange(PlanetModel::greenState)  { stateChanged(PlanetResources.GREEN,  it) }
-        model.onPropertyChange(PlanetModel::blueState)   { stateChanged(PlanetResources.BLUE,   it) }
-        model.onPropertyChange(PlanetModel::purpleState) { stateChanged(PlanetResources.PURPLE, it) }
-        model.onPropertyChange(PlanetModel::pinkState)   { stateChanged(PlanetResources.PINK,   it) }
-        model.onPropertyChange(PlanetModel::brownState)  { stateChanged(PlanetResources.BROWN,  it) }
-        model.onPropertyChange(PlanetModel::whiteState)  { stateChanged(PlanetResources.WHITE,  it) }
-        model.onPropertyChange(PlanetModel::blackState)  { stateChanged(PlanetResources.BLACK,  it) }
+        model.onPropertyChange(FarmModel::redState)    { stateChanged(PlanetResources.RED,    it) }
+        model.onPropertyChange(FarmModel::orangeState) { stateChanged(PlanetResources.ORANGE, it) }
+        model.onPropertyChange(FarmModel::yellowState) { stateChanged(PlanetResources.YELLOW, it) }
+        model.onPropertyChange(FarmModel::greenState)  { stateChanged(PlanetResources.GREEN,  it) }
+        model.onPropertyChange(FarmModel::blueState)   { stateChanged(PlanetResources.BLUE,   it) }
+        model.onPropertyChange(FarmModel::purpleState) { stateChanged(PlanetResources.PURPLE, it) }
+        model.onPropertyChange(FarmModel::pinkState)   { stateChanged(PlanetResources.PINK,   it) }
+        model.onPropertyChange(FarmModel::brownState)  { stateChanged(PlanetResources.BROWN,  it) }
+        model.onPropertyChange(FarmModel::whiteState)  { stateChanged(PlanetResources.WHITE,  it) }
+        model.onPropertyChange(FarmModel::blackState)  { stateChanged(PlanetResources.BLACK,  it) }
 
         // Floating text: fires when a production cycle completes, then gold is credited by animation end
-        model.onPropertyChange(PlanetModel::lastProductionPayout) { (name, amount) ->
+        model.onPropertyChange(FarmModel::lastProductionPayout) { (name, amount) ->
             if (name.isEmpty()) return@onPropertyChange
             val resource = PlanetResources.entries.find { it.resourceName == name } ?: return@onPropertyChange
             elapsedSeconds[resource] = 0f
@@ -436,7 +436,7 @@ class PlanetView(
     }
 
     companion object {
-        private val log             = logger<PlanetView>()
+        private val log             = logger<FarmView>()
         private val PLANETARY_EXPONENT = BigDecimal(308)
         @Suppress("unused")
         private val PLANETARY_SCORE    = BigDecimal(1e308)
@@ -444,10 +444,10 @@ class PlanetView(
 }
 
 @Scene2dDsl
-fun <S> KWidget<S>.planetView(
-    model: PlanetModel,
+fun <S> KWidget<S>.farmView(
+    model: FarmModel,
     stage: Stage,
     goldLabel: Label,
     skin: Skin = Scene2DSkin.defaultSkin,
-    init: PlanetView.(S) -> Unit = {},
-): PlanetView = actor(PlanetView(model, stage, goldLabel, skin), init)
+    init: FarmView.(S) -> Unit = {},
+): FarmView = actor(FarmView(model, stage, goldLabel, skin), init)
