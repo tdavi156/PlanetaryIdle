@@ -64,12 +64,16 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
         }
     }
 
-    private val farmModel    = FarmModel(entityWorld, stage)
-    private val barnViewModel = BarnViewModel(entityWorld, stage, farmModel)
+    private val farmModel      = FarmModel(entityWorld, stage)
+    private val kitchenViewModel = KitchenViewModel(entityWorld, stage, farmModel)
+    private val barnViewModel  = BarnViewModel(entityWorld, stage, farmModel)
 
     private lateinit var bgView: BackgroundView
 
     init {
+        // Wire cross-references that couldn't be set at construction time
+        barnViewModel.kitchenViewModel = kitchenViewModel
+
         stage.actors {
             bgView = backgroundView()
 
@@ -93,9 +97,9 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                 var aView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
 
                 stack { stackCell ->
-                    fView = farmView(farmModel, stage, hdrView!!.goldLabel) { isVisible = true }
+                    fView = farmView(farmModel, kitchenViewModel, stage, hdrView!!.goldLabel) { isVisible = true }
                     bView = barnView(barnViewModel, stage) { isVisible = false }
-                    kView = kitchenView(KitchenViewModel(entityWorld, stage)) { isVisible = false }
+                    kView = kitchenView(kitchenViewModel) { isVisible = false }
                     aView = achievementsView(AchievementsModel(entityWorld, stage)) { isVisible = false }
                     notificationView(NotificationModel(entityWorld, stage))
                     stackCell.expand().fill()

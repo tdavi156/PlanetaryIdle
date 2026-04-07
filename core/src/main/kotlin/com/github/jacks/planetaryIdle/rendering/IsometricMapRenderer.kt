@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.github.jacks.planetaryIdle.events.BarnUnlockedEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
+import com.github.jacks.planetaryIdle.events.KitchenUnlockedEvent
 import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
 import com.github.jacks.planetaryIdle.events.ViewStateChangeEvent
 import com.github.jacks.planetaryIdle.ui.ViewState
@@ -65,6 +66,10 @@ class IsometricMapRenderer : EventListener {
             }
             is BarnUnlockedEvent -> {
                 activeLayers.add("layer_barn")
+                applyLayerVisibility()
+            }
+            is KitchenUnlockedEvent -> {
+                activeLayers.add("layer_kitchen")
                 applyLayerVisibility()
             }
             is BuyResourceEvent -> {

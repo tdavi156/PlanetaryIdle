@@ -11,6 +11,8 @@ import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.events.BarnEffectsChangedEvent
 import com.github.jacks.planetaryIdle.events.BarnUnlockedEvent
 import com.github.jacks.planetaryIdle.events.BuyBarnUpgradeEvent
+import com.github.jacks.planetaryIdle.events.CropUnlockedEvent
+import com.github.jacks.planetaryIdle.events.KitchenUnlockedEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.UpgradeSoilEvent
 import com.github.jacks.planetaryIdle.events.fire
@@ -41,6 +43,9 @@ class BarnViewModel(
     // ── Persisted state ───────────────────────────────────────────────────────
     private val levels = mutableMapOf<BarnUpgrade, Int>()
 
+    /** Set after construction by GameScreen to avoid circular dependency. */
+    var kitchenViewModel: KitchenViewModel? = null
+
     // ── Observable model properties ───────────────────────────────────────────
     var barnUnlocked by propertyNotify(false)
     /** Snapshot of all upgrade states; fires whenever any level changes. */
@@ -66,6 +71,11 @@ class BarnViewModel(
                     preferences.flush { this["barn_unlocked"] = true }
                 }
                 return false  // let other listeners also receive it
+            }
+            is CropUnlockedEvent -> {
+                // A new crop was researched — re-broadcast expertise multipliers
+                stage.fire(buildEffectsEvent())
+                return false
             }
             is ResetGameEvent -> {
                 // Barn upgrades persist through soil prestige (only gold/crops reset).
@@ -97,6 +107,11 @@ class BarnViewModel(
             stage.fire(UpgradeSoilEvent(BigDecimal.ONE))
         }
 
+        // Kitchen: fire unlock event (persisted by KitchenViewModel/MenuModel listeners)
+        if (upgrade == BarnUpgrade.KITCHEN) {
+            stage.fire(KitchenUnlockedEvent())
+        }
+
         // Broadcast updated effects to systems
         stage.fire(buildEffectsEvent())
 
@@ -108,12 +123,21 @@ class BarnViewModel(
 
     // ── Effects computation ───────────────────────────────────────────────────
 
-    /** Payout multiplier for a given resource name from value upgrades. */
+    /** Payout multiplier for a given resource name from value and expertise upgrades. */
     fun getPayoutMultiplier(resourceName: String): BigDecimal {
-        val upgrade = BarnUpgrade.valueUpgradeFor[resourceName] ?: return BigDecimal.ONE
-        val level = levels[upgrade] ?: 0
-        if (level == 0) return BigDecimal.ONE
-        return BigDecimal("1.1").pow(level, MATH_CONTEXT)
+        val valueUpgrade = BarnUpgrade.valueUpgradeFor[resourceName]
+        val valueLevel = if (valueUpgrade != null) levels[valueUpgrade] ?: 0 else 0
+        val valueMult = if (valueLevel > 0) BigDecimal("1.1").pow(valueLevel, MATH_CONTEXT) else BigDecimal.ONE
+
+        // Expertise: multiply by number of crop types researched for this color (if upgrade purchased)
+        val expertiseUpgrade = BarnUpgrade.expertiseUpgradeFor[resourceName]
+        val expertiseLevel = if (expertiseUpgrade != null) levels[expertiseUpgrade] ?: 0 else 0
+        val expertiseMult = if (expertiseLevel >= 1) {
+            val cropCount = kitchenViewModel?.unlockedCropCount(resourceName) ?: 0
+            if (cropCount > 0) BigDecimal(cropCount) else BigDecimal.ONE
+        } else BigDecimal.ONE
+
+        return valueMult.multiply(expertiseMult)
     }
 
     /** Combined speed multiplier from Improved Seeds. */

@@ -1,6 +1,9 @@
 package com.github.jacks.planetaryIdle.ui.views
 
 import ch.obermuhlner.math.big.BigDecimalMath
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.Pixmap
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.InputListener
@@ -11,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Align
 import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.events.AchievementNotificationEvent
@@ -24,6 +28,7 @@ import com.github.jacks.planetaryIdle.ui.Drawables
 import com.github.jacks.planetaryIdle.ui.Labels
 import com.github.jacks.planetaryIdle.ui.get
 import com.github.jacks.planetaryIdle.ui.models.FarmModel
+import com.github.jacks.planetaryIdle.ui.models.KitchenViewModel
 import com.github.jacks.planetaryIdle.ui.models.ResourceModelState
 import com.github.jacks.planetaryIdle.ui.views.HeaderView.Companion.formatShort
 import ktx.actors.txt
@@ -48,12 +53,14 @@ import java.text.DecimalFormatSymbols
 private data class ResourceWidgets(
     val rowTable: Table,
     val button: TextButton,
+    val dropdownButton: TextButton,
     val progressFill: Image,
     val tooltipLabel: Label,
 )
 
 class FarmView(
     private val model: FarmModel,
+    private val kitchenModel: KitchenViewModel,
     private val stage: Stage,
     private val goldLabel: Label,
     skin: Skin,
@@ -72,6 +79,25 @@ class FarmView(
     private lateinit var colonizationProgress: Image
     private lateinit var productionRateProgressLabel: Label
 
+    // Currently active recipe pairs for visual linking
+    private val linkedColors = mutableSetOf<String>()  // colors currently in a recipe
+
+    private val recipeLinkedDrawable: TextureRegionDrawable = run {
+        val px = Pixmap(1, 1, Pixmap.Format.RGBA8888)
+        px.setColor(Color(1f, 1f, 1f, 0.15f))
+        px.fill()
+        val t = Texture(px); px.dispose()
+        TextureRegionDrawable(t)
+    }
+
+    private val dimDrawable: TextureRegionDrawable = run {
+        val px = Pixmap(1, 1, Pixmap.Format.RGBA8888)
+        px.setColor(Color(0f, 0f, 0f, 0.4f))
+        px.fill()
+        val t = Texture(px); px.dispose()
+        TextureRegionDrawable(t)
+    }
+
     init {
         setFillParent(true)
         val view = this@FarmView
@@ -87,6 +113,8 @@ class FarmView(
                 PlanetResources.entries.forEach { resource ->
                     val state = view.localStates[resource]!!
                     val rowTable = table { rowCell ->
+
+                        // Buy button (color-styled)
                         val btn = textButton(
                             view.makeButtonText(resource, state),
                             view.buttonStyleFor(resource)
@@ -100,6 +128,18 @@ class FarmView(
                             })
                         }
 
+                        // Crop dropdown arrow button (shown when kitchen has multiple options)
+                        val dropBtn = textButton("v", Buttons.GREY_BUTTON_SMALL.skinKey) { cell ->
+                            cell.width(24f).height(55f).pad(3f, 0f, 3f, 4f)
+                            isVisible = false   // hidden until kitchen unlocks
+                            addListener(object : ChangeListener() {
+                                override fun changed(event: ChangeEvent, actor: Actor) {
+                                    view.showCropDropdown(resource)
+                                }
+                            })
+                        }
+
+                        // Progress bar
                         var fillImage: Image? = null
                         stack { stackCell ->
                             image(view.skin[Drawables.BAR_GREY_THICK])
@@ -107,7 +147,7 @@ class FarmView(
                                 color = view.colorFor(resource).color
                                 scaleX = 0f
                             }
-                            stackCell.expandX().fillX().height(30f).pad(3f, 5f, 3f, 5f)
+                            stackCell.expandX().fillX().height(30f).pad(3f, 0f, 3f, 5f)
                         }
 
                         val tooltip = label(
@@ -131,12 +171,23 @@ class FarmView(
                         rowCell.expandX().fillX()
 
                         view.resourceWidgets[resource] = ResourceWidgets(
-                            rowTable     = this,
-                            button       = btn,
-                            progressFill = fillImage!!,
-                            tooltipLabel = tooltip,
+                            rowTable      = this,
+                            button        = btn,
+                            dropdownButton = dropBtn,
+                            progressFill  = fillImage!!,
+                            tooltipLabel  = tooltip,
                         )
                     }
+                    // Right-click on row opens crop dropdown (desktop) — added after rowTable is assigned
+                    rowTable.addListener(object : InputListener() {
+                        override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                            if (button == 1) {
+                                view.showCropDropdown(resource)
+                                return true
+                            }
+                            return false
+                        }
+                    })
                     row()
                     rowTable.isVisible = resource == PlanetResources.RED
                 }
@@ -220,6 +271,26 @@ class FarmView(
             stage.fire(FloatingTextEvent(startPos, targetPos, amount, "+${formatShort(amount)}"))
         }
 
+        // Kitchen bindings
+        kitchenModel.onPropertyChange(KitchenViewModel::kitchenUnlocked) { _ ->
+            updateDropdownVisibility()
+            updateButtonTexts()
+        }
+        kitchenModel.onPropertyChange(KitchenViewModel::unlockedCrops) { _ ->
+            updateDropdownVisibility()
+        }
+        kitchenModel.onPropertyChange(KitchenViewModel::activeCrops) { _ ->
+            updateButtonTexts()
+        }
+        kitchenModel.onPropertyChange(KitchenViewModel::activeRecipes) { recipes ->
+            linkedColors.clear()
+            recipes.forEach { r ->
+                linkedColors.add(r.crop1.color)
+                linkedColors.add(r.crop2.color)
+            }
+            updateRecipeVisuals()
+        }
+
         reapplyUnlockVisibility()
     }
 
@@ -234,6 +305,71 @@ class FarmView(
             resourceWidgets[resource]?.progressFill?.scaleX = progress
         }
     }
+
+    // ── Crop dropdown ─────────────────────────────────────────────────────────
+
+    private fun showCropDropdown(resource: PlanetResources) {
+        if (!kitchenModel.kitchenUnlocked) return
+        val color = resource.resourceName
+        val unlocked = kitchenModel.unlockedCrops[color] ?: return
+        if (unlocked.size <= 1) return
+
+        val popup = Table(skin)
+        popup.setBackground(dimDrawable)
+        popup.pad(6f)
+
+        unlocked.forEach { cropName ->
+            val btn = TextButton(cropName, skin, Buttons.GREY_BUTTON_SMALL.skinKey)
+            btn.addListener(object : ChangeListener() {
+                override fun changed(event: ChangeEvent, actor: Actor) {
+                    kitchenModel.setActiveCrop(color, cropName)
+                    popup.remove()
+                }
+            })
+            popup.add(btn).expandX().fillX().height(32f).pad(1f)
+            popup.row()
+        }
+
+        popup.pack()
+        val stg = stage ?: return
+        popup.setPosition(
+            (stg.width / 2f - popup.width / 2f).coerceIn(0f, stg.width - popup.width),
+            (stg.height / 2f - popup.height / 2f).coerceIn(0f, stg.height - popup.height),
+        )
+        stg.addActor(popup)
+    }
+
+    // ── Kitchen visual updates ────────────────────────────────────────────────
+
+    private fun updateDropdownVisibility() {
+        PlanetResources.entries.forEach { resource ->
+            val color = resource.resourceName
+            val unlocked = kitchenModel.unlockedCrops[color] ?: emptyList()
+            resourceWidgets[resource]?.dropdownButton?.isVisible =
+                kitchenModel.kitchenUnlocked && unlocked.size > 1
+        }
+    }
+
+    private fun updateButtonTexts() {
+        PlanetResources.entries.forEach { resource ->
+            val state = localStates[resource] ?: return@forEach
+            val widgets = resourceWidgets[resource] ?: return@forEach
+            widgets.button.txt = makeButtonText(resource, state)
+        }
+    }
+
+    private fun updateRecipeVisuals() {
+        PlanetResources.entries.forEach { resource ->
+            val widgets = resourceWidgets[resource] ?: return@forEach
+            if (resource.resourceName in linkedColors) {
+                widgets.rowTable.background = recipeLinkedDrawable
+            } else {
+                widgets.rowTable.background = null
+            }
+        }
+    }
+
+    // ── Existing helpers ──────────────────────────────────────────────────────
 
     private fun stateChanged(resource: PlanetResources, state: ResourceModelState) {
         localStates[resource] = state
@@ -317,10 +453,15 @@ class FarmView(
 
     // ── Text helpers ──────────────────────────────────────────────────────
     private fun makeButtonText(resource: PlanetResources, state: ResourceModelState): String {
-        val name  = resource.resourceName.replaceFirstChar { it.uppercaseChar() }
+        val cropName = if (kitchenModel.kitchenUnlocked) {
+            kitchenModel.activeCrops[resource.resourceName]
+                ?: resource.resourceName.replaceFirstChar { it.uppercaseChar() }
+        } else {
+            resource.resourceName.replaceFirstChar { it.uppercaseChar() }
+        }
         val owned = noDecFormat.format(state.owned)
         val cost  = formatShort(state.cost)
-        return "$name ($owned)\n$cost gold"
+        return "$cropName ($owned)\n$cost gold"
     }
 
     private fun makeTooltipText(resource: PlanetResources, state: ResourceModelState): String {
@@ -393,8 +534,9 @@ class FarmView(
 @Scene2dDsl
 fun <S> KWidget<S>.farmView(
     model: FarmModel,
+    kitchenModel: KitchenViewModel,
     stage: Stage,
     goldLabel: Label,
     skin: Skin = Scene2DSkin.defaultSkin,
     init: FarmView.(S) -> Unit = {},
-): FarmView = actor(FarmView(model, stage, goldLabel, skin), init)
+): FarmView = actor(FarmView(model, kitchenModel, stage, goldLabel, skin), init)

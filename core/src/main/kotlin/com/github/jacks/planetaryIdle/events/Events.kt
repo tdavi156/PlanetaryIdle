@@ -3,6 +3,7 @@ package com.github.jacks.planetaryIdle.events
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.github.jacks.planetaryIdle.components.Recipe
 import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.ui.ViewState
 import java.math.BigDecimal
@@ -41,3 +42,38 @@ class BarnEffectsChangedEvent(
     /** New base per-level soil speed multiplier (modified by Improved Soil Quality). */
     val soilBaseMultiplier: BigDecimal,
 ) : Event()
+
+// ── Kitchen events ────────────────────────────────────────────────────────────
+
+class KitchenUnlockedEvent : Event()
+
+/**
+ * Fired when the player switches to a different named crop for a color.
+ * FarmModel listens and updates the ResourceComponent + resets owned count.
+ */
+class ActiveCropChangedEvent(
+    val color: String,
+    val cropName: String,
+    val newBasePayout: BigDecimal,
+    val newCycleDuration: BigDecimal,
+) : Event()
+
+/** Fired when a recipe is activated (set). FarmModel links the two color rows. */
+class RecipeActivatedEvent(val recipe: Recipe) : Event()
+
+/** Fired when a recipe is deactivated (cleared). FarmModel unlinks the two color rows. */
+class RecipeDeactivatedEvent(val recipe: Recipe) : Event()
+
+/**
+ * Fired when a research job completes.
+ * Exactly one of discoveredCropId / discoveredRecipeId will be non-null on success;
+ * both null means the roll failed.
+ */
+class ResearchCompleteEvent(
+    val researcherIndex: Int,
+    val discoveredCropId: String?,
+    val discoveredRecipeId: String?,
+) : Event()
+
+/** Fired when a new crop type is unlocked via research. Used by BarnViewModel for expertise. */
+class CropUnlockedEvent(val color: String, val cropName: String) : Event()

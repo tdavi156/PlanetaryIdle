@@ -11,11 +11,14 @@ import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.components.ScoreResources
 import com.github.jacks.planetaryIdle.components.UpgradeComponent
 import com.github.jacks.planetaryIdle.events.AchievementCompletedEvent
+import com.github.jacks.planetaryIdle.events.ActiveCropChangedEvent
 import com.github.jacks.planetaryIdle.events.BarnEffectsChangedEvent
 import com.github.jacks.planetaryIdle.events.BarnUnlockedEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.CreditGoldEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
+import com.github.jacks.planetaryIdle.events.RecipeActivatedEvent
+import com.github.jacks.planetaryIdle.events.RecipeDeactivatedEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
 import com.github.jacks.planetaryIdle.events.UpdateBuyAmountEvent
@@ -78,6 +81,17 @@ class FarmModel(
     /** Per-resource-name payout multiplier from barn value/expertise upgrades. */
     private val barnPayoutMultipliers = mutableMapOf<String, BigDecimal>()
 
+    // ── Recipe state ──────────────────────────────────────────────────────────
+
+    /** color → partner color for active recipe pairs (bidirectional). */
+    private val activeRecipePairs = mutableMapOf<String, String>()
+
+    /** Per-color payout buffered when it fires first in a recipe pair. */
+    private val recipePendingPayouts = mutableMapOf<String, BigDecimal>()
+
+    /** Per-color base cycle duration (before recipe linking). */
+    private val baseCycleDurations = mutableMapOf<String, BigDecimal>()
+
     private val stateProps: Map<String, KMutableProperty0<ResourceModelState>> = mapOf(
         PlanetResources.RED.resourceName    to ::redState,
         PlanetResources.ORANGE.resourceName to ::orangeState,
@@ -113,14 +127,7 @@ class FarmModel(
                 }
             }
             is ResourceUpdateEvent -> {
-                val barnMult = barnPayoutMultipliers[event.rscComp.name] ?: BigDecimal.ONE
-                val adjustedPayout = event.rscComp.payout
-                    .multiply(calculateAchievementMultiplier())
-                    .multiply(barnMult)
-                goldCoins += adjustedPayout
-                preferences.flush { this["gold_coins"] = goldCoins.toString() }
-                lastProductionPayout = event.rscComp.name to adjustedPayout
-                updateModelProductionRate()
+                handleResourceUpdate(event.rscComp)
             }
             is CreditGoldEvent -> {
                 goldCoins += event.amount
@@ -143,11 +150,52 @@ class FarmModel(
             is BarnEffectsChangedEvent -> {
                 barnPayoutMultipliers.clear()
                 barnPayoutMultipliers.putAll(event.payoutMultipliers)
-                // Update soil component base multiplier from Improved Soil Quality
                 upgradeEntities.forEach { entity ->
                     upgradeComponents[entity].soilSpeedMultiplier = event.soilBaseMultiplier
                 }
                 updateModelProductionRate()
+            }
+            is ActiveCropChangedEvent -> {
+                val entity = getResourceEntityByName(event.color) ?: return false
+                val rscComp = resourceComponents[entity]
+                rscComp.basePayout    = event.newBasePayout
+                rscComp.cycleDuration = event.newCycleDuration
+                rscComp.amountOwned   = BigDecimal.ZERO
+                rscComp.currentTicks  = 0
+                baseCycleDurations[event.color] = event.newCycleDuration
+                updateModel(rscComp)
+                persistResourceState(rscComp)
+            }
+            is RecipeActivatedEvent -> {
+                val color1 = event.recipe.crop1.color
+                val color2 = event.recipe.crop2.color
+                val entity1 = getResourceEntityByName(color1) ?: return false
+                val entity2 = getResourceEntityByName(color2) ?: return false
+                val rsc1 = resourceComponents[entity1]
+                val rsc2 = resourceComponents[entity2]
+                // Store individual durations before linking
+                baseCycleDurations.putIfAbsent(color1, rsc1.cycleDuration)
+                baseCycleDurations.putIfAbsent(color2, rsc2.cycleDuration)
+                val combined = BigDecimal(event.recipe.combinedTime.toString())
+                rsc1.cycleDuration = combined
+                rsc2.cycleDuration = combined
+                rsc1.currentTicks  = 0
+                rsc2.currentTicks  = 0
+                activeRecipePairs[color1] = color2
+                activeRecipePairs[color2] = color1
+                updateModel(rsc1)
+                updateModel(rsc2)
+            }
+            is RecipeDeactivatedEvent -> {
+                val color1 = event.recipe.crop1.color
+                val color2 = event.recipe.crop2.color
+                activeRecipePairs.remove(color1)
+                activeRecipePairs.remove(color2)
+                recipePendingPayouts.remove(color1)
+                recipePendingPayouts.remove(color2)
+                // Restore individual cycle durations
+                restoreCycleDuration(color1)
+                restoreCycleDuration(color2)
             }
             is ResetGameEvent -> {
                 resetGameValues()
@@ -159,6 +207,56 @@ class FarmModel(
         }
         return true
     }
+
+    // ── Resource update with recipe support ───────────────────────────────────
+
+    private fun handleResourceUpdate(rscComp: ResourceComponent) {
+        val color = rscComp.name
+        val partnerColor = activeRecipePairs[color]
+
+        if (partnerColor == null) {
+            // Normal independent production
+            val barnMult = barnPayoutMultipliers[color] ?: BigDecimal.ONE
+            val adjustedPayout = rscComp.payout
+                .multiply(calculateAchievementMultiplier())
+                .multiply(barnMult)
+            goldCoins += adjustedPayout
+            preferences.flush { this["gold_coins"] = goldCoins.toString() }
+            lastProductionPayout = color to adjustedPayout
+            updateModelProductionRate()
+        } else {
+            // This color is in a recipe pair
+            val myRawPayout = rscComp.payout.multiply(barnPayoutMultipliers[color] ?: BigDecimal.ONE)
+            val partnerPending = recipePendingPayouts[partnerColor]
+
+            if (partnerPending != null) {
+                // Partner already fired — complete the pair
+                val combined = myRawPayout
+                    .multiply(partnerPending)
+                    .multiply(calculateAchievementMultiplier())
+                goldCoins += combined
+                preferences.flush { this["gold_coins"] = goldCoins.toString() }
+                lastProductionPayout = color to combined
+                updateModelProductionRate()
+                recipePendingPayouts.remove(color)
+                recipePendingPayouts.remove(partnerColor)
+            } else {
+                // Buffer and wait for partner
+                recipePendingPayouts[color] = myRawPayout
+            }
+        }
+    }
+
+    private fun restoreCycleDuration(color: String) {
+        val entity = getResourceEntityByName(color) ?: return
+        val rscComp = resourceComponents[entity]
+        val base = baseCycleDurations[color]
+            ?: BigDecimal(PlanetResources.entries.find { it.resourceName == color }?.cycleDuration ?: "60")
+        rscComp.cycleDuration = base
+        updateModel(rscComp)
+    }
+
+    // ── Existing helpers (unchanged) ──────────────────────────────────────────
 
     private fun getResourceEntityByName(name: String): Entity? {
         resourceEntities.forEach { entity ->
@@ -232,6 +330,8 @@ class FarmModel(
     }
 
     private fun resetValuesFromSoilUpgrade() {
+        activeRecipePairs.clear()
+        recipePendingPayouts.clear()
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
             rscComp.amountOwned = BigDecimal.ZERO
@@ -256,6 +356,9 @@ class FarmModel(
     }
 
     private fun resetGameValues() {
+        activeRecipePairs.clear()
+        recipePendingPayouts.clear()
+        baseCycleDurations.clear()
         resourceEntities.forEach { entity ->
             resourceComponents[entity].amountOwned = BigDecimal.ZERO
         }

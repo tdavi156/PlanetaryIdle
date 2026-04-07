@@ -249,5 +249,19 @@ enum class BarnUpgrade(
             "white"  to WHITE_VALUE,
             "black"  to BLACK_VALUE,
         )
+
+        /** Maps a PlanetResources color name to the corresponding expertise upgrade. */
+        val expertiseUpgradeFor: Map<String, BarnUpgrade> = mapOf(
+            "red"    to RED_EXPERTISE,
+            "orange" to ORANGE_EXPERTISE,
+            "yellow" to YELLOW_EXPERTISE,
+            "green"  to GREEN_EXPERTISE,
+            "blue"   to BLUE_EXPERTISE,
+            "purple" to PURPLE_EXPERTISE,
+            "pink"   to PINK_EXPERTISE,
+            "brown"  to BROWN_EXPERTISE,
+            "white"  to WHITE_EXPERTISE,
+            "black"  to BLACK_EXPERTISE,
+        )
     }
 }

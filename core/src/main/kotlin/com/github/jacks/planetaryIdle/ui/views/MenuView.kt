@@ -32,6 +32,7 @@ class MenuView(
 ) : Table(skin), KTable {
 
     private lateinit var barnButton: TextButton
+    private lateinit var kitchenButton: TextButton
 
     init {
         val view = this@MenuView
@@ -59,9 +60,9 @@ class MenuView(
             }
             row()
 
-            textButton("Kitchen", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
+            view.kitchenButton = textButton("Kitchen", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
-                isDisabled = true
+                isDisabled = !model.kitchenUnlocked
                 addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         this@MenuView.changeActiveView(ViewState.KITCHEN)
@@ -119,6 +120,9 @@ class MenuView(
 
         model.onPropertyChange(MenuModel::barnUnlocked) { unlocked ->
             barnButton.isDisabled = !unlocked
+        }
+        model.onPropertyChange(MenuModel::kitchenUnlocked) { unlocked ->
+            kitchenButton.isDisabled = !unlocked
         }
     }
 

@@ -1,6 +1,536 @@
 package com.github.jacks.planetaryIdle.ui.models
 
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Preferences
+import com.badlogic.gdx.scenes.scene2d.Event
+import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.github.jacks.planetaryIdle.components.CropRegistry
+import com.github.jacks.planetaryIdle.components.CropType
+import com.github.jacks.planetaryIdle.components.PlanetResources
+import com.github.jacks.planetaryIdle.components.Recipe
+import com.github.jacks.planetaryIdle.events.ActiveCropChangedEvent
+import com.github.jacks.planetaryIdle.events.BuyResourceEvent
+import com.github.jacks.planetaryIdle.events.CropUnlockedEvent
+import com.github.jacks.planetaryIdle.events.KitchenUnlockedEvent
+import com.github.jacks.planetaryIdle.events.RecipeActivatedEvent
+import com.github.jacks.planetaryIdle.events.RecipeDeactivatedEvent
+import com.github.jacks.planetaryIdle.events.ResetGameEvent
+import com.github.jacks.planetaryIdle.events.ResearchCompleteEvent
+import com.github.jacks.planetaryIdle.events.fire
 import com.github.quillraven.fleks.World
+import ktx.log.logger
+import ktx.preferences.flush
+import ktx.preferences.get
+import ktx.preferences.set
+import java.math.BigDecimal
 
-class KitchenViewModel(world: World, stage: Stage) : PropertyChangeSource()
+// ── Data classes ──────────────────────────────────────────────────────────────
+
+data class ResearchJob(
+    val inputs: List<CropType>,
+    val duration: Float,
+    val elapsed: Float,
+    val discoveryChance: Float,
+)
+
+data class ResearcherState(
+    val id: Int,
+    val inputSlotCount: Int,
+    val speedLevel: Int = 0,
+    val activeJob: ResearchJob? = null,
+) {
+    val speedMultiplier: Float get() = 1f + speedLevel * 0.25f
+}
+
+sealed class ResearchResult {
+    data class NewCrop(val cropType: CropType) : ResearchResult()
+    data class NewRecipe(val recipe: Recipe) : ResearchResult()
+}
+
+// ── ViewModel ─────────────────────────────────────────────────────────────────
+
+class KitchenViewModel(
+    @Suppress("UNUSED_PARAMETER") world: World,
+    private val stage: Stage,
+    val farmModel: FarmModel,
+) : PropertyChangeSource(), EventListener {
+
+    private val preferences: Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
+
+    var kitchenUnlocked by propertyNotify(false)
+
+    /** color → ordered list of unlocked crop names for that color. */
+    var unlockedCrops: Map<String, List<String>> by propertyNotify(emptyMap())
+
+    /** color → currently active crop name. */
+    var activeCrops: Map<String, String> by propertyNotify(emptyMap())
+
+    /** All recipes the player has discovered. */
+    var discoveredRecipes: List<Recipe> by propertyNotify(emptyList())
+
+    /** Recipes currently set (in effect). */
+    var activeRecipes: List<Recipe> by propertyNotify(emptyList())
+
+    /** All researcher slots. */
+    var researchers: List<ResearcherState> by propertyNotify(emptyList())
+
+    init {
+        stage.addListener(this)
+        load()
+    }
+
+    // ── Public helpers ────────────────────────────────────────────────────────
+
+    fun unlockedCropCount(color: String): Int = (unlockedCrops[color] ?: emptyList()).size
+
+    fun getActiveCropType(color: String): CropType? {
+        val name = activeCrops[color] ?: return CropRegistry.tier1(color)
+        return CropRegistry.forColor(color).find { it.cropName == name }
+    }
+
+    fun hireCost(currentCount: Int): BigDecimal = HIRE_RESEARCHER_BASE_COST.multiply(
+        BigDecimal("5").pow(currentCount)
+    )
+
+    fun slotUpgradeCost(researcherIndex: Int): BigDecimal = UPGRADE_SLOTS_BASE_COST.multiply(
+        BigDecimal("3").pow(researcherIndex)
+    )
+
+    fun speedUpgradeCost(researcher: ResearcherState): BigDecimal = SPEED_UPGRADE_BASE_COST.multiply(
+        BigDecimal("2").pow(researcher.speedLevel)
+    )
+
+    // ── EventListener ────────────────────────────────────────────────────────
+
+    override fun handle(event: Event): Boolean {
+        when (event) {
+            is KitchenUnlockedEvent -> {
+                if (!kitchenUnlocked) {
+                    kitchenUnlocked = true
+                    preferences.flush { this["kitchen_unlocked"] = true }
+                    initializeUnlockedCrops()
+                    grantPresetRecipe()
+                    if (researchers.isEmpty()) {
+                        researchers = listOf(ResearcherState(id = 0, inputSlotCount = 2))
+                        persistResearchers()
+                    }
+                }
+                return false
+            }
+            is BuyResourceEvent -> {
+                if (kitchenUnlocked) {
+                    val color = event.resourceType
+                    val current = unlockedCrops[color] ?: emptyList()
+                    if (current.isEmpty()) {
+                        val t1 = CropRegistry.tier1(color)
+                        val newMap = unlockedCrops.toMutableMap()
+                        newMap[color] = listOf(t1.cropName)
+                        unlockedCrops = newMap
+                        if (activeCrops[color] == null) {
+                            val newActive = activeCrops.toMutableMap()
+                            newActive[color] = t1.cropName
+                            activeCrops = newActive
+                            persistActiveCrops()
+                        }
+                        persistUnlockedCrops()
+                    }
+                }
+                return false
+            }
+            is ResetGameEvent -> return false
+            else -> return false
+        }
+    }
+
+    // ── Active crop ───────────────────────────────────────────────────────────
+
+    fun setActiveCrop(color: String, cropName: String) {
+        val currentActive = activeCrops[color]
+        if (currentActive == cropName) return
+        val cropType = CropRegistry.forColor(color).find { it.cropName == cropName } ?: return
+
+        // Deactivate any recipe that involves this color
+        activeRecipes.filter { it.crop1.color == color || it.crop2.color == color }
+            .forEach { deactivateRecipe(it) }
+
+        val newActive = activeCrops.toMutableMap()
+        newActive[color] = cropName
+        activeCrops = newActive
+        persistActiveCrops()
+
+        stage.fire(ActiveCropChangedEvent(
+            color            = color,
+            cropName         = cropName,
+            newBasePayout    = cropType.baseValue,
+            newCycleDuration = BigDecimal(cropType.baseProductionTime.toString()),
+        ))
+    }
+
+    // ── Recipes ───────────────────────────────────────────────────────────────
+
+    fun activateRecipe(recipe: Recipe) {
+        if (activeRecipes.any { it.id == recipe.id }) return
+
+        val color1 = recipe.crop1.color
+        val color2 = recipe.crop2.color
+
+        // Remove conflicting active recipes for either color
+        activeRecipes.filter { it.crop1.color == color1 || it.crop2.color == color1 ||
+                               it.crop1.color == color2 || it.crop2.color == color2 }
+            .forEach { deactivateRecipe(it) }
+
+        // Auto-switch crops if needed (setActiveCrop may fire ActiveCropChangedEvent)
+        if (activeCrops[color1] != recipe.crop1.cropName) setActiveCrop(color1, recipe.crop1.cropName)
+        if (activeCrops[color2] != recipe.crop2.cropName) setActiveCrop(color2, recipe.crop2.cropName)
+
+        activeRecipes = activeRecipes + recipe
+        persistActiveRecipes()
+        stage.fire(RecipeActivatedEvent(recipe))
+    }
+
+    fun deactivateRecipe(recipe: Recipe) {
+        if (activeRecipes.none { it.id == recipe.id }) return
+        activeRecipes = activeRecipes.filter { it.id != recipe.id }
+        persistActiveRecipes()
+        stage.fire(RecipeDeactivatedEvent(recipe))
+    }
+
+    // ── Research ──────────────────────────────────────────────────────────────
+
+    fun startResearch(researcherIndex: Int, cropInputs: List<CropType>) {
+        val researcher = researchers.getOrNull(researcherIndex) ?: return
+        if (researcher.activeJob != null) return
+        if (cropInputs.isEmpty()) return
+
+        val rawDuration = cropInputs.sumOf { it.tier * it.tier } * BASE_RESEARCH_SECONDS
+        val duration = rawDuration / researcher.speedMultiplier
+        val chance = computeDiscoveryChance(cropInputs)
+        val job = ResearchJob(inputs = cropInputs, duration = duration, elapsed = 0f, discoveryChance = chance)
+
+        val updated = researchers.toMutableList()
+        updated[researcherIndex] = researcher.copy(activeJob = job)
+        researchers = updated
+    }
+
+    fun cancelResearch(researcherIndex: Int) {
+        val researcher = researchers.getOrNull(researcherIndex) ?: return
+        val updated = researchers.toMutableList()
+        updated[researcherIndex] = researcher.copy(activeJob = null)
+        researchers = updated
+    }
+
+    fun hireResearcher(): Boolean {
+        val cost = hireCost(researchers.size)
+        if (farmModel.goldCoins < cost) return false
+        farmModel.goldCoins -= cost
+        preferences.flush { this["gold_coins"] = farmModel.goldCoins.toString() }
+        val newResearcher = ResearcherState(id = researchers.size, inputSlotCount = 2)
+        researchers = researchers + newResearcher
+        persistResearchers()
+        return true
+    }
+
+    fun upgradeResearcherSlots(researcherIndex: Int): Boolean {
+        val researcher = researchers.getOrNull(researcherIndex) ?: return false
+        if (researcher.inputSlotCount >= MAX_INPUT_SLOTS) return false
+        val cost = slotUpgradeCost(researcherIndex)
+        if (farmModel.goldCoins < cost) return false
+        farmModel.goldCoins -= cost
+        preferences.flush { this["gold_coins"] = farmModel.goldCoins.toString() }
+        val updated = researchers.toMutableList()
+        updated[researcherIndex] = researcher.copy(inputSlotCount = researcher.inputSlotCount + 1)
+        researchers = updated
+        persistResearchers()
+        return true
+    }
+
+    fun upgradeResearcherSpeed(researcherIndex: Int): Boolean {
+        val researcher = researchers.getOrNull(researcherIndex) ?: return false
+        val cost = speedUpgradeCost(researcher)
+        if (farmModel.goldCoins < cost) return false
+        farmModel.goldCoins -= cost
+        preferences.flush { this["gold_coins"] = farmModel.goldCoins.toString() }
+        val updated = researchers.toMutableList()
+        updated[researcherIndex] = researcher.copy(speedLevel = researcher.speedLevel + 1)
+        researchers = updated
+        persistResearchers()
+        return true
+    }
+
+    fun computeDiscoveryChance(inputs: List<CropType>): Float {
+        if (inputs.isEmpty()) return 0f
+        val avgTier = inputs.map { it.tier }.average().toFloat()
+        val baseChance = (0.3f + avgTier * 0.1f).coerceIn(0f, 0.95f)
+        return if (canDiscoverAnything(inputs)) baseChance else 0f
+    }
+
+    /** Called every frame from KitchenView.act(). Advances active research jobs. */
+    fun update(delta: Float) {
+        if (!kitchenUnlocked) return
+        var changed = false
+        val updated = researchers.toMutableList()
+        updated.forEachIndexed { index, researcher ->
+            val job = researcher.activeJob ?: return@forEachIndexed
+            val newElapsed = job.elapsed + delta
+            if (newElapsed >= job.duration) {
+                val result = resolveResearch(job)
+                if (result != null) applyResearchResult(result)
+                updated[index] = researcher.copy(activeJob = null)
+                stage.fire(ResearchCompleteEvent(
+                    researcherIndex   = index,
+                    discoveredCropId  = (result as? ResearchResult.NewCrop)?.cropType?.id,
+                    discoveredRecipeId = (result as? ResearchResult.NewRecipe)?.recipe?.id,
+                ))
+                changed = true
+            } else {
+                updated[index] = researcher.copy(activeJob = job.copy(elapsed = newElapsed))
+                changed = true
+            }
+        }
+        if (changed) researchers = updated
+    }
+
+    // ── Research internals ────────────────────────────────────────────────────
+
+    private fun canDiscoverAnything(inputs: List<CropType>): Boolean {
+        val colors = inputs.map { it.color }.distinct()
+        for (color in colors) {
+            val unlocked = unlockedCrops[color] ?: emptyList()
+            if (unlocked.size < CropRegistry.forColor(color).size) return true
+        }
+        if (colors.size >= 2) {
+            for (i in colors.indices) {
+                for (j in i + 1 until colors.size) {
+                    val c1 = colors[i]; val c2 = colors[j]
+                    val crop1 = getActiveCropType(c1) ?: continue
+                    val crop2 = getActiveCropType(c2) ?: continue
+                    if (!discoveredRecipes.any { it.id == Recipe(crop1, crop2).id }) return true
+                }
+            }
+        }
+        return false
+    }
+
+    private fun resolveResearch(job: ResearchJob): ResearchResult? {
+        val roll = Math.random().toFloat()
+        if (roll > job.discoveryChance) return null
+
+        val colors = job.inputs.map { it.color }.distinct()
+        val newCrop   = findDiscoverableCrop(colors)
+        val newRecipe = findDiscoverableRecipe(job.inputs)
+        val preferCrop = Math.random() < 0.7
+
+        return when {
+            preferCrop && newCrop   != null -> ResearchResult.NewCrop(newCrop)
+            !preferCrop && newRecipe != null -> ResearchResult.NewRecipe(newRecipe)
+            newCrop   != null               -> ResearchResult.NewCrop(newCrop)
+            newRecipe != null               -> ResearchResult.NewRecipe(newRecipe)
+            else                            -> null
+        }
+    }
+
+    private fun findDiscoverableCrop(colors: List<String>): CropType? {
+        for (color in colors.shuffled()) {
+            val unlocked = unlockedCrops[color] ?: emptyList()
+            val next = CropRegistry.forColor(color).firstOrNull { it.cropName !in unlocked }
+            if (next != null) return next
+        }
+        return null
+    }
+
+    private fun findDiscoverableRecipe(inputs: List<CropType>): Recipe? {
+        val colors = inputs.map { it.color }.distinct()
+        if (colors.size < 2) return null
+        for (i in colors.indices) {
+            for (j in i + 1 until colors.size) {
+                val crop1 = getActiveCropType(colors[i]) ?: continue
+                val crop2 = getActiveCropType(colors[j]) ?: continue
+                val recipe = Recipe(crop1, crop2)
+                if (!discoveredRecipes.any { it.id == recipe.id }) return recipe
+            }
+        }
+        return null
+    }
+
+    private fun applyResearchResult(result: ResearchResult) {
+        when (result) {
+            is ResearchResult.NewCrop -> {
+                val crop = result.cropType
+                val current = unlockedCrops.toMutableMap()
+                val list = current[crop.color]?.toMutableList() ?: mutableListOf()
+                if (crop.cropName !in list) {
+                    list.add(crop.cropName)
+                    current[crop.color] = list
+                    unlockedCrops = current
+                    persistUnlockedCrops()
+                    stage.fire(CropUnlockedEvent(crop.color, crop.cropName))
+                }
+            }
+            is ResearchResult.NewRecipe -> {
+                val recipe = result.recipe
+                if (!discoveredRecipes.any { it.id == recipe.id }) {
+                    discoveredRecipes = discoveredRecipes + recipe
+                    persistDiscoveredRecipes()
+                }
+            }
+        }
+    }
+
+    // ── Initialization helpers ────────────────────────────────────────────────
+
+    private fun grantPresetRecipe() {
+        val preset = Recipe.preset()
+        if (!discoveredRecipes.any { it.id == preset.id }) {
+            discoveredRecipes = discoveredRecipes + preset
+            persistDiscoveredRecipes()
+        }
+    }
+
+    private fun initializeUnlockedCrops() {
+        val newMap = mutableMapOf<String, List<String>>()
+        // Load any previously saved unlocked crops first
+        PlanetResources.entries.forEach { res ->
+            val saved = preferences["kitchen_unlocked_crops_${res.resourceName}", ""]
+            if (saved.isNotEmpty()) newMap[res.resourceName] = saved.split(",").filter { it.isNotEmpty() }
+        }
+        // Also unlock T1 for any colors the player currently owns or has ever unlocked
+        PlanetResources.entries.forEach { res ->
+            val ownedStr = preferences["${res.resourceName}_owned", "0"]
+            val hasUnlocked = preferences["${res.resourceName}_unlocked", res == PlanetResources.RED]
+            if ((ownedStr.toBigDecimalOrNull() ?: BigDecimal.ZERO) > BigDecimal.ZERO || hasUnlocked) {
+                val existing = newMap[res.resourceName] ?: emptyList()
+                val t1 = CropRegistry.tier1(res.resourceName)
+                if (t1.cropName !in existing) {
+                    newMap[res.resourceName] = listOf(t1.cropName) + existing.filter { it != t1.cropName }
+                } else if (newMap[res.resourceName] == null) {
+                    newMap[res.resourceName] = listOf(t1.cropName)
+                }
+            }
+        }
+        unlockedCrops = newMap
+
+        // Initialize active crops to T1 for each color that has unlocked crops
+        val newActive = activeCrops.toMutableMap()
+        newMap.keys.forEach { color ->
+            if (newActive[color] == null) {
+                newActive[color] = (newMap[color] ?: emptyList()).firstOrNull()
+                    ?: CropRegistry.tier1(color).cropName
+            }
+        }
+        activeCrops = newActive
+        persistUnlockedCrops()
+        persistActiveCrops()
+    }
+
+    // ── Persistence ───────────────────────────────────────────────────────────
+
+    private fun load() {
+        kitchenUnlocked = preferences["kitchen_unlocked", false]
+        if (!kitchenUnlocked) return
+
+        loadUnlockedCrops()
+        loadActiveCrops()
+        loadDiscoveredRecipes()
+        loadActiveRecipes()
+        loadResearchers()
+    }
+
+    private fun loadUnlockedCrops() {
+        val map = mutableMapOf<String, List<String>>()
+        PlanetResources.entries.forEach { res ->
+            val saved = preferences["kitchen_unlocked_crops_${res.resourceName}", ""]
+            if (saved.isNotEmpty()) map[res.resourceName] = saved.split(",").filter { it.isNotEmpty() }
+        }
+        unlockedCrops = map
+    }
+
+    private fun loadActiveCrops() {
+        val map = mutableMapOf<String, String>()
+        PlanetResources.entries.forEach { res ->
+            val saved = preferences["kitchen_active_crop_${res.resourceName}", ""]
+            if (saved.isNotEmpty()) map[res.resourceName] = saved
+        }
+        activeCrops = map
+    }
+
+    private fun loadDiscoveredRecipes() {
+        val saved = preferences["kitchen_discovered_recipes", ""]
+        discoveredRecipes = if (saved.isEmpty()) emptyList()
+        else saved.split(",").filter { it.isNotEmpty() }.mapNotNull { parseRecipe(it) }
+    }
+
+    private fun loadActiveRecipes() {
+        val saved = preferences["kitchen_active_recipes", ""]
+        activeRecipes = if (saved.isEmpty()) emptyList()
+        else saved.split(",").filter { it.isNotEmpty() }.mapNotNull { parseRecipe(it) }
+    }
+
+    private fun loadResearchers() {
+        val count = preferences["kitchen_researcher_count", 0]
+        researchers = if (count == 0) {
+            listOf(ResearcherState(id = 0, inputSlotCount = 2))
+        } else {
+            (0 until count).map { i ->
+                ResearcherState(
+                    id             = i,
+                    inputSlotCount = preferences["kitchen_researcher_${i}_input_slots", 2],
+                    speedLevel     = preferences["kitchen_researcher_${i}_speed_level", 0],
+                )
+            }
+        }
+    }
+
+    private fun parseRecipe(id: String): Recipe? {
+        // id format: "{color}_{cropname}_x_{color}_{cropname}"
+        val parts = id.split("_x_", limit = 2)
+        if (parts.size != 2) return null
+        val crop1 = CropRegistry.byId(parts[0]) ?: return null
+        val crop2 = CropRegistry.byId(parts[1]) ?: return null
+        return Recipe(crop1, crop2)
+    }
+
+    private fun persistUnlockedCrops() {
+        preferences.flush {
+            PlanetResources.entries.forEach { res ->
+                this["kitchen_unlocked_crops_${res.resourceName}"] =
+                    (unlockedCrops[res.resourceName] ?: emptyList()).joinToString(",")
+            }
+        }
+    }
+
+    private fun persistActiveCrops() {
+        preferences.flush {
+            PlanetResources.entries.forEach { res ->
+                this["kitchen_active_crop_${res.resourceName}"] = activeCrops[res.resourceName] ?: ""
+            }
+        }
+    }
+
+    private fun persistDiscoveredRecipes() {
+        preferences.flush { this["kitchen_discovered_recipes"] = discoveredRecipes.joinToString(",") { it.id } }
+    }
+
+    private fun persistActiveRecipes() {
+        preferences.flush { this["kitchen_active_recipes"] = activeRecipes.joinToString(",") { it.id } }
+    }
+
+    private fun persistResearchers() {
+        preferences.flush {
+            this["kitchen_researcher_count"] = researchers.size
+            researchers.forEachIndexed { i, r ->
+                this["kitchen_researcher_${i}_input_slots"] = r.inputSlotCount
+                this["kitchen_researcher_${i}_speed_level"] = r.speedLevel
+            }
+        }
+    }
+
+    companion object {
+        private val log = logger<KitchenViewModel>()
+        const val BASE_RESEARCH_SECONDS = 60f
+        const val MAX_INPUT_SLOTS = 4
+        val HIRE_RESEARCHER_BASE_COST   = BigDecimal("1000000000")
+        val UPGRADE_SLOTS_BASE_COST     = BigDecimal("10000000000")
+        val SPEED_UPGRADE_BASE_COST     = BigDecimal("5000000000")
+    }
+}
