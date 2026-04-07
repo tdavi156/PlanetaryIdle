@@ -45,13 +45,18 @@ Menu buttons fire `ViewStateChangeEvent(state)`. `BackgroundView` and `Isometric
 ### TMX Layer Convention (`farm_map.tmx`)
 `layer_base` (always on), `layer_red`, `layer_orange`, `layer_yellow`, `layer_green`, `layer_blue`, `layer_purple`, `layer_pink`, `layer_brown`, `layer_white`, `layer_black`, `layer_barn`, `layer_kitchen` — names match `ResourceComponent` color enum values (lowercase).
 
+### Barn Upgrade Tree
+`BarnUpgrade` enum (`components/BarnUpgrade.kt`) defines 24 upgrades with node positions, costs, prerequisites, and category. `BarnViewModel` handles purchases, persists levels, and fires `BarnEffectsChangedEvent` with per-color payout multipliers, speed multiplier, and soil base multiplier. Barn unlocks on first green crop purchase (`BarnUnlockedEvent`). Soil upgrade lives in the Barn (root node); the FarmView soil button is removed. No barn upgrades reset on soil prestige.
+
 ### Event Flow
 Events fired via `Stage.fire()`. Key events in `events/Events.kt`:
 `BuyResourceEvent` → `FarmModel` → `ResourceUpdateEvent` → views update
 `ViewStateChangeEvent` → `BackgroundView`, `IsometricMapRenderer`, `MenuView`
+`BarnUnlockedEvent` → `MenuModel`, `IsometricMapRenderer` (enables `layer_barn`)
+`BuyBarnUpgradeEvent` → `BarnViewModel` → `BarnEffectsChangedEvent` → `FarmModel`, `ResourceUpdateSystem`
 
 ### Persistence
-LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/current_ticks/unlocked`, `soil_is_unlocked/upgrades/cost`, `ach1`–`ach22`.
+LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/current_ticks/unlocked`, `soil_is_unlocked/upgrades/cost`, `ach1`–`ach22`, `barn_unlocked`, `barn_upgrade_{id}_level`.
 
 ## Game Resources
 10 resources in order: Red → Orange → Yellow → Green → Blue → Purple → Pink → Brown → White → Black. Defined as enum in `ResourceComponent.kt`.
@@ -63,12 +68,13 @@ LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/cur
 | `GameScreen.kt` | Builds Fleks World; wires systems and UI hierarchy |
 | `FarmModel.kt` | Core game logic; gold coins, buy/sell, multipliers, save/load |
 | `FarmView.kt` | Main farm UI; resource rows, buy buttons, production rate display |
-| `BarnView.kt` / `BarnViewModel.kt` | Stub — upgrades feature (next) |
+| `BarnView.kt` / `BarnViewModel.kt` | Upgrade tree UI (node graph + info panel) and purchase logic |
+| `BarnUpgrade.kt` | Enum of 24 upgrades; prerequisites map defines tree edges |
 | `KitchenView.kt` / `KitchenViewModel.kt` | Stub — recipes feature (future) |
 | `IsometricMapRenderer.kt` | Loads farm_map.tmx; toggles layers; renders pre-stage |
 | `BackgroundView.kt` | Dynamic background switcher (PNG or grey fallback) |
 | `ResourceComponent.kt` | BigDecimal resource math; `tickCount` property drives production timing |
-| `UpgradeComponent.kt` | Soil upgrades; cost and speed multiplier (×2 per level, ×2.5 at max) |
+| `UpgradeComponent.kt` | Soil speed multiplier; `soilSpeedMultiplier` updated by `BarnEffectsChangedEvent` (Improved Soil Quality) |
 | `AchievementComponent.kt` | 22 achievements; multiplier = 1.05^completedCount |
 | `MenuView.kt` | Side menu: Farm · Barn · Kitchen · Achievements · Statistics · Settings · Reset · Quit |
 
