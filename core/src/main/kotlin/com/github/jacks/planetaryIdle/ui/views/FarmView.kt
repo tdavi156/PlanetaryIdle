@@ -285,8 +285,7 @@ class FarmView(
         kitchenModel.onPropertyChange(KitchenViewModel::activeRecipes) { recipes ->
             linkedColors.clear()
             recipes.forEach { r ->
-                linkedColors.add(r.crop1.color)
-                linkedColors.add(r.crop2.color)
+                r.crops.forEach { linkedColors.add(it.color) }
             }
             updateRecipeVisuals()
         }

@@ -9,6 +9,7 @@ import com.github.jacks.planetaryIdle.components.CropRegistry
 import com.github.jacks.planetaryIdle.components.CropType
 import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.components.Recipe
+import com.github.jacks.planetaryIdle.components.RecipeRegistry
 import com.github.jacks.planetaryIdle.events.ActiveCropChangedEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.CropUnlockedEvent
@@ -151,7 +152,7 @@ class KitchenViewModel(
         val cropType = CropRegistry.forColor(color).find { it.cropName == cropName } ?: return
 
         // Deactivate any recipe that involves this color
-        activeRecipes.filter { it.crop1.color == color || it.crop2.color == color }
+        activeRecipes.filter { recipe -> recipe.crops.any { it.color == color } }
             .forEach { deactivateRecipe(it) }
 
         val newActive = activeCrops.toMutableMap()
@@ -172,17 +173,16 @@ class KitchenViewModel(
     fun activateRecipe(recipe: Recipe) {
         if (activeRecipes.any { it.id == recipe.id }) return
 
-        val color1 = recipe.crop1.color
-        val color2 = recipe.crop2.color
+        val colors = recipe.crops.map { it.color }
 
-        // Remove conflicting active recipes for either color
-        activeRecipes.filter { it.crop1.color == color1 || it.crop2.color == color1 ||
-                               it.crop1.color == color2 || it.crop2.color == color2 }
+        // Remove any active recipe that shares a color with this one
+        activeRecipes.filter { active -> active.crops.any { it.color in colors } }
             .forEach { deactivateRecipe(it) }
 
-        // Auto-switch crops if needed (setActiveCrop may fire ActiveCropChangedEvent)
-        if (activeCrops[color1] != recipe.crop1.cropName) setActiveCrop(color1, recipe.crop1.cropName)
-        if (activeCrops[color2] != recipe.crop2.cropName) setActiveCrop(color2, recipe.crop2.cropName)
+        // Auto-switch active crop for each color involved
+        recipe.crops.forEach { crop ->
+            if (activeCrops[crop.color] != crop.cropName) setActiveCrop(crop.color, crop.cropName)
+        }
 
         activeRecipes = activeRecipes + recipe
         persistActiveRecipes()
@@ -295,21 +295,16 @@ class KitchenViewModel(
 
     private fun canDiscoverAnything(inputs: List<CropType>): Boolean {
         val colors = inputs.map { it.color }.distinct()
+        // Can we unlock a new crop tier for any input color?
         for (color in colors) {
             val unlocked = unlockedCrops[color] ?: emptyList()
             if (unlocked.size < CropRegistry.forColor(color).size) return true
         }
-        if (colors.size >= 2) {
-            for (i in colors.indices) {
-                for (j in i + 1 until colors.size) {
-                    val c1 = colors[i]; val c2 = colors[j]
-                    val crop1 = getActiveCropType(c1) ?: continue
-                    val crop2 = getActiveCropType(c2) ?: continue
-                    if (!discoveredRecipes.any { it.id == Recipe(crop1, crop2).id }) return true
-                }
-            }
+        // Can we discover an undiscovered recipe from the registry using only these colors?
+        return RecipeRegistry.all.any { recipe ->
+            recipe.crops.map { it.color }.all { it in colors } &&
+            discoveredRecipes.none { it.id == recipe.id }
         }
-        return false
     }
 
     private fun resolveResearch(job: ResearchJob): ResearchResult? {
@@ -318,7 +313,7 @@ class KitchenViewModel(
 
         val colors = job.inputs.map { it.color }.distinct()
         val newCrop   = findDiscoverableCrop(colors)
-        val newRecipe = findDiscoverableRecipe(job.inputs)
+        val newRecipe = findDiscoverableRecipe(colors)
         val preferCrop = Math.random() < 0.7
 
         return when {
@@ -339,18 +334,14 @@ class KitchenViewModel(
         return null
     }
 
-    private fun findDiscoverableRecipe(inputs: List<CropType>): Recipe? {
-        val colors = inputs.map { it.color }.distinct()
-        if (colors.size < 2) return null
-        for (i in colors.indices) {
-            for (j in i + 1 until colors.size) {
-                val crop1 = getActiveCropType(colors[i]) ?: continue
-                val crop2 = getActiveCropType(colors[j]) ?: continue
-                val recipe = Recipe(crop1, crop2)
-                if (!discoveredRecipes.any { it.id == recipe.id }) return recipe
+    /** Returns a random undiscovered recipe from the registry whose crops all belong to [colors]. */
+    private fun findDiscoverableRecipe(colors: List<String>): Recipe? {
+        return RecipeRegistry.all
+            .filter { recipe ->
+                recipe.crops.map { it.color }.all { it in colors } &&
+                discoveredRecipes.none { it.id == recipe.id }
             }
-        }
-        return null
+            .randomOrNull()
     }
 
     private fun applyResearchResult(result: ResearchResult) {
@@ -482,12 +473,11 @@ class KitchenViewModel(
     }
 
     private fun parseRecipe(id: String): Recipe? {
-        // id format: "{color}_{cropname}_x_{color}_{cropname}"
-        val parts = id.split("_x_", limit = 2)
-        if (parts.size != 2) return null
-        val crop1 = CropRegistry.byId(parts[0]) ?: return null
-        val crop2 = CropRegistry.byId(parts[1]) ?: return null
-        return Recipe(crop1, crop2)
+        // id format: "{cropId1}_x_{cropId2}[_x_{cropId3}...]"
+        val parts = id.split("_x_")
+        if (parts.size < 2) return null
+        val crops = parts.map { part -> CropRegistry.byId(part) ?: return null }
+        return Recipe(crops)
     }
 
     private fun persistUnlockedCrops() {

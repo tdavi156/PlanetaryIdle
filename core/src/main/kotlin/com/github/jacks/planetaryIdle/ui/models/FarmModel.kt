@@ -167,8 +167,10 @@ class FarmModel(
                 persistResourceState(rscComp)
             }
             is RecipeActivatedEvent -> {
-                val color1 = event.recipe.crop1.color
-                val color2 = event.recipe.crop2.color
+                // Note: multi-color (3+) recipe payout mechanics are not yet implemented;
+                // only the first two colors are linked for now.
+                val color1 = event.recipe.crops[0].color
+                val color2 = event.recipe.crops[1].color
                 val entity1 = getResourceEntityByName(color1) ?: return false
                 val entity2 = getResourceEntityByName(color2) ?: return false
                 val rsc1 = resourceComponents[entity1]
@@ -187,8 +189,8 @@ class FarmModel(
                 updateModel(rsc2)
             }
             is RecipeDeactivatedEvent -> {
-                val color1 = event.recipe.crop1.color
-                val color2 = event.recipe.crop2.color
+                val color1 = event.recipe.crops[0].color
+                val color2 = event.recipe.crops[1].color
                 activeRecipePairs.remove(color1)
                 activeRecipePairs.remove(color2)
                 recipePendingPayouts.remove(color1)
