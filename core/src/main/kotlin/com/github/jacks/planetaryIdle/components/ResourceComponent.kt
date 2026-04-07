@@ -12,21 +12,19 @@ enum class ScoreResources(
 enum class PlanetResources(
     val resourceName : String,
     val baseCost : String,
-    val baseValue : String,
-    val valueScaling : String,
-    val baseRate : String,
-    val rateScaling : String
+    val basePayout : String,
+    val cycleDuration : String
 ) {
-    RED("red","1","0.31","10.04","1.3","0.17"),
-    ORANGE("orange","100","2.4","0.09","0.95","0.11"),
-    YELLOW("yellow","1000","18.9","0.23","0.67","0.07"),
-    GREEN("green","50000","147.1","3.21","0.43","0.06"),
-    BLUE("blue","1000000","1147","12.5","0.21","0.05"),
-    PURPLE("purple","500000000","8952","46.3","0.12","0.04"),
-    PINK("pink","10000000000","69811","374.8","0.08","0.03"),
-    BROWN("brown","100000000000000","544532","2567","0.05","0.02"),
-    WHITE("white","1000000000000000000","4247354","74502","0.03","0.01"),
-    BLACK("black","1000000000000000000000000","33129365","3312936","0.01","0.005");
+    RED("red",       "1",                        "5",         "1.5"),
+    ORANGE("orange", "100",                       "25",        "4.5"),
+    YELLOW("yellow", "1000",                      "125",       "13.5"),
+    GREEN("green",   "50000",                     "625",       "40.5"),
+    BLUE("blue",     "1000000",                   "3125",      "121.5"),
+    PURPLE("purple", "500000000",                 "15625",     "364.5"),
+    PINK("pink",     "10000000000",               "78125",     "1093.5"),
+    BROWN("brown",   "100000000000000",           "390625",    "3280.5"),
+    WHITE("white",   "1000000000000000000",       "1953125",   "9841.5"),
+    BLACK("black",   "1000000000000000000000000", "9765625",   "29524.5");
 }
 
 data class ResourceConfiguration(
@@ -34,10 +32,8 @@ data class ResourceConfiguration(
     val amountOwned: BigDecimal = BigDecimal("0"),
     val baseCost: BigDecimal = BigDecimal("0"),
     val costScaling: BigDecimal = BigDecimal("0"),
-    val baseValue: BigDecimal = BigDecimal("0"),
-    val valueScaling: BigDecimal = BigDecimal("0"),
-    val baseRate : BigDecimal = BigDecimal("0"),
-    val rateScaling : BigDecimal = BigDecimal("0"),
+    val basePayout: BigDecimal = BigDecimal("0"),
+    val cycleDuration: BigDecimal = BigDecimal("0"),
     val currentTicks : Int = 0,
     val isUnlocked: Boolean = false
 )
@@ -47,11 +43,8 @@ data class ResourceComponent(
     var amountOwned: BigDecimal = BigDecimal("0"),
     var baseCost: BigDecimal = BigDecimal("0"),
     var costScaling: BigDecimal = BigDecimal("0"),
-    var baseValue: BigDecimal = BigDecimal("0"),
-    var valueScaling: BigDecimal = BigDecimal("0"),
-    var baseRate : BigDecimal = BigDecimal("0"),
-    var rateScaling : BigDecimal = BigDecimal("0"),
-    var amountSold : BigDecimal = BigDecimal("0"),
+    var basePayout: BigDecimal = BigDecimal("0"),
+    var cycleDuration: BigDecimal = BigDecimal("0"),
     var currentTicks : Int = 0,
     var isUnlocked : Boolean = false
 ) {
@@ -59,29 +52,27 @@ data class ResourceComponent(
     val cost : BigDecimal
         get() = baseCost.multiply((BigDecimal.ONE + costScaling).pow(amountOwned.toInt()))
 
-    val value : BigDecimal
+    val milestoneMultiplier : BigDecimal
         get() {
-            return if (amountOwned == BigDecimal.ZERO) {
-                BigDecimal.ZERO
-            } else if (amountOwned == BigDecimal.ONE) {
-                baseValue
-            } else {
-                baseValue + (valueScaling * amountSold)
-            }
+            var mult = BigDecimal.ONE
+            val owned = amountOwned.toInt()
+            if (owned >= 10)  mult = mult.multiply(BigDecimal("1.2"))
+            if (owned >= 25)  mult = mult.multiply(BigDecimal("1.5"))
+            if (owned >= 50)  mult = mult.multiply(BigDecimal("2.0"))
+            if (owned >= 100) mult = mult.multiply(BigDecimal("3.0"))
+            return mult
         }
 
-    val rate : BigDecimal
-        // might add additional scaling here later to improve the rate based on amount owned (scaling * owned)
-        get() = baseRate
+    val payout : BigDecimal
+        get() {
+            if (amountOwned <= BigDecimal.ZERO) return BigDecimal.ZERO
+            val ownedScaled = Math.pow(amountOwned.toDouble(), 0.75).toBigDecimal()
+            return basePayout.multiply(ownedScaled).multiply(milestoneMultiplier)
+        }
 
     val tickCount : Int
         get() {
-            if (rate <= BigDecimal.ZERO) return Int.MAX_VALUE
-            // if the rate is greater then the frame cap, increase the value proportionally based on the exceeding rate
-            return if (rate.toInt() >= FRAMES_PER_SECOND_INT) { 1 }
-            else {
-                val rateFraction = rate.divide(BigDecimal(FRAMES_PER_SECOND_INT), 10, RoundingMode.HALF_UP)
-                BigDecimal.ONE.divide(rateFraction, 2, RoundingMode.UP).toInt()
-            }
+            if (cycleDuration <= BigDecimal.ZERO) return Int.MAX_VALUE
+            return (cycleDuration.toFloat() * FRAMES_PER_SECOND_INT).toInt()
         }
 }

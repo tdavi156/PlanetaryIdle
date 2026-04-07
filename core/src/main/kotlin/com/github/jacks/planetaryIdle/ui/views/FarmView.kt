@@ -17,7 +17,6 @@ import com.github.jacks.planetaryIdle.events.AchievementNotificationEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.FloatingTextEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
-import com.github.jacks.planetaryIdle.events.UpgradeSoilEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.ui.Buttons
 import com.github.jacks.planetaryIdle.ui.Colors
@@ -66,19 +65,16 @@ class FarmView(
     private val localStates     = mutableMapOf<PlanetResources, ResourceModelState>()
     private val elapsedSeconds  = mutableMapOf<PlanetResources, Float>()
 
-    private var goldCoins      = model.goldCoins
-    private var soilUpgrades   = model.soilUpgrades
-    private var soilCost       = model.soilCost
-    private var soilIsUnlocked = model.soilIsUnlocked
+    private var goldCoins    = model.goldCoins
+    private var soilUpgrades = model.soilUpgrades
 
-    private lateinit var soilButton: TextButton
     private lateinit var productionRateLabel: Label
     private lateinit var colonizationProgress: Image
     private lateinit var productionRateProgressLabel: Label
 
     init {
         setFillParent(true)
-        val view = this@FarmView   // explicit capture for use inside DSL lambdas
+        val view = this@FarmView
 
         PlanetResources.entries.forEach { resource ->
             localStates[resource] = stateFor(resource)
@@ -91,7 +87,6 @@ class FarmView(
                 PlanetResources.entries.forEach { resource ->
                     val state = view.localStates[resource]!!
                     val rowTable = table { rowCell ->
-                        // Buy button
                         val btn = textButton(
                             view.makeButtonText(resource, state),
                             view.buttonStyleFor(resource)
@@ -105,7 +100,6 @@ class FarmView(
                             })
                         }
 
-                        // Progress bar: grey background + colored fill in a Stack
                         var fillImage: Image? = null
                         stack { stackCell ->
                             image(view.skin[Drawables.BAR_GREY_THICK])
@@ -116,7 +110,6 @@ class FarmView(
                             stackCell.expandX().fillX().height(30f).pad(3f, 5f, 3f, 5f)
                         }
 
-                        // Hover tooltip
                         val tooltip = label(
                             view.makeTooltipText(resource, state),
                             view.tooltipStyleFor(resource)
@@ -138,31 +131,14 @@ class FarmView(
                         rowCell.expandX().fillX()
 
                         view.resourceWidgets[resource] = ResourceWidgets(
-                            rowTable    = this,
-                            button      = btn,
+                            rowTable     = this,
+                            button       = btn,
                             progressFill = fillImage!!,
                             tooltipLabel = tooltip,
                         )
                     }
                     row()
-                    // Visibility resolved at end of init via reapplyUnlockVisibility()
                     rowTable.isVisible = resource == PlanetResources.RED
-                }
-
-                // Soil upgrade button
-                row()
-                view.soilButton = textButton(
-                    view.makeSoilButtonText(),
-                    Buttons.BLACK_BUTTON_SMALL.skinKey
-                ) { cell ->
-                    cell.left().width(210f).height(55f).pad(3f, 5f, 3f, 0f)
-                    isVisible = false
-                    isDisabled = view.goldCoins < view.soilCost
-                    addListener(object : ChangeListener() {
-                        override fun changed(event: ChangeEvent, actor: Actor) {
-                            view.stage.fire(UpgradeSoilEvent())
-                        }
-                    })
                 }
 
                 rowsCell.expandY().fillY().top().left()
@@ -214,20 +190,10 @@ class FarmView(
             productionRateLabel.txt = "Production: ${formatShort(rate)}/s"
             updateColonizationBar(rate)
         }
-        model.onPropertyChange(FarmModel::soilCost) { cost ->
-            soilCost = cost
-            soilButton.txt = makeSoilButtonText()
-        }
         model.onPropertyChange(FarmModel::soilUpgrades) { amount ->
             soilUpgrades = amount
-            soilButton.txt = makeSoilButtonText()
-            resetButtonVisibility()
             reapplyUnlockVisibility()
             checkSoilAchievements(amount)
-        }
-        model.onPropertyChange(FarmModel::soilIsUnlocked) { unlocked ->
-            soilIsUnlocked = unlocked
-            reapplyUnlockVisibility()
         }
         model.onPropertyChange(FarmModel::gameCompleted) { completed ->
             if (completed) stage.fire(GameCompletedEvent())
@@ -244,12 +210,10 @@ class FarmView(
         model.onPropertyChange(FarmModel::whiteState)  { stateChanged(PlanetResources.WHITE,  it) }
         model.onPropertyChange(FarmModel::blackState)  { stateChanged(PlanetResources.BLACK,  it) }
 
-        // Floating text: fires when a production cycle completes, then gold is credited by animation end
         model.onPropertyChange(FarmModel::lastProductionPayout) { (name, amount) ->
             if (name.isEmpty()) return@onPropertyChange
             val resource = PlanetResources.entries.find { it.resourceName == name } ?: return@onPropertyChange
             elapsedSeconds[resource] = 0f
-
             val fillImage = resourceWidgets[resource]?.progressFill ?: return@onPropertyChange
             val startPos  = fillImage.localToStageCoordinates(vec2(fillImage.width, fillImage.height / 2f))
             val targetPos = goldLabel.localToStageCoordinates(vec2(goldLabel.width / 2f, goldLabel.height / 2f))
@@ -259,7 +223,6 @@ class FarmView(
         reapplyUnlockVisibility()
     }
 
-    // ── act() — progress bar scaleX driven by local elapsed-time timer ──────
     override fun act(delta: Float) {
         super.act(delta)
         PlanetResources.entries.forEach { resource ->
@@ -272,7 +235,6 @@ class FarmView(
         }
     }
 
-    // ── State change handler ─────────────────────────────────────────────────
     private fun stateChanged(resource: PlanetResources, state: ResourceModelState) {
         localStates[resource] = state
         val widgets = resourceWidgets[resource] ?: return
@@ -283,7 +245,6 @@ class FarmView(
         checkOwnedAchievements(resource, state.owned)
     }
 
-    // ── Unlock / visibility ───────────────────────────────────────────────────
     private fun reapplyUnlockVisibility() {
         fun owned(r: PlanetResources) = (localStates[r]?.owned ?: BigDecimal.ZERO).toInt()
         val soil = soilUpgrades.toInt()
@@ -297,15 +258,6 @@ class FarmView(
         resourceWidgets[PlanetResources.BROWN]?.rowTable?.isVisible  = owned(PlanetResources.PINK)   >= 5 && soil >= 7
         resourceWidgets[PlanetResources.WHITE]?.rowTable?.isVisible  = owned(PlanetResources.BROWN)  >= 5 && soil >= 9
         resourceWidgets[PlanetResources.BLACK]?.rowTable?.isVisible  = owned(PlanetResources.WHITE)  >= 5 && soil >= 11
-        soilButton.isVisible = soilIsUnlocked || owned(PlanetResources.YELLOW) >= 5
-    }
-
-    private fun resetButtonVisibility() {
-        listOf(
-            PlanetResources.ORANGE, PlanetResources.YELLOW, PlanetResources.GREEN,
-            PlanetResources.BLUE, PlanetResources.PURPLE, PlanetResources.PINK,
-            PlanetResources.BROWN, PlanetResources.WHITE, PlanetResources.BLACK,
-        ).forEach { resourceWidgets[it]?.rowTable?.isVisible = false }
     }
 
     private fun updateAllButtonDisabledState() {
@@ -313,10 +265,9 @@ class FarmView(
             val state = localStates[resource] ?: return@forEach
             resourceWidgets[resource]?.button?.isDisabled = goldCoins < state.cost
         }
-        soilButton.isDisabled = goldCoins < soilCost
     }
 
-    // ── Achievement notifications ─────────────────────────────────────────────
+    // ── Achievement notifications ──────────────────────────────────────────
     private fun checkOwnedAchievements(resource: PlanetResources, owned: BigDecimal) {
         val n = owned.toInt()
         when (resource) {
@@ -352,7 +303,7 @@ class FarmView(
         if (n >= 25) stage.fire(AchievementNotificationEvent(21))
     }
 
-    // ── Colonization progress bar ─────────────────────────────────────────────
+    // ── Colonization progress bar ─────────────────────────────────────────
     private fun updateColonizationBar(rate: BigDecimal) {
         val prodMantissa = BigDecimalMath.mantissa(rate)
         val prodExponent = BigDecimalMath.exponent(rate).toBigDecimal()
@@ -364,7 +315,7 @@ class FarmView(
         colonizationProgress.scaleX = clamped
     }
 
-    // ── Text helpers ──────────────────────────────────────────────────────────
+    // ── Text helpers ──────────────────────────────────────────────────────
     private fun makeButtonText(resource: PlanetResources, state: ResourceModelState): String {
         val name  = resource.resourceName.replaceFirstChar { it.uppercaseChar() }
         val owned = noDecFormat.format(state.owned)
@@ -378,10 +329,7 @@ class FarmView(
         return "Payout: $payout\nCycle: ${duration}s"
     }
 
-    private fun makeSoilButtonText(): String =
-        "Upgrade Soil (${soilUpgrades.toInt()})\n${formatShort(soilCost)} gold"
-
-    // ── Skin / style helpers ──────────────────────────────────────────────────
+    // ── Skin / style helpers ──────────────────────────────────────────────
     private fun buttonStyleFor(resource: PlanetResources): String = when (resource) {
         PlanetResources.RED    -> Buttons.RED_BUTTON_SMALL.skinKey
         PlanetResources.ORANGE -> Buttons.ORANGE_BUTTON_SMALL.skinKey
@@ -421,7 +369,6 @@ class FarmView(
         PlanetResources.BLACK  -> Labels.SMALL_BLACK_BGD.skinKey
     }
 
-    // ── Initial state from model ──────────────────────────────────────────────
     private fun stateFor(resource: PlanetResources): ResourceModelState = when (resource) {
         PlanetResources.RED    -> model.redState
         PlanetResources.ORANGE -> model.orangeState

@@ -30,3 +30,14 @@ class FloatingTextEvent(val startPosition: Vector2, val targetPosition: Vector2,
 class CreditGoldEvent(val amount: BigDecimal) : Event()
 
 class ViewStateChangeEvent(val state: ViewState) : Event()
+
+class BarnUnlockedEvent : Event()
+class BuyBarnUpgradeEvent(val upgrade: com.github.jacks.planetaryIdle.components.BarnUpgrade) : Event()
+class BarnEffectsChangedEvent(
+    /** Per-resource-name payout multiplier (e.g. "red" → 1.331 for 3 levels of Red Value). */
+    val payoutMultipliers: Map<String, BigDecimal>,
+    /** Speed multiplier from Improved Seeds applied on top of soil multiplier. */
+    val speedMultiplier: BigDecimal,
+    /** New base per-level soil speed multiplier (modified by Improved Soil Quality). */
+    val soilBaseMultiplier: BigDecimal,
+) : Event()

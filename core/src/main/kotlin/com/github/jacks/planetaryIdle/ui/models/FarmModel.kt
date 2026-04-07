@@ -11,6 +11,8 @@ import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.components.ScoreResources
 import com.github.jacks.planetaryIdle.components.UpgradeComponent
 import com.github.jacks.planetaryIdle.events.AchievementCompletedEvent
+import com.github.jacks.planetaryIdle.events.BarnEffectsChangedEvent
+import com.github.jacks.planetaryIdle.events.BarnUnlockedEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.CreditGoldEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
@@ -18,6 +20,7 @@ import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
 import com.github.jacks.planetaryIdle.events.UpdateBuyAmountEvent
 import com.github.jacks.planetaryIdle.events.UpgradeSoilEvent
+import com.github.jacks.planetaryIdle.events.fire
 import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.World
@@ -39,7 +42,7 @@ data class ResourceModelState(
 
 class FarmModel(
     world: World,
-    stage: Stage
+    private val stage: Stage
 ) : PropertyChangeSource(), EventListener {
 
     private val preferences: Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
@@ -66,14 +69,14 @@ class FarmModel(
     var blackState  by propertyNotify(initialState(PlanetResources.BLACK))
 
     // Set by ResourceUpdateEvent; FarmView binds to this to trigger floating text animation.
-    // An empty resourceName signals no payout has fired yet — bindings should ignore it.
     var lastProductionPayout by propertyNotify(Pair("", BigDecimal.ZERO))
 
     var achievementMultiplier by propertyNotify(BigDecimal(preferences["achievement_multiplier", "1"]))
-    var soilCost by propertyNotify(BigDecimal(preferences["soil_cost", "1000000"]))
     var soilUpgrades by propertyNotify(BigDecimal(preferences["soil_upgrades", "0"]))
-    var soilIsUnlocked by propertyNotify(preferences["soil_is_unlocked", false])
     var gameCompleted by propertyNotify(false)
+
+    /** Per-resource-name payout multiplier from barn value/expertise upgrades. */
+    private val barnPayoutMultipliers = mutableMapOf<String, BigDecimal>()
 
     private val stateProps: Map<String, KMutableProperty0<ResourceModelState>> = mapOf(
         PlanetResources.RED.resourceName    to ::redState,
@@ -98,13 +101,22 @@ class FarmModel(
                 val entity = getResourceEntityByName(event.resourceType)
                     ?: gdxError("No Entity with type: ${event.resourceType}")
                 val rscComp = resourceComponents[entity]
+                val wasZero = rscComp.amountOwned <= BigDecimal.ZERO
                 deductPurchaseCost(rscComp)
                 rscComp.amountOwned += buyAmount.toBigDecimal()
                 updateModel(rscComp)
                 persistResourceState(rscComp)
+                // Unlock barn on first green purchase
+                if (event.resourceType == PlanetResources.GREEN.resourceName && wasZero) {
+                    preferences.flush { this["barn_unlocked"] = true }
+                    stage.fire(BarnUnlockedEvent())
+                }
             }
             is ResourceUpdateEvent -> {
-                val adjustedPayout = event.rscComp.payout.multiply(calculateAchievementMultiplier())
+                val barnMult = barnPayoutMultipliers[event.rscComp.name] ?: BigDecimal.ONE
+                val adjustedPayout = event.rscComp.payout
+                    .multiply(calculateAchievementMultiplier())
+                    .multiply(barnMult)
                 goldCoins += adjustedPayout
                 preferences.flush { this["gold_coins"] = goldCoins.toString() }
                 lastProductionPayout = event.rscComp.name to adjustedPayout
@@ -127,6 +139,15 @@ class FarmModel(
                 buyAmount = event.amount
                 preferences.flush { this["buy_amount"] = buyAmount }
                 updateAllModelStates()
+            }
+            is BarnEffectsChangedEvent -> {
+                barnPayoutMultipliers.clear()
+                barnPayoutMultipliers.putAll(event.payoutMultipliers)
+                // Update soil component base multiplier from Improved Soil Quality
+                upgradeEntities.forEach { entity ->
+                    upgradeComponents[entity].soilSpeedMultiplier = event.soilBaseMultiplier
+                }
+                updateModelProductionRate()
             }
             is ResetGameEvent -> {
                 resetGameValues()
@@ -170,13 +191,16 @@ class FarmModel(
     }
 
     private fun updateModelProductionRate() {
-        val mult = calculateAchievementMultiplier()
+        val achMult = calculateAchievementMultiplier()
         var total = BigDecimal.ZERO
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
             if (rscComp.name == ScoreResources.GOLD_COINS.resourceName) return@forEach
             if (rscComp.amountOwned > BigDecimal.ZERO && rscComp.cycleDuration > BigDecimal.ZERO) {
-                total += rscComp.payout.multiply(mult)
+                val barnMult = barnPayoutMultipliers[rscComp.name] ?: BigDecimal.ONE
+                total += rscComp.payout
+                    .multiply(achMult)
+                    .multiply(barnMult)
                     .divide(rscComp.cycleDuration, 10, RoundingMode.HALF_UP)
             }
         }
@@ -196,9 +220,7 @@ class FarmModel(
             val upgComp = upgradeComponents[entity]
             upgComp.soilUpgrades += amount
             upgComp.isUnlocked = true
-            soilCost = upgComp.cost
         }
-        soilIsUnlocked = true
     }
 
     private fun calculateAchievementMultiplier(): BigDecimal {
@@ -226,8 +248,6 @@ class FarmModel(
             this["gold_coins"] = goldCoins.toString()
             this["production_rate"] = productionRate.toString()
             this["soil_upgrades"] = soilUpgrades.toString()
-            this["soil_cost"] = soilCost.toString()
-            this["soil_is_unlocked"] = true
             PlanetResources.entries.forEach { resource ->
                 this["${resource.resourceName}_owned"] = "0"
                 this["${resource.resourceName}_cost"] = resource.baseCost
@@ -248,6 +268,8 @@ class FarmModel(
         productionRate = BigDecimal.ZERO
         buyAmount = 1f
         gameCompleted = false
+        soilUpgrades = BigDecimal.ZERO
+        barnPayoutMultipliers.clear()
         preferences.flush { preferences.clear() }
     }
 

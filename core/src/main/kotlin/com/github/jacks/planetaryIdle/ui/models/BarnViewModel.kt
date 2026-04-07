@@ -1,6 +1,194 @@
 package com.github.jacks.planetaryIdle.ui.models
 
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Preferences
+import com.badlogic.gdx.scenes.scene2d.Event
+import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.github.jacks.planetaryIdle.PlanetaryIdle.Companion.MATH_CONTEXT
+import com.github.jacks.planetaryIdle.components.BarnUpgrade
+import com.github.jacks.planetaryIdle.components.PlanetResources
+import com.github.jacks.planetaryIdle.events.BarnEffectsChangedEvent
+import com.github.jacks.planetaryIdle.events.BarnUnlockedEvent
+import com.github.jacks.planetaryIdle.events.BuyBarnUpgradeEvent
+import com.github.jacks.planetaryIdle.events.ResetGameEvent
+import com.github.jacks.planetaryIdle.events.UpgradeSoilEvent
+import com.github.jacks.planetaryIdle.events.fire
 import com.github.quillraven.fleks.World
+import ktx.log.logger
+import ktx.preferences.flush
+import ktx.preferences.get
+import ktx.preferences.set
+import java.math.BigDecimal
+import java.math.RoundingMode
 
-class BarnViewModel(world: World, stage: Stage) : PropertyChangeSource()
+data class BarnUpgradeState(
+    val level: Int,
+    val maxLevel: Int,
+    val cost: BigDecimal,
+    val isRevealed: Boolean,
+    val isMaxed: Boolean,
+)
+
+class BarnViewModel(
+    @Suppress("UNUSED_PARAMETER") world: World,
+    private val stage: Stage,
+    val farmModel: FarmModel,
+) : PropertyChangeSource(), EventListener {
+
+    private val preferences: Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
+
+    // ── Persisted state ───────────────────────────────────────────────────────
+    private val levels = mutableMapOf<BarnUpgrade, Int>()
+
+    // ── Observable model properties ───────────────────────────────────────────
+    var barnUnlocked by propertyNotify(false)
+    /** Snapshot of all upgrade states; fires whenever any level changes. */
+    var upgradeStates by propertyNotify(emptyMap<BarnUpgrade, BarnUpgradeState>())
+
+    init {
+        stage.addListener(this)
+        loadFromPreferences()
+        barnUnlocked = preferences["barn_unlocked", false]
+        upgradeStates = buildUpgradeStates()
+    }
+
+    // ── EventListener ────────────────────────────────────────────────────────
+    override fun handle(event: Event): Boolean {
+        when (event) {
+            is BuyBarnUpgradeEvent -> {
+                handlePurchase(event.upgrade)
+                return true
+            }
+            is BarnUnlockedEvent -> {
+                if (!barnUnlocked) {
+                    barnUnlocked = true
+                    preferences.flush { this["barn_unlocked"] = true }
+                }
+                return false  // let other listeners also receive it
+            }
+            is ResetGameEvent -> {
+                // Barn upgrades persist through soil prestige (only gold/crops reset).
+                // They do NOT reset here — a future planet prestige mechanic handles that.
+                return false
+            }
+            else -> return false
+        }
+    }
+
+    // ── Purchase logic ────────────────────────────────────────────────────────
+    private fun handlePurchase(upgrade: BarnUpgrade) {
+        val state = upgradeStates[upgrade] ?: return
+        if (state.isMaxed) return
+        if (farmModel.goldCoins < state.cost) return
+
+        val newLevel = state.level + 1
+        levels[upgrade] = newLevel
+
+        // Deduct gold
+        farmModel.goldCoins -= state.cost
+        preferences.flush { this["gold_coins"] = farmModel.goldCoins.toString() }
+
+        // Persist upgrade level
+        preferences.flush { this[upgrade.prefKey] = newLevel }
+
+        // Soil: delegate effects to FarmModel via UpgradeSoilEvent (handles reset + unlock logic)
+        if (upgrade == BarnUpgrade.SOIL) {
+            stage.fire(UpgradeSoilEvent(BigDecimal.ONE))
+        }
+
+        // Broadcast updated effects to systems
+        stage.fire(buildEffectsEvent())
+
+        // Refresh states (reveals newly connected nodes)
+        upgradeStates = buildUpgradeStates()
+
+        log.debug { "Purchased ${upgrade.displayName} → level $newLevel" }
+    }
+
+    // ── Effects computation ───────────────────────────────────────────────────
+
+    /** Payout multiplier for a given resource name from value upgrades. */
+    fun getPayoutMultiplier(resourceName: String): BigDecimal {
+        val upgrade = BarnUpgrade.valueUpgradeFor[resourceName] ?: return BigDecimal.ONE
+        val level = levels[upgrade] ?: 0
+        if (level == 0) return BigDecimal.ONE
+        return BigDecimal("1.1").pow(level, MATH_CONTEXT)
+    }
+
+    /** Combined speed multiplier from Improved Seeds. */
+    fun getSpeedMultiplier(): BigDecimal {
+        val level = levels[BarnUpgrade.IMPROVED_SEEDS] ?: 0
+        if (level == 0) return BigDecimal.ONE
+        return BigDecimal("1.05").pow(level, MATH_CONTEXT)
+    }
+
+    /** Base per-level soil speed multiplier, boosted by Improved Soil Quality. */
+    fun getSoilBaseMultiplier(): BigDecimal {
+        val level = levels[BarnUpgrade.IMPROVED_SOIL_QUALITY] ?: 0
+        return BigDecimal("1.5").multiply(BigDecimal("1.05").pow(level, MATH_CONTEXT))
+    }
+
+    private fun buildEffectsEvent(): BarnEffectsChangedEvent {
+        val payoutMultipliers = PlanetResources.entries.associate { resource ->
+            resource.resourceName to getPayoutMultiplier(resource.resourceName)
+        }
+        return BarnEffectsChangedEvent(
+            payoutMultipliers = payoutMultipliers,
+            speedMultiplier   = getSpeedMultiplier(),
+            soilBaseMultiplier = getSoilBaseMultiplier(),
+        )
+    }
+
+    // ── Upgrade state snapshot ────────────────────────────────────────────────
+    private fun buildUpgradeStates(): Map<BarnUpgrade, BarnUpgradeState> =
+        BarnUpgrade.entries.associateWith { upgrade ->
+            val level = levels[upgrade] ?: 0
+            val isMaxed = level >= upgrade.maxLevel
+            BarnUpgradeState(
+                level      = level,
+                maxLevel   = upgrade.maxLevel,
+                cost       = costFor(upgrade, level),
+                isRevealed = isRevealed(upgrade),
+                isMaxed    = isMaxed,
+            )
+        }
+
+    private fun isRevealed(upgrade: BarnUpgrade): Boolean {
+        if (upgrade == BarnUpgrade.SOIL) return barnUnlocked
+        val prereqs = BarnUpgrade.prerequisites[upgrade] ?: return false
+        return prereqs.all { (levels[it] ?: 0) >= 1 }
+    }
+
+    fun costFor(upgrade: BarnUpgrade, atLevel: Int): BigDecimal {
+        if (upgrade.maxLevel == 1) return upgrade.baseCost
+        return upgrade.baseCost.multiply(
+            upgrade.costScaling.pow(atLevel, MATH_CONTEXT)
+        )
+    }
+
+    // ── Persistence ───────────────────────────────────────────────────────────
+    private fun loadFromPreferences() {
+        BarnUpgrade.entries.forEach { upgrade ->
+            // SOIL level is authoritative in FarmModel via "soil_upgrades"; mirror it here.
+            val level = if (upgrade == BarnUpgrade.SOIL) {
+                preferences["soil_upgrades", "0"].let { BigDecimal(it).toInt() }
+            } else {
+                preferences[upgrade.prefKey, 0]
+            }
+            levels[upgrade] = level
+        }
+        // Fire effects on load so ResourceUpdateSystem and FarmModel start with correct values
+        stage.fire(buildEffectsEvent())
+    }
+
+    /** Called by GameScreen after all listeners are wired, to broadcast initial state. */
+    fun fireInitialEffects() {
+        stage.fire(buildEffectsEvent())
+        upgradeStates = buildUpgradeStates()
+    }
+
+    companion object {
+        private val log = logger<BarnViewModel>()
+    }
+}

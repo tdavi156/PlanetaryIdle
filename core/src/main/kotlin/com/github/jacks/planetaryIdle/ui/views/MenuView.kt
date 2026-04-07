@@ -3,6 +3,7 @@ package com.github.jacks.planetaryIdle.ui.views
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.github.jacks.planetaryIdle.events.QuitGameEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
@@ -30,7 +31,10 @@ class MenuView(
     private val achievementsView: Table,
 ) : Table(skin), KTable {
 
+    private lateinit var barnButton: TextButton
+
     init {
+        val view = this@MenuView
         table { tableCell ->
             top()
 
@@ -44,8 +48,9 @@ class MenuView(
             }
             row()
 
-            textButton("Barn", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
+            view.barnButton = textButton("Barn", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
+                isDisabled = !model.barnUnlocked
                 addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         this@MenuView.changeActiveView(ViewState.BARN)
@@ -56,6 +61,7 @@ class MenuView(
 
             textButton("Kitchen", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
+                isDisabled = true
                 addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         this@MenuView.changeActiveView(ViewState.KITCHEN)
@@ -110,12 +116,16 @@ class MenuView(
 
             tableCell.expand().fill()
         }
+
+        model.onPropertyChange(MenuModel::barnUnlocked) { unlocked ->
+            barnButton.isDisabled = !unlocked
+        }
     }
 
     private fun changeActiveView(state: ViewState) {
-        farmView.isVisible        = state == ViewState.FARM
-        barnView.isVisible        = state == ViewState.BARN
-        kitchenView.isVisible     = state == ViewState.KITCHEN
+        farmView.isVisible         = state == ViewState.FARM
+        barnView.isVisible         = state == ViewState.BARN
+        kitchenView.isVisible      = state == ViewState.KITCHEN
         achievementsView.isVisible = state == ViewState.ACHIEVEMENTS
         stage.fire(ViewStateChangeEvent(state))
     }

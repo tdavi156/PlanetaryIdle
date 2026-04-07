@@ -8,6 +8,7 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader
 import com.badlogic.gdx.maps.tiled.renderers.IsometricTiledMapRenderer
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
+import com.github.jacks.planetaryIdle.events.BarnUnlockedEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
 import com.github.jacks.planetaryIdle.events.ViewStateChangeEvent
@@ -61,6 +62,10 @@ class IsometricMapRenderer : EventListener {
         when (event) {
             is ViewStateChangeEvent -> {
                 currentViewState = event.state
+            }
+            is BarnUnlockedEvent -> {
+                activeLayers.add("layer_barn")
+                applyLayerVisibility()
             }
             is BuyResourceEvent -> {
                 // Activate the layer for this resource immediately on purchase

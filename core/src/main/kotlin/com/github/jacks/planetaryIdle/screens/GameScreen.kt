@@ -46,10 +46,8 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
     private val stage = game.stage
     private val skin = Scene2DSkin.defaultSkin
 
-    // Created before entityWorld so it can be injected as a Fleks injectable
     private val isometricMapRenderer = IsometricMapRenderer()
 
-    // entityWorld must be declared before farmModel (property initializers run in declaration order)
     private val entityWorld: World = world {
         injectables {
             add(stage)
@@ -66,10 +64,9 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
         }
     }
 
-    // Shared model — passed to both HeaderView and FarmView
-    private val farmModel = FarmModel(entityWorld, stage)
+    private val farmModel    = FarmModel(entityWorld, stage)
+    private val barnViewModel = BarnViewModel(entityWorld, stage, farmModel)
 
-    // Captured so it can be registered as a stage listener in show()
     private lateinit var bgView: BackgroundView
 
     init {
@@ -79,20 +76,17 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
             table {
                 setFillParent(true)
 
-                // Row 1: header bar
                 var hdrView: HeaderView? = null
                 hdrView = headerView(farmModel) { cell ->
                     cell.expandX().fillX().height(HEADER_HEIGHT).colspan(3)
                 }
                 row()
 
-                // Row 2: horizontal separator under the header
                 image(skin[Drawables.BAR_BLACK_THIN]) { cell ->
                     cell.expandX().fillX().height(2f).colspan(3)
                 }
                 row()
 
-                // Row 3: content stack | vertical divider | menu column
                 var fView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var bView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var kView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
@@ -100,7 +94,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
 
                 stack { stackCell ->
                     fView = farmView(farmModel, stage, hdrView!!.goldLabel) { isVisible = true }
-                    bView = barnView(BarnViewModel(entityWorld, stage)) { isVisible = false }
+                    bView = barnView(barnViewModel, stage) { isVisible = false }
                     kView = kitchenView(KitchenViewModel(entityWorld, stage)) { isVisible = false }
                     aView = achievementsView(AchievementsModel(entityWorld, stage)) { isVisible = false }
                     notificationView(NotificationModel(entityWorld, stage))
@@ -128,11 +122,14 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
             }
         }
 
-        // Register listeners that need to receive stage events
         stage.addListener(bgView)
         stage.addListener(isometricMapRenderer)
 
         stage.fire(InitializeGameEvent())
+
+        // Fire initial barn effects after all listeners are registered
+        barnViewModel.fireInitialEffects()
+
         KeyboardInputProcessor(entityWorld, stage)
         gdxInputProcessor(stage)
     }
@@ -149,7 +146,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
 
     companion object {
         val log = logger<PlanetaryIdle>()
-        const val MENU_WIDTH = 204f
+        const val MENU_WIDTH    = 204f
         const val HEADER_HEIGHT = 44f
     }
 }
