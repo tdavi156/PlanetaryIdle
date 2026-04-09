@@ -77,3 +77,8 @@ class ResearchCompleteEvent(
 
 /** Fired when a new crop type is unlocked via research. Used by BarnViewModel for expertise. */
 class CropUnlockedEvent(val color: String, val cropName: String) : Event()
+
+// ── Settings events ───────────────────────────────────────────────────────────
+
+class SettingsOpenEvent : Event()
+class SettingsClosedEvent : Event()

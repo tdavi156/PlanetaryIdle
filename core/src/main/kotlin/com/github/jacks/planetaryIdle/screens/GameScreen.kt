@@ -9,10 +9,12 @@ import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.input.KeyboardInputProcessor
 import com.github.jacks.planetaryIdle.input.gdxInputProcessor
 import com.github.jacks.planetaryIdle.rendering.IsometricMapRenderer
+import com.github.jacks.planetaryIdle.systems.AudioSystem
 import com.github.jacks.planetaryIdle.systems.FloatingTextSystem
 import com.github.jacks.planetaryIdle.systems.InitializeGameSystem
 import com.github.jacks.planetaryIdle.systems.RenderSystem
 import com.github.jacks.planetaryIdle.systems.ResourceUpdateSystem
+import com.github.jacks.planetaryIdle.systems.SettingsSystem
 import com.github.jacks.planetaryIdle.ui.Drawables
 import com.github.jacks.planetaryIdle.ui.get
 import com.github.jacks.planetaryIdle.ui.models.AchievementsModel
@@ -21,6 +23,7 @@ import com.github.jacks.planetaryIdle.ui.models.FarmModel
 import com.github.jacks.planetaryIdle.ui.models.KitchenViewModel
 import com.github.jacks.planetaryIdle.ui.models.MenuModel
 import com.github.jacks.planetaryIdle.ui.models.NotificationModel
+import com.github.jacks.planetaryIdle.ui.models.SettingsModel
 import com.github.jacks.planetaryIdle.ui.views.BackgroundView
 import com.github.jacks.planetaryIdle.ui.views.HeaderView
 import com.github.jacks.planetaryIdle.ui.views.achievementsView
@@ -31,6 +34,7 @@ import com.github.jacks.planetaryIdle.ui.views.headerView
 import com.github.jacks.planetaryIdle.ui.views.kitchenView
 import com.github.jacks.planetaryIdle.ui.views.menuView
 import com.github.jacks.planetaryIdle.ui.views.notificationView
+import com.github.jacks.planetaryIdle.ui.views.settingsView
 import com.github.quillraven.fleks.World
 import com.github.quillraven.fleks.world
 import ktx.app.KtxScreen
@@ -61,12 +65,19 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
             add<RenderSystem>()
             add<ResourceUpdateSystem>()
             add<FloatingTextSystem>()
+            add<SettingsSystem>()
+            add<AudioSystem>()
         }
     }
 
-    private val farmModel      = FarmModel(entityWorld, stage)
-    private val kitchenViewModel = KitchenViewModel(entityWorld, stage, farmModel)
-    private val barnViewModel  = BarnViewModel(entityWorld, stage, farmModel)
+    private val farmModel         = FarmModel(entityWorld, stage)
+    private val kitchenViewModel  = KitchenViewModel(entityWorld, stage, farmModel)
+    private val barnViewModel     = BarnViewModel(entityWorld, stage, farmModel)
+    private val settingsModel     = SettingsModel(
+        stage,
+        entityWorld.system<SettingsSystem>(),
+        entityWorld.system<AudioSystem>(),
+    )
 
     private lateinit var bgView: BackgroundView
 
@@ -95,12 +106,14 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                 var bView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var kView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var aView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var sView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
 
                 stack { stackCell ->
                     fView = farmView(farmModel, kitchenViewModel, stage, hdrView!!.goldLabel) { isVisible = true }
                     bView = barnView(barnViewModel, stage) { isVisible = false }
                     kView = kitchenView(kitchenViewModel) { isVisible = false }
                     aView = achievementsView(AchievementsModel(entityWorld, stage)) { isVisible = false }
+                    sView = settingsView(settingsModel) { isVisible = false }
                     notificationView(NotificationModel(entityWorld, stage))
                     stackCell.expand().fill()
                 }
@@ -109,7 +122,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                     cell.fillY().width(2f)
                 }
 
-                menuView(MenuModel(stage), fView!!, bView!!, kView!!, aView!!) { cell ->
+                menuView(MenuModel(stage), stage, fView!!, bView!!, kView!!, aView!!, sView!!) { cell ->
                     cell.top().fillY().width(MENU_WIDTH)
                 }
             }

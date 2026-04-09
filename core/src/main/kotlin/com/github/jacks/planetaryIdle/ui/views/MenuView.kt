@@ -1,6 +1,9 @@
 package com.github.jacks.planetaryIdle.ui.views
 
 import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.Event
+import com.badlogic.gdx.scenes.scene2d.EventListener
+import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
@@ -8,6 +11,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.github.jacks.planetaryIdle.events.QuitGameEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.SaveGameEvent
+import com.github.jacks.planetaryIdle.events.SettingsClosedEvent
+import com.github.jacks.planetaryIdle.events.SettingsOpenEvent
 import com.github.jacks.planetaryIdle.events.ViewStateChangeEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.ui.Buttons
@@ -25,16 +30,20 @@ import ktx.scene2d.textButton
 class MenuView(
     model: MenuModel,
     skin: Skin,
+    private val stage: Stage,
     private val farmView: Table,
     private val barnView: Table,
     private val kitchenView: Table,
     private val achievementsView: Table,
-) : Table(skin), KTable {
+    private val settingsView: Table,
+) : Table(skin), KTable, EventListener {
 
     private lateinit var barnButton: TextButton
     private lateinit var kitchenButton: TextButton
 
     init {
+        stage.addListener(this)
+
         val view = this@MenuView
         table { tableCell ->
             top()
@@ -89,7 +98,11 @@ class MenuView(
 
             textButton("Settings", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
-                isDisabled = true
+                addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent, actor: Actor) {
+                        this@MenuView.changeActiveView(ViewState.SETTINGS)
+                    }
+                })
             }
             row()
 
@@ -126,11 +139,24 @@ class MenuView(
         }
     }
 
+    override fun handle(event: Event): Boolean {
+        if (event is SettingsClosedEvent) {
+            changeActiveView(ViewState.FARM)
+            return true
+        }
+        return false
+    }
+
     private fun changeActiveView(state: ViewState) {
         farmView.isVisible         = state == ViewState.FARM
         barnView.isVisible         = state == ViewState.BARN
         kitchenView.isVisible      = state == ViewState.KITCHEN
         achievementsView.isVisible = state == ViewState.ACHIEVEMENTS
+        settingsView.isVisible     = state == ViewState.SETTINGS
+
+        if (state == ViewState.SETTINGS) {
+            stage.fire(SettingsOpenEvent())
+        }
         stage.fire(ViewStateChangeEvent(state))
     }
 
@@ -142,10 +168,12 @@ class MenuView(
 @Scene2dDsl
 fun <S> KWidget<S>.menuView(
     model: MenuModel,
+    stage: Stage,
     farmView: Table,
     barnView: Table,
     kitchenView: Table,
     achievementsView: Table,
+    settingsView: Table,
     skin: Skin = Scene2DSkin.defaultSkin,
     init: MenuView.(S) -> Unit = {},
-): MenuView = actor(MenuView(model, skin, farmView, barnView, kitchenView, achievementsView), init)
+): MenuView = actor(MenuView(model, skin, stage, farmView, barnView, kitchenView, achievementsView, settingsView), init)

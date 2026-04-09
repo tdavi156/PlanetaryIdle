@@ -28,6 +28,8 @@ Idle/incremental game about producing resources to earn gold coins. Kotlin + Lib
   - `InitializeGameSystem` — Loads save data from preferences, creates entities
   - `ResourceUpdateSystem` — Fixed 60fps tick; advances resource production, applies upgrade multipliers
   - `RenderSystem` — Calls `IsometricMapRenderer.render()` then delegates to LibGDX Stage
+  - `SettingsSystem` — Holds `Settings` data class at runtime (masterVolume, musicVolume, effectsVolume)
+  - `AudioSystem` — `IntervalSystem` + `EventListener`; deferred sound queue; starts background music on first tick; reads volume from `SettingsSystem`
 
 ### UI (MVC-inspired)
 - **Models** (`ui/models/`) — Game state + business logic; extend `PropertyChangeSource`; listen to ECS events; notify views via `onPropertyChange`
@@ -48,15 +50,35 @@ Menu buttons fire `ViewStateChangeEvent(state)`. `BackgroundView` and `Isometric
 ### Barn Upgrade Tree
 `BarnUpgrade` enum (`components/BarnUpgrade.kt`) defines 24 upgrades with node positions, costs, prerequisites, and category. `BarnViewModel` handles purchases, persists levels, and fires `BarnEffectsChangedEvent` with per-color payout multipliers, speed multiplier, and soil base multiplier. Barn unlocks on first green crop purchase (`BarnUnlockedEvent`). Soil upgrade lives in the Barn (root node); the FarmView soil button is removed. No barn upgrades reset on soil prestige.
 
+### Audio System
+`AudioSystem` is a Fleks `IntervalSystem` + `EventListener`. Sounds are queued during event handling and played on the next tick (prevents duplicate rapid sounds). Volume is applied at playback time from `SettingsSystem`.
+
+**Triggered events → sounds:**
+- `BuyResourceEvent` → `SFX_BUY_CROP`
+- `BuyBarnUpgradeEvent` → `SFX_BUY_UPGRADE`
+- `BarnUnlockedEvent` → `SFX_BARN_UNLOCKED`
+- `AchievementCompletedEvent` → `SFX_ACHIEVEMENT`
+- `KitchenUnlockedEvent` → `SFX_KITCHEN_UNLOCKED`
+- Background music loop starts on first tick via `BACKGROUND_MUSIC`
+
+**Adding audio files:** Set the path constants in `AudioSystem.companion object` (currently blank strings). Drop WAV files in `assets/audio/`.
+
+**Settings persistence:** Volume keys `settings_master_volume`, `settings_music_volume`, `settings_effects_volume` stored in `planetaryIdlePrefs`. Loaded on startup by `SettingsModel`; saved when the user clicks Save in the Settings view.
+
+### Settings View
+`SettingsView` is a full-screen overlay added to the main stack. Opening: clicking Settings in `MenuView` fires `SettingsOpenEvent` + `ViewStateChangeEvent(SETTINGS)`. Closing: Save/Cancel in `SettingsView` fires `SettingsClosedEvent`; `MenuView` handles this and returns to `ViewState.FARM`.
+
 ### Event Flow
 Events fired via `Stage.fire()`. Key events in `events/Events.kt`:
 `BuyResourceEvent` → `FarmModel` → `ResourceUpdateEvent` → views update
 `ViewStateChangeEvent` → `BackgroundView`, `IsometricMapRenderer`, `MenuView`
 `BarnUnlockedEvent` → `MenuModel`, `IsometricMapRenderer` (enables `layer_barn`)
 `BuyBarnUpgradeEvent` → `BarnViewModel` → `BarnEffectsChangedEvent` → `FarmModel`, `ResourceUpdateSystem`
+`SettingsOpenEvent` → `SettingsModel` (syncs UI from `SettingsSystem`)
+`SettingsClosedEvent` → `MenuView` (returns to Farm view)
 
 ### Persistence
-LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/current_ticks/unlocked`, `soil_is_unlocked/upgrades/cost`, `ach1`–`ach22`, `barn_unlocked`, `barn_upgrade_{id}_level`.
+LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/current_ticks/unlocked`, `soil_is_unlocked/upgrades/cost`, `ach1`–`ach22`, `barn_unlocked`, `barn_upgrade_{id}_level`, `settings_master_volume`, `settings_music_volume`, `settings_effects_volume`.
 
 ## Game Resources
 10 resources in order: Red → Orange → Yellow → Green → Blue → Purple → Pink → Brown → White → Black. Defined as enum in `ResourceComponent.kt`.
@@ -71,6 +93,10 @@ LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/cur
 | `BarnView.kt` / `BarnViewModel.kt` | Upgrade tree UI (node graph + info panel) and purchase logic |
 | `BarnUpgrade.kt` | Enum of 24 upgrades; prerequisites map defines tree edges |
 | `KitchenView.kt` / `KitchenViewModel.kt` | Stub — recipes feature (future) |
+| `SettingsView.kt` / `SettingsModel.kt` | Volume controls (master/music/effects); save/cancel; persists to preferences |
+| `AudioSystem.kt` | Sound queue + background music; volume from `SettingsSystem`; asset paths as blank constants |
+| `SettingsSystem.kt` | Fleks system holding `Settings` data class at runtime |
+| `configurations/Settings.kt` | Data class with volume fields and preference key constants |
 | `IsometricMapRenderer.kt` | Loads farm_map.tmx; toggles layers; renders pre-stage |
 | `BackgroundView.kt` | Dynamic background switcher (PNG or grey fallback) |
 | `ResourceComponent.kt` | BigDecimal resource math; `tickCount` property drives production timing |
