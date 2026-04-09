@@ -11,24 +11,24 @@ import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.World
 
 class NotificationModel(
-    world : World,
-    stage : Stage
+    world: World,
+    stage: Stage,
 ) : PropertyChangeSource(), EventListener {
 
-    private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
-    private val achievementComponents : ComponentMapper<AchievementComponent> = world.mapper()
+    private val preferences: Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
+    private val achievementComponents: ComponentMapper<AchievementComponent> = world.mapper()
     private val achievementEntities = world.family(allOf = arrayOf(AchievementComponent::class))
 
-    // dummy variable to trigger the notification
-    var achId by propertyNotify(-1)
+    var achId by propertyNotify("")
 
     init {
         stage.addListener(this)
     }
 
-    override fun handle(event : Event): Boolean {
-        when(event) {
+    override fun handle(event: Event): Boolean {
+        when (event) {
             is AchievementNotificationEvent -> {
+                if (event.achId.isEmpty()) return false
                 achievementEntities.forEach { achievement ->
                     if (!achievementComponents[achievement].completedAchievements.contains(event.achId)) {
                         achId = event.achId

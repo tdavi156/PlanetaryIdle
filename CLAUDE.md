@@ -50,6 +50,44 @@ Menu buttons fire `ViewStateChangeEvent(state)`. `BackgroundView` and `Isometric
 ### Barn Upgrade Tree
 `BarnUpgrade` enum (`components/BarnUpgrade.kt`) defines 24 upgrades with node positions, costs, prerequisites, and category. `BarnViewModel` handles purchases, persists levels, and fires `BarnEffectsChangedEvent` with per-color payout multipliers, speed multiplier, and soil base multiplier. Barn unlocks on first green crop purchase (`BarnUnlockedEvent`). Soil upgrade lives in the Barn (root node); the FarmView soil button is removed. No barn upgrades reset on soil prestige.
 
+### Achievement System
+57 achievements defined in `Achievements` enum (`components/AchievementComponent.kt`). Each grants a base **x1.05 multiplier** (compounding); 7 have a special `AchievementBonus` that also applies a unique effect.
+
+**Achievement categories and IDs:**
+- Red crops: `red_10/50/250/500/1000/5000`
+- Other colors: `<color>_10/100/1000` (Orange–White); Black: `black_1/10/100`
+- Combined: `combined_full_spectrum` (own 10 of every color)
+- Gold: `gold_1m/1b/1t/1q/1e33/1e50`
+- Soil: `soil_1/5/10/25`
+- Barn: `barn_1/5/10/15`
+- Kitchen: `kitchen_unlock/crop_1/recipe_1/crop_5/crop_10/crop_50/recipe_5/recipe_10/recipe_50`
+
+**Special bonuses (`AchievementBonus` sealed class in `AchievementComponent.kt`):**
+| Achievement | Bonus | Applied in |
+|---|---|---|
+| Going Green (`green_10`) | Descriptive: "Unlocks the Barn!" | — |
+| Red Giant (`red_250`) | Red crop production ×1.15 | `FarmModel.colorProductionBonus()` |
+| Full Spectrum (`combined_full_spectrum`) | All crop production ×1.10 | `FarmModel.colorProductionBonus()` |
+| Tilled Earth (`soil_5`) | Soil upgrade cost ×0.90 | `BarnViewModel.costFor()` |
+| Perfect Soil (`soil_25`) | Soil effectiveness: ×1.5 → ×1.75 | `BarnViewModel.getSoilBaseMultiplier()` |
+| Trillionaire! (`gold_1t`) | All gold income ×1.05 | `FarmModel.goldIncomeMultiplier()` |
+| The End (`gold_1e50`) | Achievement scale: 1.05 → 1.06 per ach | `AchievementComponent.multiplierScale` |
+| Master Builder (`barn_15`) | Kitchen research speed ×1.2 | `KitchenViewModel.researchSpeedBonusMultiplier` |
+
+**Bonus persistence keys:** `bonus_red_production`, `bonus_all_production`, `bonus_gold_income`, `bonus_soil_cost_discount`, `bonus_perfect_soil`, `bonus_research_speed` (all bool). `achievement_multiplier_scale` (string, default `"1.05"`, set to `"1.06"` when The End unlocks).
+
+**Achievement persistence:** `ach_<achId>` (e.g. `ach_red_10`, `ach_gold_1t`) — note the `ach_` prefix with underscore separator. Was formerly `ach1`–`ach22` (integer IDs, now removed).
+
+**Trigger locations:**
+- Crop counts & gold milestones: `FarmView.checkOwnedAchievements()` / `checkGoldAchievements()` / `checkSoilAchievements()`
+- Full Spectrum: `FarmView.checkFullSpectrumAchievement()` (checks all `localStates`)
+- Barn milestones: `BarnViewModel.handlePurchase()` (counts non-SOIL upgrade levels)
+- Kitchen milestones: `KitchenViewModel` — kitchen unlock in `KitchenUnlockedEvent` handler; crop/recipe discoveries in `applyResearchResult()` via `checkCropAchievements()` / `checkRecipeAchievements()`
+
+**Header:** `HeaderView` shows a clickable `"Achievements: N / 57"` button (was a bare multiplier label). Clicking fires `ViewStateChangeEvent(ACHIEVEMENTS)`. `HeaderView` now takes `AchievementsModel` and `Stage` as constructor params.
+
+**Achievements view:** Top banner shows `"Achievement Bonus: x1.21"` in yellow. Count row below. Cards with a bonus show the `bonusDesc` in yellow text. Card height is 90px to accommodate the bonus line.
+
 ### Audio System
 `AudioSystem` is a Fleks `IntervalSystem` + `EventListener`. Sounds are queued during event handling and played on the next tick (prevents duplicate rapid sounds). Volume is applied at playback time from `SettingsSystem`.
 
@@ -95,7 +133,7 @@ Events fired via `Stage.fire()`. Key events in `events/Events.kt`:
 `SettingsClosedEvent` → `MenuView` (returns to Farm view)
 
 ### Persistence
-LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/current_ticks/unlocked`, `soil_is_unlocked/upgrades/cost`, `ach1`–`ach22`, `barn_unlocked`, `barn_upgrade_{id}_level`, `settings_master_volume`, `settings_music_volume`, `settings_effects_volume`, plus kitchen keys listed in the Kitchen System section above.
+LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/current_ticks/unlocked`, `soil_is_unlocked/upgrades/cost`, `ach_<achId>` (e.g. `ach_red_10`, `ach_gold_1t` — 57 total), `achievement_multiplier`, `achievement_multiplier_scale`, `bonus_red_production`, `bonus_all_production`, `bonus_gold_income`, `bonus_soil_cost_discount`, `bonus_perfect_soil`, `bonus_research_speed`, `barn_unlocked`, `barn_upgrade_{id}_level`, `settings_master_volume`, `settings_music_volume`, `settings_effects_volume`, plus kitchen keys listed in the Kitchen System section above.
 
 ## Game Resources
 10 resources in order: Red → Orange → Yellow → Green → Blue → Purple → Pink → Brown → White → Black. Defined as enum in `ResourceComponent.kt`.
@@ -122,7 +160,7 @@ LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/cur
 | `BackgroundView.kt` | Dynamic background switcher (PNG or grey fallback) |
 | `ResourceComponent.kt` | BigDecimal resource math; `tickCount` property drives production timing |
 | `UpgradeComponent.kt` | Soil speed multiplier; `soilSpeedMultiplier` updated by `BarnEffectsChangedEvent` (Improved Soil Quality) |
-| `AchievementComponent.kt` | 22 achievements; multiplier = 1.05^completedCount |
+| `AchievementComponent.kt` | 57 achievements; `AchievementBonus` sealed class; multiplier = `multiplierScale`^completedCount (scale defaults 1.05, upgrades to 1.06 via The End bonus) |
 | `MenuView.kt` | Side menu: Farm · Barn · Kitchen · Achievements · Statistics · Settings · Reset · Quit |
 
 ## BigDecimal Division — Important

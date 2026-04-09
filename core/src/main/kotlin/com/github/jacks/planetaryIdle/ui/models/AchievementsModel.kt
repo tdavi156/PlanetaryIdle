@@ -13,21 +13,26 @@ import com.github.quillraven.fleks.World
 import ktx.preferences.flush
 import ktx.preferences.get
 import ktx.preferences.set
+import java.math.BigDecimal
 
 class AchievementsModel(
-    world : World,
-    stage : Stage
+    world: World,
+    stage: Stage,
 ) : PropertyChangeSource(), EventListener {
 
-    private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
-    private val achievementComponents : ComponentMapper<AchievementComponent> = world.mapper()
+    private val preferences: Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
+    private val achievementComponents: ComponentMapper<AchievementComponent> = world.mapper()
     private val achievementEntities = world.family(allOf = arrayOf(AchievementComponent::class))
 
     var completedAchievements by propertyNotify(
         Achievements.entries
-            .filter { preferences["ach${it.achId}", false] }
+            .filter { preferences["ach_${it.achId}", false] }
             .map { it.achId }
             .toSet()
+    )
+
+    var achievementMultiplier by propertyNotify(
+        BigDecimal(preferences["achievement_multiplier", "1"])
     )
 
     init {
@@ -38,12 +43,14 @@ class AchievementsModel(
         when (event) {
             is AchievementCompletedEvent -> {
                 val achId = event.achId
-                if (achId == -1) return false
+                if (achId.isEmpty()) return false
                 achievementEntities.forEach { achievement ->
                     if (!achievementComponents[achievement].completedAchievements.contains(achId)) {
                         achievementComponents[achievement].completedAchievements.add(achId)
                         completedAchievements = completedAchievements + achId
-                        preferences.flush { this["ach$achId"] = true }
+                        preferences.flush { this["ach_$achId"] = true }
+                        // Read the multiplier persisted by FarmModel (already updated at this point)
+                        achievementMultiplier = BigDecimal(preferences["achievement_multiplier", "1"])
                     }
                 }
             }

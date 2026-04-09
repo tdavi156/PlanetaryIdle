@@ -8,6 +8,10 @@ import com.badlogic.gdx.scenes.scene2d.Stage
 import com.github.jacks.planetaryIdle.PlanetaryIdle.Companion.MATH_CONTEXT
 import com.github.jacks.planetaryIdle.components.BarnUpgrade
 import com.github.jacks.planetaryIdle.components.PlanetResources
+import com.github.jacks.planetaryIdle.components.AchievementBonus
+import com.github.jacks.planetaryIdle.components.Achievements
+import com.github.jacks.planetaryIdle.events.AchievementCompletedEvent
+import com.github.jacks.planetaryIdle.events.AchievementNotificationEvent
 import com.github.jacks.planetaryIdle.events.BarnEffectsChangedEvent
 import com.github.jacks.planetaryIdle.events.BarnUnlockedEvent
 import com.github.jacks.planetaryIdle.events.BuyBarnUpgradeEvent
@@ -43,6 +47,10 @@ class BarnViewModel(
     // ── Persisted state ───────────────────────────────────────────────────────
     private val levels = mutableMapOf<BarnUpgrade, Int>()
 
+    // ── Bonus flags (loaded from prefs on startup) ────────────────────────────
+    var soilCostDiscountActive: Boolean = false
+    var perfectSoilBonusActive: Boolean = false
+
     /** Set after construction by GameScreen to avoid circular dependency. */
     var kitchenViewModel: KitchenViewModel? = null
 
@@ -55,6 +63,8 @@ class BarnViewModel(
         stage.addListener(this)
         loadFromPreferences()
         barnUnlocked = preferences["barn_unlocked", false]
+        soilCostDiscountActive = preferences["bonus_soil_cost_discount", false]
+        perfectSoilBonusActive = preferences["bonus_perfect_soil", false]
         upgradeStates = buildUpgradeStates()
     }
 
@@ -77,9 +87,27 @@ class BarnViewModel(
                 stage.fire(buildEffectsEvent())
                 return false
             }
+            is AchievementCompletedEvent -> {
+                if (event.achId.isEmpty()) return false
+                val ach = Achievements.entries.find { it.achId == event.achId }
+                when (ach?.bonus) {
+                    is AchievementBonus.SoilCostDiscount -> {
+                        soilCostDiscountActive = true
+                        preferences.flush { this["bonus_soil_cost_discount"] = true }
+                        upgradeStates = buildUpgradeStates()
+                    }
+                    is AchievementBonus.PerfectSoilBonus -> {
+                        perfectSoilBonusActive = true
+                        preferences.flush { this["bonus_perfect_soil"] = true }
+                        stage.fire(buildEffectsEvent())
+                    }
+                    else -> {}
+                }
+                return false
+            }
             is ResetGameEvent -> {
-                // Barn upgrades persist through soil prestige (only gold/crops reset).
-                // They do NOT reset here — a future planet prestige mechanic handles that.
+                soilCostDiscountActive = false
+                perfectSoilBonusActive = false
                 return false
             }
             else -> return false
@@ -118,6 +146,15 @@ class BarnViewModel(
         // Refresh states (reveals newly connected nodes)
         upgradeStates = buildUpgradeStates()
 
+        // Barn purchase achievement milestones (total non-soil upgrades purchased)
+        val totalPurchased = levels.entries
+            .filter { (u, _) -> u != BarnUpgrade.SOIL }
+            .sumOf { (_, lvl) -> lvl }
+        if (totalPurchased >= 1)  stage.fire(AchievementNotificationEvent("barn_1"))
+        if (totalPurchased >= 5)  stage.fire(AchievementNotificationEvent("barn_5"))
+        if (totalPurchased >= 10) stage.fire(AchievementNotificationEvent("barn_10"))
+        if (totalPurchased >= 15) stage.fire(AchievementNotificationEvent("barn_15"))
+
         log.debug { "Purchased ${upgrade.displayName} → level $newLevel" }
     }
 
@@ -147,10 +184,12 @@ class BarnViewModel(
         return BigDecimal("1.05").pow(level, MATH_CONTEXT)
     }
 
-    /** Base per-level soil speed multiplier, boosted by Improved Soil Quality. */
+    /** Base per-level soil speed multiplier, boosted by Improved Soil Quality.
+     *  Perfect Soil achievement raises the base from x1.5 to x1.75. */
     fun getSoilBaseMultiplier(): BigDecimal {
         val level = levels[BarnUpgrade.IMPROVED_SOIL_QUALITY] ?: 0
-        return BigDecimal("1.5").multiply(BigDecimal("1.05").pow(level, MATH_CONTEXT))
+        val base = if (perfectSoilBonusActive) BigDecimal("1.75") else BigDecimal("1.5")
+        return base.multiply(BigDecimal("1.05").pow(level, MATH_CONTEXT))
     }
 
     private fun buildEffectsEvent(): BarnEffectsChangedEvent {
@@ -185,10 +224,12 @@ class BarnViewModel(
     }
 
     fun costFor(upgrade: BarnUpgrade, atLevel: Int): BigDecimal {
-        if (upgrade.maxLevel == 1) return upgrade.baseCost
-        return upgrade.baseCost.multiply(
-            upgrade.costScaling.pow(atLevel, MATH_CONTEXT)
-        )
+        val raw = if (upgrade.maxLevel == 1) upgrade.baseCost
+                  else upgrade.baseCost.multiply(upgrade.costScaling.pow(atLevel, MATH_CONTEXT))
+        // Tilled Earth bonus: soil upgrades cost 10% less
+        return if (soilCostDiscountActive && upgrade == BarnUpgrade.SOIL)
+            raw.multiply(BigDecimal("0.90"), MATH_CONTEXT)
+        else raw
     }
 
     // ── Persistence ───────────────────────────────────────────────────────────

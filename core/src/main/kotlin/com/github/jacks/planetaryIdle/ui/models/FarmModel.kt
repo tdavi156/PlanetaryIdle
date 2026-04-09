@@ -5,7 +5,9 @@ import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.github.jacks.planetaryIdle.components.AchievementBonus
 import com.github.jacks.planetaryIdle.components.AchievementComponent
+import com.github.jacks.planetaryIdle.components.Achievements
 import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.components.ScoreResources
@@ -78,6 +80,15 @@ class FarmModel(
     var soilUpgrades by propertyNotify(BigDecimal(preferences["soil_upgrades", "0"]))
     var gameCompleted by propertyNotify(false)
 
+    // ── Special bonus flags (loaded from prefs on startup) ────────────────────
+    var redProductionBonusActive: Boolean = preferences["bonus_red_production", false]
+    var allProductionBonusActive: Boolean = preferences["bonus_all_production", false]
+    var goldIncomeBonusActive: Boolean    = preferences["bonus_gold_income", false]
+
+    private val RED_PRODUCTION_MULTIPLIER = BigDecimal("1.15")
+    private val ALL_PRODUCTION_MULTIPLIER = BigDecimal("1.10")
+    private val GOLD_INCOME_MULTIPLIER    = BigDecimal("1.05")
+
     /** Per-resource-name payout multiplier from barn value/expertise upgrades. */
     private val barnPayoutMultipliers = mutableMapOf<String, BigDecimal>()
 
@@ -139,8 +150,15 @@ class FarmModel(
                 resetValuesFromSoilUpgrade()
             }
             is AchievementCompletedEvent -> {
-                achievementMultiplier = achievementMultiplier.multiply(BigDecimal("1.05"))
+                if (event.achId.isEmpty()) return false
+                val ach = Achievements.entries.find { it.achId == event.achId }
+                // Multiply by the current scale (may already be 1.06 if TheEnd was previously unlocked)
+                val currentScale = achievementEntities.firstOrNull()
+                    ?.let { achievementComponents[it].multiplierScale }
+                    ?: BigDecimal("1.05")
+                achievementMultiplier = achievementMultiplier.multiply(currentScale)
                 preferences.flush { this["achievement_multiplier"] = achievementMultiplier.toString() }
+                ach?.bonus?.let { applyBonus(it) }
             }
             is UpdateBuyAmountEvent -> {
                 buyAmount = event.amount
@@ -210,6 +228,47 @@ class FarmModel(
         return true
     }
 
+    // ── Special bonus application ─────────────────────────────────────────────
+
+    private fun applyBonus(bonus: AchievementBonus) {
+        when (bonus) {
+            is AchievementBonus.RedProductionBonus -> {
+                redProductionBonusActive = true
+                preferences.flush { this["bonus_red_production"] = true }
+                updateModelProductionRate()
+            }
+            is AchievementBonus.AllProductionBonus -> {
+                allProductionBonusActive = true
+                preferences.flush { this["bonus_all_production"] = true }
+                updateModelProductionRate()
+            }
+            is AchievementBonus.GoldIncomeBonus -> {
+                goldIncomeBonusActive = true
+                preferences.flush { this["bonus_gold_income"] = true }
+                updateModelProductionRate()
+            }
+            is AchievementBonus.TheEndBonus -> {
+                achievementEntities.forEach { entity ->
+                    achievementComponents[entity].multiplierScale = BigDecimal("1.06")
+                }
+                // Recalculate: component has N-1 completed (current ach not yet added);
+                // multiply once more by 1.06 to account for this achievement.
+                achievementMultiplier = calculateAchievementMultiplier().multiply(BigDecimal("1.06"))
+                preferences.flush {
+                    this["achievement_multiplier"] = achievementMultiplier.toString()
+                    this["achievement_multiplier_scale"] = "1.06"
+                }
+                updateModelProductionRate()
+            }
+            // SoilCostDiscount, PerfectSoilBonus, ResearchSpeedBonus are handled
+            // by BarnViewModel and KitchenViewModel which also listen to AchievementCompletedEvent.
+            is AchievementBonus.SoilCostDiscount,
+            is AchievementBonus.PerfectSoilBonus,
+            is AchievementBonus.ResearchSpeedBonus,
+            is AchievementBonus.DescriptiveOnly -> { /* handled elsewhere or informational */ }
+        }
+    }
+
     // ── Resource update with recipe support ───────────────────────────────────
 
     private fun handleResourceUpdate(rscComp: ResourceComponent) {
@@ -222,13 +281,17 @@ class FarmModel(
             val adjustedPayout = rscComp.payout
                 .multiply(calculateAchievementMultiplier())
                 .multiply(barnMult)
+                .multiply(colorProductionBonus(color))
+                .multiply(goldIncomeMultiplier())
             goldCoins += adjustedPayout
             preferences.flush { this["gold_coins"] = goldCoins.toString() }
             lastProductionPayout = color to adjustedPayout
             updateModelProductionRate()
         } else {
             // This color is in a recipe pair
-            val myRawPayout = rscComp.payout.multiply(barnPayoutMultipliers[color] ?: BigDecimal.ONE)
+            val myRawPayout = rscComp.payout
+                .multiply(barnPayoutMultipliers[color] ?: BigDecimal.ONE)
+                .multiply(colorProductionBonus(color))
             val partnerPending = recipePendingPayouts[partnerColor]
 
             if (partnerPending != null) {
@@ -236,6 +299,7 @@ class FarmModel(
                 val combined = myRawPayout
                     .multiply(partnerPending)
                     .multiply(calculateAchievementMultiplier())
+                    .multiply(goldIncomeMultiplier())
                 goldCoins += combined
                 preferences.flush { this["gold_coins"] = goldCoins.toString() }
                 lastProductionPayout = color to combined
@@ -249,6 +313,20 @@ class FarmModel(
         }
     }
 
+    /** Per-color production multiplier from Red Giant and Full Spectrum bonuses. */
+    private fun colorProductionBonus(color: String): BigDecimal {
+        var mult = BigDecimal.ONE
+        if (allProductionBonusActive) mult = mult.multiply(ALL_PRODUCTION_MULTIPLIER)
+        if (redProductionBonusActive && color == PlanetResources.RED.resourceName) {
+            mult = mult.multiply(RED_PRODUCTION_MULTIPLIER)
+        }
+        return mult
+    }
+
+    /** Gold income multiplier from the Trillionaire! bonus. */
+    private fun goldIncomeMultiplier(): BigDecimal =
+        if (goldIncomeBonusActive) GOLD_INCOME_MULTIPLIER else BigDecimal.ONE
+
     private fun restoreCycleDuration(color: String) {
         val entity = getResourceEntityByName(color) ?: return
         val rscComp = resourceComponents[entity]
@@ -258,7 +336,7 @@ class FarmModel(
         updateModel(rscComp)
     }
 
-    // ── Existing helpers (unchanged) ──────────────────────────────────────────
+    // ── Existing helpers ──────────────────────────────────────────────────────
 
     private fun getResourceEntityByName(name: String): Entity? {
         resourceEntities.forEach { entity ->
@@ -292,6 +370,7 @@ class FarmModel(
 
     private fun updateModelProductionRate() {
         val achMult = calculateAchievementMultiplier()
+        val goldMult = goldIncomeMultiplier()
         var total = BigDecimal.ZERO
         resourceEntities.forEach { entity ->
             val rscComp = resourceComponents[entity]
@@ -301,6 +380,8 @@ class FarmModel(
                 total += rscComp.payout
                     .multiply(achMult)
                     .multiply(barnMult)
+                    .multiply(colorProductionBonus(rscComp.name))
+                    .multiply(goldMult)
                     .divide(rscComp.cycleDuration, 10, RoundingMode.HALF_UP)
             }
         }
@@ -375,6 +456,9 @@ class FarmModel(
         gameCompleted = false
         soilUpgrades = BigDecimal.ZERO
         barnPayoutMultipliers.clear()
+        redProductionBonusActive = false
+        allProductionBonusActive = false
+        goldIncomeBonusActive = false
         preferences.flush { preferences.clear() }
     }
 

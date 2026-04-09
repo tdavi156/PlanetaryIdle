@@ -10,6 +10,10 @@ import com.github.jacks.planetaryIdle.components.CropType
 import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.components.Recipe
 import com.github.jacks.planetaryIdle.components.RecipeRegistry
+import com.github.jacks.planetaryIdle.components.AchievementBonus
+import com.github.jacks.planetaryIdle.components.Achievements
+import com.github.jacks.planetaryIdle.events.AchievementCompletedEvent
+import com.github.jacks.planetaryIdle.events.AchievementNotificationEvent
 import com.github.jacks.planetaryIdle.events.ActiveCropChangedEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.CropUnlockedEvent
@@ -76,8 +80,12 @@ class KitchenViewModel(
     /** All researcher slots. */
     var researchers: List<ResearcherState> by propertyNotify(emptyList())
 
+    /** Bonus multiplier applied to research job speed from the Master Builder achievement. */
+    var researchSpeedBonusMultiplier: Float = 1f
+
     init {
         stage.addListener(this)
+        researchSpeedBonusMultiplier = if (preferences["bonus_research_speed", false]) 1.2f else 1f
         load()
     }
 
@@ -116,6 +124,7 @@ class KitchenViewModel(
                         researchers = listOf(ResearcherState(id = 0, inputSlotCount = 2))
                         persistResearchers()
                     }
+                    stage.fire(AchievementNotificationEvent("kitchen_unlock"))
                 }
                 return false
             }
@@ -139,7 +148,19 @@ class KitchenViewModel(
                 }
                 return false
             }
-            is ResetGameEvent -> return false
+            is AchievementCompletedEvent -> {
+                if (event.achId.isEmpty()) return false
+                val ach = Achievements.entries.find { it.achId == event.achId }
+                if (ach?.bonus is AchievementBonus.ResearchSpeedBonus) {
+                    researchSpeedBonusMultiplier = (ach.bonus as AchievementBonus.ResearchSpeedBonus).multiplier
+                    preferences.flush { this["bonus_research_speed"] = true }
+                }
+                return false
+            }
+            is ResetGameEvent -> {
+                researchSpeedBonusMultiplier = 1f
+                return false
+            }
             else -> return false
         }
     }
@@ -204,7 +225,7 @@ class KitchenViewModel(
         if (cropInputs.isEmpty()) return
 
         val rawDuration = cropInputs.sumOf { it.tier * it.tier } * BASE_RESEARCH_SECONDS
-        val duration = rawDuration / researcher.speedMultiplier
+        val duration = rawDuration / researcher.speedMultiplier / researchSpeedBonusMultiplier
         val chance = computeDiscoveryChance(cropInputs)
         val job = ResearchJob(inputs = cropInputs, duration = duration, elapsed = 0f, discoveryChance = chance)
 
@@ -356,6 +377,7 @@ class KitchenViewModel(
                     unlockedCrops = current
                     persistUnlockedCrops()
                     stage.fire(CropUnlockedEvent(crop.color, crop.cropName))
+                    checkCropAchievements()
                 }
             }
             is ResearchResult.NewRecipe -> {
@@ -363,9 +385,31 @@ class KitchenViewModel(
                 if (!discoveredRecipes.any { it.id == recipe.id }) {
                     discoveredRecipes = discoveredRecipes + recipe
                     persistDiscoveredRecipes()
+                    checkRecipeAchievements()
                 }
             }
         }
+    }
+
+    private fun checkCropAchievements() {
+        // Discovered crops = non-tier-1 crops (T1 are granted at kitchen unlock, not "discovered")
+        val discovered = unlockedCrops.entries.sumOf { (color, names) ->
+            names.count { name ->
+                CropRegistry.forColor(color).find { it.cropName == name }?.tier?.let { it > 1 } ?: false
+            }
+        }
+        if (discovered >= 1)  stage.fire(AchievementNotificationEvent("kitchen_crop_1"))
+        if (discovered >= 5)  stage.fire(AchievementNotificationEvent("kitchen_crop_5"))
+        if (discovered >= 10) stage.fire(AchievementNotificationEvent("kitchen_crop_10"))
+        if (discovered >= 50) stage.fire(AchievementNotificationEvent("kitchen_crop_50"))
+    }
+
+    private fun checkRecipeAchievements() {
+        val count = discoveredRecipes.size
+        if (count >= 1)  stage.fire(AchievementNotificationEvent("kitchen_recipe_1"))
+        if (count >= 5)  stage.fire(AchievementNotificationEvent("kitchen_recipe_5"))
+        if (count >= 10) stage.fire(AchievementNotificationEvent("kitchen_recipe_10"))
+        if (count >= 50) stage.fire(AchievementNotificationEvent("kitchen_recipe_50"))
     }
 
     // ── Initialization helpers ────────────────────────────────────────────────

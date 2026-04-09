@@ -404,38 +404,87 @@ class FarmView(
 
     // ── Achievement notifications ──────────────────────────────────────────
     private fun checkOwnedAchievements(resource: PlanetResources, owned: BigDecimal) {
-        val n = owned.toInt()
+        val n = owned.toLong()
+        fun fire(id: String) = stage.fire(AchievementNotificationEvent(id))
         when (resource) {
-            PlanetResources.RED    -> {
-                if (n >= 1)   stage.fire(AchievementNotificationEvent(1))
-                if (n >= 50)  stage.fire(AchievementNotificationEvent(5))
-                if (n >= 250) stage.fire(AchievementNotificationEvent(17))
+            PlanetResources.RED -> {
+                if (n >= 10)   fire("red_10")
+                if (n >= 50)   fire("red_50")
+                if (n >= 250)  fire("red_250")
+                if (n >= 500)  fire("red_500")
+                if (n >= 1000) fire("red_1000")
+                if (n >= 5000) fire("red_5000")
             }
-            PlanetResources.ORANGE -> if (n >= 1) stage.fire(AchievementNotificationEvent(2))
-            PlanetResources.YELLOW -> if (n >= 1) stage.fire(AchievementNotificationEvent(3))
-            PlanetResources.GREEN  -> if (n >= 1) stage.fire(AchievementNotificationEvent(4))
-            PlanetResources.BLUE   -> if (n >= 1) stage.fire(AchievementNotificationEvent(8))
-            PlanetResources.PURPLE -> if (n >= 1) stage.fire(AchievementNotificationEvent(9))
-            PlanetResources.PINK   -> if (n >= 1) stage.fire(AchievementNotificationEvent(10))
-            PlanetResources.BROWN  -> if (n >= 1) stage.fire(AchievementNotificationEvent(14))
-            PlanetResources.WHITE  -> if (n >= 1) stage.fire(AchievementNotificationEvent(15))
-            PlanetResources.BLACK  -> if (n >= 1) stage.fire(AchievementNotificationEvent(18))
+            PlanetResources.ORANGE -> {
+                if (n >= 10)   fire("orange_10")
+                if (n >= 100)  fire("orange_100")
+                if (n >= 1000) fire("orange_1000")
+            }
+            PlanetResources.YELLOW -> {
+                if (n >= 10)   fire("yellow_10")
+                if (n >= 100)  fire("yellow_100")
+                if (n >= 1000) fire("yellow_1000")
+            }
+            PlanetResources.GREEN -> {
+                if (n >= 10)   fire("green_10")
+                if (n >= 100)  fire("green_100")
+                if (n >= 1000) fire("green_1000")
+            }
+            PlanetResources.BLUE -> {
+                if (n >= 10)   fire("blue_10")
+                if (n >= 100)  fire("blue_100")
+                if (n >= 1000) fire("blue_1000")
+            }
+            PlanetResources.PURPLE -> {
+                if (n >= 10)   fire("purple_10")
+                if (n >= 100)  fire("purple_100")
+                if (n >= 1000) fire("purple_1000")
+            }
+            PlanetResources.PINK -> {
+                if (n >= 10)   fire("pink_10")
+                if (n >= 100)  fire("pink_100")
+                if (n >= 1000) fire("pink_1000")
+            }
+            PlanetResources.BROWN -> {
+                if (n >= 10)   fire("brown_10")
+                if (n >= 100)  fire("brown_100")
+                if (n >= 1000) fire("brown_1000")
+            }
+            PlanetResources.WHITE -> {
+                if (n >= 10)   fire("white_10")
+                if (n >= 100)  fire("white_100")
+                if (n >= 1000) fire("white_1000")
+            }
+            PlanetResources.BLACK -> {
+                if (n >= 1)   fire("black_1")
+                if (n >= 10)  fire("black_10")
+                if (n >= 100) fire("black_100")
+            }
+        }
+        checkFullSpectrumAchievement()
+    }
+
+    private fun checkFullSpectrumAchievement() {
+        if (PlanetResources.entries.all { (localStates[it]?.owned ?: BigDecimal.ZERO) >= TEN }) {
+            stage.fire(AchievementNotificationEvent("combined_full_spectrum"))
         }
     }
 
     private fun checkGoldAchievements(amount: BigDecimal) {
-        if (amount >= BigDecimal(1_000_000L))         stage.fire(AchievementNotificationEvent(6))
-        if (amount >= BigDecimal(1_000_000_000_000L)) stage.fire(AchievementNotificationEvent(13))
-        if (amount >= BigDecimal("1e33"))             stage.fire(AchievementNotificationEvent(20))
-        if (amount >= BigDecimal("1e50"))             stage.fire(AchievementNotificationEvent(22))
+        if (amount >= GOLD_1M)  stage.fire(AchievementNotificationEvent("gold_1m"))
+        if (amount >= GOLD_1B)  stage.fire(AchievementNotificationEvent("gold_1b"))
+        if (amount >= GOLD_1T)  stage.fire(AchievementNotificationEvent("gold_1t"))
+        if (amount >= GOLD_1Q)  stage.fire(AchievementNotificationEvent("gold_1q"))
+        if (amount >= GOLD_1E33) stage.fire(AchievementNotificationEvent("gold_1e33"))
+        if (amount >= GOLD_1E50) stage.fire(AchievementNotificationEvent("gold_1e50"))
     }
 
     private fun checkSoilAchievements(amount: BigDecimal) {
         val n = amount.toInt()
-        if (n >= 1)  stage.fire(AchievementNotificationEvent(7))
-        if (n >= 5)  stage.fire(AchievementNotificationEvent(12))
-        if (n >= 10) stage.fire(AchievementNotificationEvent(16))
-        if (n >= 25) stage.fire(AchievementNotificationEvent(21))
+        if (n >= 1)  stage.fire(AchievementNotificationEvent("soil_1"))
+        if (n >= 5)  stage.fire(AchievementNotificationEvent("soil_5"))
+        if (n >= 10) stage.fire(AchievementNotificationEvent("soil_10"))
+        if (n >= 25) stage.fire(AchievementNotificationEvent("soil_25"))
     }
 
     // ── Colonization progress bar ─────────────────────────────────────────
@@ -523,10 +572,18 @@ class FarmView(
     }
 
     companion object {
-        private val log             = logger<FarmView>()
+        private val log = logger<FarmView>()
         private val PLANETARY_EXPONENT = BigDecimal(308)
         @Suppress("unused")
-        private val PLANETARY_SCORE    = BigDecimal(1e308)
+        private val PLANETARY_SCORE = BigDecimal(1e308)
+
+        private val TEN      = BigDecimal(10)
+        private val GOLD_1M  = BigDecimal(1_000_000L)
+        private val GOLD_1B  = BigDecimal(1_000_000_000L)
+        private val GOLD_1T  = BigDecimal(1_000_000_000_000L)
+        private val GOLD_1Q  = BigDecimal(1_000_000_000_000_000L)
+        private val GOLD_1E33 = BigDecimal("1e33")
+        private val GOLD_1E50 = BigDecimal("1e50")
     }
 }
 

@@ -91,8 +91,9 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
             table {
                 setFillParent(true)
 
+                val achievementsModel = AchievementsModel(entityWorld, stage)
                 var hdrView: HeaderView? = null
-                hdrView = headerView(farmModel) { cell ->
+                hdrView = headerView(farmModel, achievementsModel, stage) { cell ->
                     cell.expandX().fillX().height(HEADER_HEIGHT).colspan(3)
                 }
                 row()
@@ -112,7 +113,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                     fView = farmView(farmModel, kitchenViewModel, stage, hdrView!!.goldLabel) { isVisible = true }
                     bView = barnView(barnViewModel, stage) { isVisible = false }
                     kView = kitchenView(kitchenViewModel) { isVisible = false }
-                    aView = achievementsView(AchievementsModel(entityWorld, stage)) { isVisible = false }
+                    aView = achievementsView(achievementsModel) { isVisible = false }
                     sView = settingsView(settingsModel) { isVisible = false }
                     notificationView(NotificationModel(entityWorld, stage))
                     stackCell.expand().fill()

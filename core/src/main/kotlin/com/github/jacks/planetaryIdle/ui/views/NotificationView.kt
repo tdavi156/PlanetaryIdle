@@ -34,9 +34,10 @@ class NotificationView(
         model.onPropertyChange(NotificationModel::achId) { achId -> triggerNotification(achId) }
     }
 
-    private fun triggerNotification(achId : Int) {
+    private fun triggerNotification(achId: String) {
+        if (achId.isEmpty()) return
         log.debug { "NotificationView: triggerNotification .. achId: $achId" }
-        val ach = Achievements.entries[achId - 1]
+        val ach = Achievements.entries.find { it.achId == achId } ?: return
         val button = TextButton(ach.achName, skin, Buttons.GREEN_BUTTON_SMALL.skinKey)
 
         button.addListener(object : ChangeListener() {

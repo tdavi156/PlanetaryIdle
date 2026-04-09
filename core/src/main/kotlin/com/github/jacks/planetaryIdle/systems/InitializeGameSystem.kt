@@ -64,6 +64,7 @@ class InitializeGameSystem(
                     val config = getAchievementConfiguration(configurationName)
                     world.entity {
                         add<AchievementComponent> {
+                            multiplierScale = config.multiplierScale
                             completedAchievements.addAll(config.completedAchievements)
                         }
                     }
@@ -161,9 +162,12 @@ class InitializeGameSystem(
             AchievementType.BASIC_ACHIEVEMENT.typeName -> AchievementConfiguration(
                 name = "basic_achievement",
                 completedAchievements = Achievements.entries
-                    .filter { preferences["ach${it.achId}", false] }
+                    .filter { preferences["ach_${it.achId}", false] }
                     .map { it.achId }
-                    .toSet()
+                    .toSet(),
+                multiplierScale = java.math.BigDecimal(
+                    preferences["achievement_multiplier_scale", "1.05"]
+                )
             )
             else -> AchievementConfiguration()
         }
@@ -200,7 +204,15 @@ class InitializeGameSystem(
             this["soil_cost"] = "1000000"
             this["barn_unlocked"] = false
 
-            for (i in 1..22) { this["ach$i"] = false }
+            this["achievement_multiplier_scale"] = "1.05"
+            this["bonus_red_production"] = false
+            this["bonus_all_production"] = false
+            this["bonus_gold_income"] = false
+            this["bonus_soil_cost_discount"] = false
+            this["bonus_perfect_soil"] = false
+            this["bonus_research_speed"] = false
+
+            Achievements.entries.forEach { ach -> this["ach_${ach.achId}"] = false }
         }
     }
 
