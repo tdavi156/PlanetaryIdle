@@ -68,17 +68,34 @@ Menu buttons fire `ViewStateChangeEvent(state)`. `BackgroundView` and `Isometric
 ### Settings View
 `SettingsView` is a full-screen overlay added to the main stack. Opening: clicking Settings in `MenuView` fires `SettingsOpenEvent` + `ViewStateChangeEvent(SETTINGS)`. Closing: Save/Cancel in `SettingsView` fires `SettingsClosedEvent`; `MenuView` handles this and returns to `ViewState.FARM`.
 
+### Kitchen System
+Unlocks via `BarnUpgrade.KITCHEN`. Named crops replace raw color names on the farm rows.
+
+**Crops:** 10 colors × 5 tiers = 50 crops defined in `CropRegistry`. T1 base values match the original `PlanetResources` enum. Active crop per color stored in `KitchenViewModel.activeCrops`; switching fires `ActiveCropChangedEvent` which updates `ResourceComponent.basePayout` and `cycleDuration` in `FarmModel`.
+
+**Recipes:** Defined in `RecipeRegistry.all` (see Key Files above). `Recipe.combinedTime` = sum of crop times; `Recipe.combinedBaseValue` = product of crop values. Activating a recipe syncs both resource cycle durations to `combinedTime` and registers a pair in `FarmModel.activeRecipePairs`. Payout: first color fires → buffered in `recipePendingPayouts`; second fires → credits `payoutA × payoutB × achMult`. Multi-color (3+) recipe payout mechanics are not yet implemented; `FarmModel` currently pairs `crops[0]` and `crops[1]` only.
+
+**Adding curated multi-color recipes:** Edit `CuratedRecipes.kt` — add `listOf("CropA", "CropB", "CropC")` entries. Rules: sequential colors only, max 2-tier gap. Registry normalizes order and deduplicates automatically.
+
+**Research:** `KitchenViewModel.update(delta)` called from `KitchenView.act(delta)` each frame. Research jobs draw from `RecipeRegistry.all` for recipe discoveries and `CropRegistry` for crop unlocks. Discovery chance = `0.3 + avgTier×0.1`; 70% crop / 30% recipe split when both are available.
+
+**Persistence keys (kitchen):** `kitchen_unlocked`, `kitchen_unlocked_crops_{color}`, `kitchen_active_crop_{color}`, `kitchen_discovered_recipes`, `kitchen_active_recipes`, `kitchen_researcher_count`, `kitchen_researcher_{i}_input_slots`, `kitchen_researcher_{i}_speed_level`.
+
 ### Event Flow
 Events fired via `Stage.fire()`. Key events in `events/Events.kt`:
 `BuyResourceEvent` → `FarmModel` → `ResourceUpdateEvent` → views update
 `ViewStateChangeEvent` → `BackgroundView`, `IsometricMapRenderer`, `MenuView`
 `BarnUnlockedEvent` → `MenuModel`, `IsometricMapRenderer` (enables `layer_barn`)
 `BuyBarnUpgradeEvent` → `BarnViewModel` → `BarnEffectsChangedEvent` → `FarmModel`, `ResourceUpdateSystem`
+`KitchenUnlockedEvent` → `KitchenViewModel`, `MenuModel`, `IsometricMapRenderer` (enables `layer_kitchen`)
+`ActiveCropChangedEvent` → `FarmModel` (updates basePayout + cycleDuration on ResourceComponent)
+`RecipeActivatedEvent` → `FarmModel` (links cycle durations, registers pair)
+`RecipeDeactivatedEvent` → `FarmModel` (unlinks pair, restores individual durations)
 `SettingsOpenEvent` → `SettingsModel` (syncs UI from `SettingsSystem`)
 `SettingsClosedEvent` → `MenuView` (returns to Farm view)
 
 ### Persistence
-LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/current_ticks/unlocked`, `soil_is_unlocked/upgrades/cost`, `ach1`–`ach22`, `barn_unlocked`, `barn_upgrade_{id}_level`, `settings_master_volume`, `settings_music_volume`, `settings_effects_volume`.
+LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/current_ticks/unlocked`, `soil_is_unlocked/upgrades/cost`, `ach1`–`ach22`, `barn_unlocked`, `barn_upgrade_{id}_level`, `settings_master_volume`, `settings_music_volume`, `settings_effects_volume`, plus kitchen keys listed in the Kitchen System section above.
 
 ## Game Resources
 10 resources in order: Red → Orange → Yellow → Green → Blue → Purple → Pink → Brown → White → Black. Defined as enum in `ResourceComponent.kt`.
@@ -92,7 +109,11 @@ LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/cur
 | `FarmView.kt` | Main farm UI; resource rows, buy buttons, production rate display |
 | `BarnView.kt` / `BarnViewModel.kt` | Upgrade tree UI (node graph + info panel) and purchase logic |
 | `BarnUpgrade.kt` | Enum of 24 upgrades; prerequisites map defines tree edges |
-| `KitchenView.kt` / `KitchenViewModel.kt` | Stub — recipes feature (future) |
+| `KitchenView.kt` / `KitchenViewModel.kt` | Kitchen UI and logic; crop tiers, recipe activation, research lab |
+| `CropType.kt` / `CropRegistry` | `CropType(name, color, tier, baseValue, baseProductionTime)`; 50 crops (10 colors × 5 tiers); `forColor()`, `tier1()`, `byId()` helpers |
+| `Recipe.kt` | `Recipe(crops: List<CropType>)`; `id`, `displayName`, `combinedTime`, `combinedBaseValue`; supports N-color recipes |
+| `RecipeRegistry.kt` | Single source of truth for all recipes; `twoColorRecipes` (171 exhaustive, generated); `curatedRecipes` (parsed from `CuratedRecipes.kt`); `all` = combined deduplicated list |
+| `CuratedRecipes.kt` | Hand-editable config: `val CURATED_RECIPES: List<List<String>>`; add multi-color recipes as lists of crop names; see inline format docs |
 | `SettingsView.kt` / `SettingsModel.kt` | Volume controls (master/music/effects); save/cancel; persists to preferences |
 | `AudioSystem.kt` | Sound queue + background music; volume from `SettingsSystem`; asset paths as blank constants |
 | `SettingsSystem.kt` | Fleks system holding `Settings` data class at runtime |
