@@ -56,6 +56,7 @@ private data class ResourceWidgets(
     val dropdownButton: TextButton,
     val progressFill: Image,
     val tooltipLabel: Label,
+    val milestoneLabel: Label,
 )
 
 class FarmView(
@@ -150,6 +151,16 @@ class FarmView(
                             stackCell.expandX().fillX().height(30f).pad(3f, 0f, 3f, 5f)
                         }
 
+                        val milestone = label(
+                            view.nextMilestoneText(resource, state.owned.toLong()),
+                            Labels.SMALL.skinKey
+                        ) { cell ->
+                            cell.width(90f).height(55f).pad(0f, 4f, 0f, 4f)
+                            setAlignment(Align.center)
+                            color = com.badlogic.gdx.graphics.Color.GRAY
+                            isVisible = view.nextMilestoneFor(resource, state.owned.toLong()) != null
+                        }
+
                         val tooltip = label(
                             view.makeTooltipText(resource, state),
                             view.tooltipStyleFor(resource)
@@ -171,11 +182,12 @@ class FarmView(
                         rowCell.expandX().fillX()
 
                         view.resourceWidgets[resource] = ResourceWidgets(
-                            rowTable      = this,
-                            button        = btn,
+                            rowTable       = this,
+                            button         = btn,
                             dropdownButton = dropBtn,
-                            progressFill  = fillImage!!,
-                            tooltipLabel  = tooltip,
+                            progressFill   = fillImage!!,
+                            tooltipLabel   = tooltip,
+                            milestoneLabel = milestone,
                         )
                     }
                     // Right-click on row opens crop dropdown (desktop) — added after rowTable is assigned
@@ -376,8 +388,19 @@ class FarmView(
         widgets.button.txt = makeButtonText(resource, state)
         widgets.button.isDisabled = goldCoins < state.cost
         widgets.tooltipLabel.txt = makeTooltipText(resource, state)
+        updateMilestoneLabel(resource, state.owned.toLong(), widgets)
         reapplyUnlockVisibility()
         checkOwnedAchievements(resource, state.owned)
+    }
+
+    private fun updateMilestoneLabel(resource: PlanetResources, owned: Long, widgets: ResourceWidgets) {
+        val next = nextMilestoneFor(resource, owned)
+        if (next == null) {
+            widgets.milestoneLabel.isVisible = false
+        } else {
+            widgets.milestoneLabel.isVisible = true
+            widgets.milestoneLabel.txt = nextMilestoneText(resource, owned)
+        }
     }
 
     private fun reapplyUnlockVisibility() {
@@ -497,6 +520,29 @@ class FarmView(
         val clamped      = prodPercent.coerceIn(0f, 1f)
         productionRateProgressLabel.txt = "${"%.2f".format(clamped * 100f)} %"
         colonizationProgress.scaleX = clamped
+    }
+
+    // ── Milestone helpers ─────────────────────────────────────────────────────
+
+    private fun milestonesFor(resource: PlanetResources): List<Long> = when (resource) {
+        PlanetResources.RED    -> listOf(10, 50, 250, 500, 1000, 5000)
+        PlanetResources.ORANGE -> listOf(10, 100, 1000)
+        PlanetResources.YELLOW -> listOf(10, 100, 1000)
+        PlanetResources.GREEN  -> listOf(10, 100, 1000)
+        PlanetResources.BLUE   -> listOf(10, 100, 1000)
+        PlanetResources.PURPLE -> listOf(10, 100, 1000)
+        PlanetResources.PINK   -> listOf(10, 100, 1000)
+        PlanetResources.BROWN  -> listOf(10, 100, 1000)
+        PlanetResources.WHITE  -> listOf(10, 100, 1000)
+        PlanetResources.BLACK  -> listOf(1, 10, 100)
+    }
+
+    fun nextMilestoneFor(resource: PlanetResources, owned: Long): Long? =
+        milestonesFor(resource).firstOrNull { it > owned }
+
+    fun nextMilestoneText(resource: PlanetResources, owned: Long): String {
+        val next = nextMilestoneFor(resource, owned) ?: return ""
+        return "→ ${noDecFormat.format(next)}"
     }
 
     // ── Text helpers ──────────────────────────────────────────────────────

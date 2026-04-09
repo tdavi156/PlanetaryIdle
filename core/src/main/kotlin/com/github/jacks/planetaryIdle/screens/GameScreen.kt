@@ -19,6 +19,7 @@ import com.github.jacks.planetaryIdle.ui.Drawables
 import com.github.jacks.planetaryIdle.ui.get
 import com.github.jacks.planetaryIdle.ui.models.AchievementsModel
 import com.github.jacks.planetaryIdle.ui.models.BarnViewModel
+import com.github.jacks.planetaryIdle.ui.models.CodexModel
 import com.github.jacks.planetaryIdle.ui.models.FarmModel
 import com.github.jacks.planetaryIdle.ui.models.KitchenViewModel
 import com.github.jacks.planetaryIdle.ui.models.MenuModel
@@ -29,6 +30,7 @@ import com.github.jacks.planetaryIdle.ui.views.HeaderView
 import com.github.jacks.planetaryIdle.ui.views.achievementsView
 import com.github.jacks.planetaryIdle.ui.views.backgroundView
 import com.github.jacks.planetaryIdle.ui.views.barnView
+import com.github.jacks.planetaryIdle.ui.views.codexView
 import com.github.jacks.planetaryIdle.ui.views.farmView
 import com.github.jacks.planetaryIdle.ui.views.headerView
 import com.github.jacks.planetaryIdle.ui.views.kitchenView
@@ -91,7 +93,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
             table {
                 setFillParent(true)
 
-                val achievementsModel = AchievementsModel(entityWorld, stage)
+                val achievementsModel = AchievementsModel(entityWorld, stage, farmModel, kitchenViewModel)
                 var hdrView: HeaderView? = null
                 hdrView = headerView(farmModel, achievementsModel, stage) { cell ->
                     cell.expandX().fillX().height(HEADER_HEIGHT).colspan(3)
@@ -106,13 +108,17 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                 var fView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var bView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var kView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var cView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var aView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var sView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+
+                val codexModel = CodexModel(kitchenViewModel)
 
                 stack { stackCell ->
                     fView = farmView(farmModel, kitchenViewModel, stage, hdrView!!.goldLabel) { isVisible = true }
                     bView = barnView(barnViewModel, stage) { isVisible = false }
                     kView = kitchenView(kitchenViewModel) { isVisible = false }
+                    cView = codexView(codexModel) { isVisible = false }
                     aView = achievementsView(achievementsModel) { isVisible = false }
                     sView = settingsView(settingsModel) { isVisible = false }
                     notificationView(NotificationModel(entityWorld, stage))
@@ -123,7 +129,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                     cell.fillY().width(2f)
                 }
 
-                menuView(MenuModel(stage), stage, fView!!, bView!!, kView!!, aView!!, sView!!) { cell ->
+                menuView(MenuModel(stage), stage, fView!!, bView!!, kView!!, cView!!, aView!!, sView!!) { cell ->
                     cell.top().fillY().width(MENU_WIDTH)
                 }
             }

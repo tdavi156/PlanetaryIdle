@@ -279,6 +279,20 @@ class KitchenViewModel(
         return true
     }
 
+    /**
+     * Estimated gold payout per recipe cycle.
+     * Uses combinedBaseValue × achievement multiplier × gold income bonus × all-production bonus.
+     * Barn per-color multipliers are omitted for simplicity — prefix display with "~".
+     */
+    fun estimatedRecipePayout(recipe: Recipe): BigDecimal {
+        val goldMult    = if (farmModel.goldIncomeBonusActive)    BigDecimal("1.05") else BigDecimal.ONE
+        val allProdMult = if (farmModel.allProductionBonusActive) BigDecimal("1.10") else BigDecimal.ONE
+        return recipe.combinedBaseValue
+            .multiply(farmModel.achievementMultiplier)
+            .multiply(goldMult)
+            .multiply(allProdMult)
+    }
+
     fun computeDiscoveryChance(inputs: List<CropType>): Float {
         if (inputs.isEmpty()) return 0f
         val avgTier = inputs.map { it.tier }.average().toFloat()

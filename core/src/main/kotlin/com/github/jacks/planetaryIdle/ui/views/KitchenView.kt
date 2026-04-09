@@ -41,6 +41,7 @@ class KitchenView(
 
     private lateinit var researcherContainer: Table
     private lateinit var recipeContainer: Table
+    private lateinit var hireBtn: TextButton
 
     private data class ResearcherWidgets(
         val selectedCrops: MutableList<CropType?>,
@@ -77,13 +78,13 @@ class KitchenView(
                 add(view.researcherContainer).expandX().fillX().top().left()
                 row()
 
-                val hireBtn = TextButton("+ Hire Researcher", skin, Buttons.GREY_BUTTON_MEDIUM.skinKey)
-                hireBtn.addListener(object : ChangeListener() {
+                view.hireBtn = TextButton(view.hireButtonText(), skin, Buttons.GREY_BUTTON_MEDIUM.skinKey)
+                view.hireBtn.addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         view.model.hireResearcher()
                     }
                 })
-                add(hireBtn).left().pad(6f, 8f, 6f, 8f).height(40f)
+                add(view.hireBtn).left().pad(6f, 8f, 6f, 8f).height(40f)
 
                 leftCell.expandY().fillY().width(780f).top().left()
             }
@@ -185,6 +186,8 @@ class KitchenView(
         }
         researcherContainer.add().expandY()
         researcherContainer.invalidateHierarchy()
+        // Update hire button cost (cost scales with current researcher count)
+        if (::hireBtn.isInitialized) hireBtn.txt = hireButtonText()
     }
 
     private fun buildResearcherRow(index: Int, researcher: ResearcherState) {
@@ -251,18 +254,21 @@ class KitchenView(
         })
         row.add(startCancel).height(32f).pad(2f, 4f, 4f, 4f).minWidth(80f)
 
-        val slotBtn = TextButton("+Slot", skin, Buttons.GREY_BUTTON_SMALL.skinKey)
-        slotBtn.isDisabled = researcher.inputSlotCount >= KitchenViewModel.MAX_INPUT_SLOTS
+        val maxSlots = researcher.inputSlotCount >= KitchenViewModel.MAX_INPUT_SLOTS
+        val slotLabel = if (maxSlots) "+Slot (max)" else "+Slot (${formatShort(model.slotUpgradeCost(index))}g)"
+        val slotBtn = TextButton(slotLabel, skin, Buttons.GREY_BUTTON_SMALL.skinKey)
+        slotBtn.isDisabled = maxSlots
         slotBtn.addListener(object : ChangeListener() {
             override fun changed(event: ChangeEvent, actor: Actor) { model.upgradeResearcherSlots(index) }
         })
-        row.add(slotBtn).height(32f).pad(2f, 2f, 4f, 2f).minWidth(60f)
+        row.add(slotBtn).height(32f).pad(2f, 2f, 4f, 2f).minWidth(100f)
 
-        val speedBtn = TextButton("+Speed", skin, Buttons.GREY_BUTTON_SMALL.skinKey)
+        val speedLabel = "+Speed (${formatShort(model.speedUpgradeCost(researcher))}g)"
+        val speedBtn = TextButton(speedLabel, skin, Buttons.GREY_BUTTON_SMALL.skinKey)
         speedBtn.addListener(object : ChangeListener() {
             override fun changed(event: ChangeEvent, actor: Actor) { model.upgradeResearcherSpeed(index) }
         })
-        row.add(speedBtn).height(32f).pad(2f, 2f, 4f, 4f).minWidth(65f)
+        row.add(speedBtn).height(32f).pad(2f, 2f, 4f, 4f).minWidth(110f)
 
         researcherContainer.add(row).expandX().fillX().left().pad(4f)
         researcherContainer.row()
@@ -339,8 +345,11 @@ class KitchenView(
             recipeContainer.add(Label("Discovered:", skin, Labels.SMALL.skinKey))
                 .expandX().left().pad(4f, 6f, 2f, 6f)
             recipeContainer.row()
+            // Determine best recipe by estimated payout for the star indicator
+            val bestId = model.discoveredRecipes
+                .maxByOrNull { model.estimatedRecipePayout(it) }?.id
             model.discoveredRecipes.forEach { recipe ->
-                buildRecipeRow(recipe)
+                buildRecipeRow(recipe, isBest = recipe.id == bestId)
                 recipeContainer.row()
             }
         }
@@ -348,11 +357,24 @@ class KitchenView(
         recipeContainer.invalidateHierarchy()
     }
 
-    private fun buildRecipeRow(recipe: Recipe) {
-        val isActive = model.activeRecipes.any { it.id == recipe.id }
+    private fun buildRecipeRow(recipe: Recipe, isBest: Boolean = false) {
+        val isActive  = model.activeRecipes.any { it.id == recipe.id }
+        val payout    = model.estimatedRecipePayout(recipe)
+        val nameText  = if (isBest) "★ ${recipe.displayName}" else recipe.displayName
+
         val row = Table(skin)
-        row.add(Label(recipe.displayName, skin, Labels.SMALL.skinKey)).expandX().left().pad(2f, 6f, 2f, 4f)
-        row.add(Label("%.1fs".format(recipe.combinedTime), skin, Labels.TINY.skinKey)).pad(2f, 0f, 2f, 4f)
+
+        // Name — gold colour if best recipe
+        val nameLabel = Label(nameText, skin, Labels.SMALL.skinKey)
+        if (isBest) nameLabel.color = com.badlogic.gdx.graphics.Color.GOLD
+        row.add(nameLabel).expandX().left().pad(2f, 6f, 2f, 4f)
+
+        // Cycle time + estimated payout
+        val infoLabel = Label(
+            "%.1fs  ~%sg".format(recipe.combinedTime, formatShort(payout)),
+            skin, Labels.TINY.skinKey
+        )
+        row.add(infoLabel).pad(2f, 0f, 2f, 4f)
 
         val toggleBtn = TextButton(if (isActive) "Clear" else "Set", skin, Buttons.GREY_BUTTON_SMALL.skinKey)
         toggleBtn.addListener(object : ChangeListener() {
@@ -363,6 +385,13 @@ class KitchenView(
         })
         row.add(toggleBtn).width(60f).height(30f).pad(2f, 4f, 2f, 6f)
         recipeContainer.add(row).expandX().fillX().pad(1f)
+    }
+
+    // ── Text helpers ──────────────────────────────────────────────────────────
+
+    private fun hireButtonText(): String {
+        val cost = formatShort(model.hireCost(model.researchers.size))
+        return "+ Hire Researcher ($cost g)"
     }
 
     companion object {

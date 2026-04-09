@@ -34,12 +34,14 @@ class MenuView(
     private val farmView: Table,
     private val barnView: Table,
     private val kitchenView: Table,
+    private val codexView: Table,
     private val achievementsView: Table,
     private val settingsView: Table,
 ) : Table(skin), KTable, EventListener {
 
     private lateinit var barnButton: TextButton
     private lateinit var kitchenButton: TextButton
+    private lateinit var codexButton: TextButton
 
     init {
         stage.addListener(this)
@@ -75,6 +77,17 @@ class MenuView(
                 addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         this@MenuView.changeActiveView(ViewState.KITCHEN)
+                    }
+                })
+            }
+            row()
+
+            view.codexButton = textButton("Codex", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
+                cell.top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
+                isDisabled = !model.kitchenUnlocked
+                addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent, actor: Actor) {
+                        this@MenuView.changeActiveView(ViewState.CODEX)
                     }
                 })
             }
@@ -136,6 +149,7 @@ class MenuView(
         }
         model.onPropertyChange(MenuModel::kitchenUnlocked) { unlocked ->
             kitchenButton.isDisabled = !unlocked
+            codexButton.isDisabled   = !unlocked
         }
     }
 
@@ -151,6 +165,7 @@ class MenuView(
         farmView.isVisible         = state == ViewState.FARM
         barnView.isVisible         = state == ViewState.BARN
         kitchenView.isVisible      = state == ViewState.KITCHEN
+        codexView.isVisible        = state == ViewState.CODEX
         achievementsView.isVisible = state == ViewState.ACHIEVEMENTS
         settingsView.isVisible     = state == ViewState.SETTINGS
 
@@ -172,8 +187,9 @@ fun <S> KWidget<S>.menuView(
     farmView: Table,
     barnView: Table,
     kitchenView: Table,
+    codexView: Table,
     achievementsView: Table,
     settingsView: Table,
     skin: Skin = Scene2DSkin.defaultSkin,
     init: MenuView.(S) -> Unit = {},
-): MenuView = actor(MenuView(model, skin, stage, farmView, barnView, kitchenView, achievementsView, settingsView), init)
+): MenuView = actor(MenuView(model, skin, stage, farmView, barnView, kitchenView, codexView, achievementsView, settingsView), init)

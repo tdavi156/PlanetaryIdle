@@ -30,6 +30,7 @@ Idle/incremental game about producing resources to earn gold coins. Kotlin + Lib
   - `RenderSystem` — Calls `IsometricMapRenderer.render()` then delegates to LibGDX Stage
   - `SettingsSystem` — Holds `Settings` data class at runtime (masterVolume, musicVolume, effectsVolume)
   - `AudioSystem` — `IntervalSystem` + `EventListener`; deferred sound queue; starts background music on first tick; reads volume from `SettingsSystem`
+  - `FloatingTextSystem` — `IteratingSystem + EventListener`; listens for `FloatingTextEvent`; creates `FloatingTextComponent` entities that animate a payout label from the resource row to the gold display over 0.6s using `Interpolation.exp5In`; removes entity when animation completes
 
 ### UI (MVC-inspired)
 - **Models** (`ui/models/`) — Game state + business logic; extend `PropertyChangeSource`; listen to ECS events; notify views via `onPropertyChange`
@@ -39,6 +40,8 @@ Idle/incremental game about producing resources to earn gold coins. Kotlin + Lib
 ### View Navigation
 `ViewState` enum (`ui/ViewState.kt`): `FARM, BARN, KITCHEN, ACHIEVEMENTS, STATISTICS, SETTINGS`.
 Menu buttons fire `ViewStateChangeEvent(state)`. `BackgroundView` and `IsometricMapRenderer` both listen to this event.
+
+**Stub views (not yet in ViewState or MenuView):** `AutomationView`, `ChallengesView`, `GalaxyView`, `ShopView`, `NotificationView` — each is a single-file placeholder (test label only) with a matching empty model. They are not accessible in-game and are scaffolded for future features.
 
 ### Rendering — Background & Isometric Map
 - **`BackgroundView`** — dynamic; shows `graphics/barn_background.png` or `graphics/kitchen_background.png` per state; grey fallback for views without imagery; `null` (transparent) for FARM so the tile map shows through
@@ -101,7 +104,7 @@ Menu buttons fire `ViewStateChangeEvent(state)`. `BackgroundView` and `Isometric
 
 **Adding audio files:** Set the path constants in `AudioSystem.companion object` (currently blank strings). Drop WAV files in `assets/audio/`.
 
-**Settings persistence:** Volume keys `settings_master_volume`, `settings_music_volume`, `settings_effects_volume` stored in `planetaryIdlePrefs`. Loaded on startup by `SettingsModel`; saved when the user clicks Save in the Settings view.
+**Settings persistence:** `settings_master_volume`, `settings_music_volume`, `settings_effects_volume` (Int), `settings_number_notation` (Boolean, `true` = letter notation). All stored in `planetaryIdlePrefs`. Loaded on startup by `SettingsModel`; saved when the user clicks Save in the Settings view. `HeaderView.useLetterNotation` (companion `var`) is set immediately on load and on save so all `formatShort` calls reflect the current preference without requiring a restart.
 
 ### Settings View
 `SettingsView` is a full-screen overlay added to the main stack. Opening: clicking Settings in `MenuView` fires `SettingsOpenEvent` + `ViewStateChangeEvent(SETTINGS)`. Closing: Save/Cancel in `SettingsView` fires `SettingsClosedEvent`; `MenuView` handles this and returns to `ViewState.FARM`.
@@ -131,9 +134,16 @@ Events fired via `Stage.fire()`. Key events in `events/Events.kt`:
 `RecipeDeactivatedEvent` → `FarmModel` (unlinks pair, restores individual durations)
 `SettingsOpenEvent` → `SettingsModel` (syncs UI from `SettingsSystem`)
 `SettingsClosedEvent` → `MenuView` (returns to Farm view)
+`FloatingTextEvent(startPos, targetPos, amount, displayText)` → `FloatingTextSystem` (spawns animated payout label)
+`AchievementNotificationEvent(achId)` → `AchievementsModel` (idempotent check; fires `AchievementCompletedEvent` if not already completed)
+`AchievementCompletedEvent(achId)` → `AchievementsModel`, `KitchenViewModel`, `FarmModel` (apply bonuses, update multiplier)
+`CropUnlockedEvent(color, cropName)` → fired after research discovers a new crop tier; consumed by `BarnViewModel` if barn expertise upgrades exist
+`ResearchCompleteEvent(researcherIndex, discoveredCropId?, discoveredRecipeId?)` → informational; both IDs null = roll failed
+`GameCompletedEvent` → fired by `FarmView` when colonization bar reaches 100%; triggers end-state
+`CreditGoldEvent(amount)` → direct gold credit without a resource buy (used for recipe payouts)
 
 ### Persistence
-LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/current_ticks/unlocked`, `soil_is_unlocked/upgrades/cost`, `ach_<achId>` (e.g. `ach_red_10`, `ach_gold_1t` — 57 total), `achievement_multiplier`, `achievement_multiplier_scale`, `bonus_red_production`, `bonus_all_production`, `bonus_gold_income`, `bonus_soil_cost_discount`, `bonus_perfect_soil`, `bonus_research_speed`, `barn_unlocked`, `barn_upgrade_{id}_level`, `settings_master_volume`, `settings_music_volume`, `settings_effects_volume`, plus kitchen keys listed in the Kitchen System section above.
+LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/current_ticks/unlocked`, `soil_is_unlocked/upgrades/cost`, `ach_<achId>` (e.g. `ach_red_10`, `ach_gold_1t` — 57 total), `achievement_multiplier`, `achievement_multiplier_scale`, `bonus_red_production`, `bonus_all_production`, `bonus_gold_income`, `bonus_soil_cost_discount`, `bonus_perfect_soil`, `bonus_research_speed`, `barn_unlocked`, `barn_upgrade_{id}_level`, `settings_master_volume`, `settings_music_volume`, `settings_effects_volume`, `settings_number_notation` (Boolean), plus kitchen keys listed in the Kitchen System section above.
 
 ## Game Resources
 10 resources in order: Red → Orange → Yellow → Green → Blue → Purple → Pink → Brown → White → Black. Defined as enum in `ResourceComponent.kt`.
@@ -162,6 +172,20 @@ LibGDX `Preferences` API. Keys: `gold_coins`, `{color}_owned/cost/value/rate/cur
 | `UpgradeComponent.kt` | Soil speed multiplier; `soilSpeedMultiplier` updated by `BarnEffectsChangedEvent` (Improved Soil Quality) |
 | `AchievementComponent.kt` | 57 achievements; `AchievementBonus` sealed class; multiplier = `multiplierScale`^completedCount (scale defaults 1.05, upgrades to 1.06 via The End bonus) |
 | `MenuView.kt` | Side menu: Farm · Barn · Kitchen · Achievements · Statistics · Settings · Reset · Quit |
+| `FloatingTextComponent.kt` | Data for in-flight payout animation: start/target positions, elapsed time, label reference, amount |
+| `FloatingTextSystem.kt` | `IteratingSystem + EventListener`; spawns and animates floating payout labels on screen |
+| `StatisticsView.kt` / `StatisticsModel.kt` | Currently a stub (single test label); wired into `ViewState.STATISTICS` and `MenuView` but shows placeholder content only |
+
+## Number Formatting
+`HeaderView.Companion.formatShort(number: BigDecimal): String` is the shared formatter used across all views (production rate label, tooltip payouts, floating text, recipe display, etc.).
+
+Supports two modes controlled by `HeaderView.useLetterNotation` (companion `var`, default `true`):
+- **Letter** (default): K / M / B / T / Qa / Qi / Sx / Sp / Oc / No / Dc / Ud / Dd / Td / Qad / Qid / Sxd (covers 1e3–1e51); raw `#,##0.00` below 1K
+- **Scientific**: raw `#,##0.00` below 1K; `%.2e` exponent form at or above 1K
+
+`formatGold(amount)` = `"${formatShort(amount)} Gold"`. Used in `HeaderView` gold display only.
+
+**Floating production numbers** are implemented via `FloatingTextEvent` → `FloatingTextSystem`. Triggered in `FarmView` via the `FarmModel::lastProductionPayout` property change binding; the label animates from the resource row's progress fill position to the gold label position.
 
 ## BigDecimal Division — Important
 Always use the 3-arg `divide(divisor, scale, RoundingMode)` form. The Kotlin `/` operator on `BigDecimal` uses the unchecked 1-arg `divide()` which throws `ArithmeticException` on non-terminating decimals. This has caused recurring crashes.

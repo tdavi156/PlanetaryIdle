@@ -27,6 +27,8 @@ class SettingsView(
     private lateinit var masterValueLabel: Label
     private lateinit var musicValueLabel: Label
     private lateinit var effectsValueLabel: Label
+    private lateinit var letterBtn: TextButton
+    private lateinit var sciBtn: TextButton
     private lateinit var saveBtn: TextButton
     private lateinit var cancelBtn: TextButton
 
@@ -115,6 +117,32 @@ class SettingsView(
             }
             row()
 
+            // Row: Number Format
+            table { rowCell ->
+                pad(4f)
+                label("Number Format:", Labels.SMALL.skinKey) { it.left().expandX() }
+                this@SettingsView.letterBtn = textButton("Letter", Buttons.GREY_BUTTON_SMALL.skinKey) { cell ->
+                    cell.width(90f).height(30f).padRight(4f)
+                    isDisabled = vm.useLetterNotation
+                    addListener(object : ChangeListener() {
+                        override fun changed(event: ChangeEvent, actor: Actor) {
+                            vm.useLetterNotation = true
+                        }
+                    })
+                }
+                this@SettingsView.sciBtn = textButton("Scientific", Buttons.GREY_BUTTON_SMALL.skinKey) { cell ->
+                    cell.width(90f).height(30f)
+                    isDisabled = !vm.useLetterNotation
+                    addListener(object : ChangeListener() {
+                        override fun changed(event: ChangeEvent, actor: Actor) {
+                            vm.useLetterNotation = false
+                        }
+                    })
+                }
+                rowCell.fillX().padBottom(4f)
+            }
+            row()
+
             // Row: Save / Cancel
             table { rowCell ->
                 pad(4f)
@@ -140,6 +168,10 @@ class SettingsView(
         model.onPropertyChange(SettingsModel::masterVolume)  { v -> masterValueLabel.txt  = "$v%" }
         model.onPropertyChange(SettingsModel::musicVolume)   { v -> musicValueLabel.txt   = "$v%" }
         model.onPropertyChange(SettingsModel::effectsVolume) { v -> effectsValueLabel.txt = "$v%" }
+        model.onPropertyChange(SettingsModel::useLetterNotation) { letter ->
+            letterBtn.isDisabled = letter
+            sciBtn.isDisabled    = !letter
+        }
     }
 }
 

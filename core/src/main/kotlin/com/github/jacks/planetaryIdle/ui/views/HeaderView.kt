@@ -75,20 +75,44 @@ class HeaderView(
         private val log = logger<HeaderView>()
         private val twoDecFormat = DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance())
 
-        private val MILLION     = BigDecimal(1_000_000L)
-        private val BILLION     = BigDecimal(1_000_000_000L)
-        private val TRILLION    = BigDecimal(1_000_000_000_000L)
-        private val QUADRILLION = BigDecimal(1_000_000_000_000_000L)
+        /** Toggled by SettingsModel when the player saves a notation preference change. */
+        var useLetterNotation: Boolean = true
+
+        private val THOUSAND     = BigDecimal(1_000L)
+        private val LETTER_THRESHOLDS: List<Pair<BigDecimal, String>> = listOf(
+            BigDecimal("1e3")  to "K",
+            BigDecimal("1e6")  to "M",
+            BigDecimal("1e9")  to "B",
+            BigDecimal("1e12") to "T",
+            BigDecimal("1e15") to "Qa",
+            BigDecimal("1e18") to "Qi",
+            BigDecimal("1e21") to "Sx",
+            BigDecimal("1e24") to "Sp",
+            BigDecimal("1e27") to "Oc",
+            BigDecimal("1e30") to "No",
+            BigDecimal("1e33") to "Dc",
+            BigDecimal("1e36") to "Ud",
+            BigDecimal("1e39") to "Dd",
+            BigDecimal("1e42") to "Td",
+            BigDecimal("1e45") to "Qad",
+            BigDecimal("1e48") to "Qid",
+            BigDecimal("1e51") to "Sxd",
+        )
 
         fun formatGold(amount: BigDecimal): String = "${formatShort(amount)} Gold"
 
-        fun formatShort(number: BigDecimal): String = when {
-            number < MILLION     -> twoDecFormat.format(number)
-            number < BILLION     -> twoDecFormat.format(number.divide(MILLION, 6, RoundingMode.HALF_UP)) + " M"
-            number < TRILLION    -> twoDecFormat.format(number.divide(BILLION, 6, RoundingMode.HALF_UP)) + " B"
-            number < QUADRILLION -> twoDecFormat.format(number.divide(TRILLION, 6, RoundingMode.HALF_UP)) + " T"
-            else                 -> "%.2eGold".format(number.toDouble())
+        fun formatShort(number: BigDecimal): String =
+            if (useLetterNotation) formatLetter(number) else formatScientific(number)
+
+        private fun formatLetter(number: BigDecimal): String {
+            val entry = LETTER_THRESHOLDS.lastOrNull { number >= it.first }
+                ?: return twoDecFormat.format(number)
+            return twoDecFormat.format(number.divide(entry.first, 6, RoundingMode.HALF_UP)) + " " + entry.second
         }
+
+        private fun formatScientific(number: BigDecimal): String =
+            if (number < THOUSAND) twoDecFormat.format(number)
+            else "%.2e".format(number.toDouble())
     }
 }
 

@@ -11,6 +11,7 @@ import com.github.jacks.planetaryIdle.systems.AudioSystem
 import com.github.jacks.planetaryIdle.systems.SettingsSystem
 import ktx.preferences.flush
 import ktx.preferences.set
+import com.github.jacks.planetaryIdle.ui.views.HeaderView
 import com.github.jacks.planetaryIdle.systems.InitializeGameSystem.Companion.preferences
 
 class SettingsModel(
@@ -19,9 +20,10 @@ class SettingsModel(
     private val audioSystem: AudioSystem,
 ) : PropertyChangeSource(), EventListener {
 
-    var masterVolume  by propertyNotify(100)
-    var musicVolume   by propertyNotify(100)
-    var effectsVolume by propertyNotify(100)
+    var masterVolume       by propertyNotify(100)
+    var musicVolume        by propertyNotify(100)
+    var effectsVolume      by propertyNotify(100)
+    var useLetterNotation  by propertyNotify(true)
 
     init {
         stage.addListener(this)
@@ -31,9 +33,10 @@ class SettingsModel(
     override fun handle(event: Event): Boolean {
         when (event) {
             is SettingsOpenEvent -> {
-                masterVolume  = settingsSystem.settings.masterVolume
-                musicVolume   = settingsSystem.settings.musicVolume
-                effectsVolume = settingsSystem.settings.effectsVolume
+                masterVolume      = settingsSystem.settings.masterVolume
+                musicVolume       = settingsSystem.settings.musicVolume
+                effectsVolume     = settingsSystem.settings.effectsVolume
+                useLetterNotation = settingsSystem.settings.useLetterNotation
                 return true
             }
         }
@@ -41,14 +44,17 @@ class SettingsModel(
     }
 
     fun save() {
-        settingsSystem.settings.masterVolume  = masterVolume
-        settingsSystem.settings.musicVolume   = musicVolume
-        settingsSystem.settings.effectsVolume = effectsVolume
+        settingsSystem.settings.masterVolume      = masterVolume
+        settingsSystem.settings.musicVolume       = musicVolume
+        settingsSystem.settings.effectsVolume     = effectsVolume
+        settingsSystem.settings.useLetterNotation = useLetterNotation
+        HeaderView.useLetterNotation              = useLetterNotation
 
         preferences.flush {
-            this[Settings.KEY_MASTER_VOLUME]  = masterVolume
-            this[Settings.KEY_MUSIC_VOLUME]   = musicVolume
-            this[Settings.KEY_EFFECTS_VOLUME] = effectsVolume
+            this[Settings.KEY_MASTER_VOLUME]   = masterVolume
+            this[Settings.KEY_MUSIC_VOLUME]    = musicVolume
+            this[Settings.KEY_EFFECTS_VOLUME]  = effectsVolume
+            this[Settings.KEY_NUMBER_NOTATION] = useLetterNotation
         }
 
         audioSystem.applyMusicVolume()
@@ -60,16 +66,22 @@ class SettingsModel(
     }
 
     private fun loadFromPreferences() {
-        val master  = preferences.getInteger(Settings.KEY_MASTER_VOLUME,  100)
-        val music   = preferences.getInteger(Settings.KEY_MUSIC_VOLUME,   100)
-        val effects = preferences.getInteger(Settings.KEY_EFFECTS_VOLUME, 100)
+        val master       = preferences.getInteger(Settings.KEY_MASTER_VOLUME,  100)
+        val music        = preferences.getInteger(Settings.KEY_MUSIC_VOLUME,   100)
+        val effects      = preferences.getInteger(Settings.KEY_EFFECTS_VOLUME, 100)
+        val letterNotation = preferences.getBoolean(Settings.KEY_NUMBER_NOTATION, true)
 
-        settingsSystem.settings.masterVolume  = master
-        settingsSystem.settings.musicVolume   = music
-        settingsSystem.settings.effectsVolume = effects
+        settingsSystem.settings.masterVolume      = master
+        settingsSystem.settings.musicVolume       = music
+        settingsSystem.settings.effectsVolume     = effects
+        settingsSystem.settings.useLetterNotation = letterNotation
 
-        masterVolume  = master
-        musicVolume   = music
-        effectsVolume = effects
+        masterVolume      = master
+        musicVolume       = music
+        effectsVolume     = effects
+        useLetterNotation = letterNotation
+
+        // Apply notation immediately so displays are correct before settings are opened
+        HeaderView.useLetterNotation = letterNotation
     }
 }
