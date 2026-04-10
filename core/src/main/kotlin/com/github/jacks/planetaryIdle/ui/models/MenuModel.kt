@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.github.jacks.planetaryIdle.events.BarnUnlockedEvent
 import com.github.jacks.planetaryIdle.events.KitchenUnlockedEvent
+import com.github.jacks.planetaryIdle.events.ObservatoryUnlockedEvent
 import ktx.log.logger
 import ktx.preferences.flush
 import ktx.preferences.get
@@ -18,8 +19,9 @@ class MenuModel(
 
     private val preferences: Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
 
-    var barnUnlocked    by propertyNotify(preferences["barn_unlocked",    false])
-    var kitchenUnlocked by propertyNotify(preferences["kitchen_unlocked", false])
+    var barnUnlocked       by propertyNotify(preferences["barn_unlocked",       false])
+    var kitchenUnlocked    by propertyNotify(preferences["kitchen_unlocked",    false])
+    var observatoryUnlocked by propertyNotify(preferences["observatory_unlocked", false])
 
     init {
         stage.addListener(this)
@@ -35,6 +37,12 @@ class MenuModel(
                 if (!kitchenUnlocked) {
                     kitchenUnlocked = true
                     preferences.flush { this["kitchen_unlocked"] = true }
+                }
+                return false
+            }
+            is ObservatoryUnlockedEvent -> {
+                if (!observatoryUnlocked) {
+                    observatoryUnlocked = true
                 }
                 return false
             }

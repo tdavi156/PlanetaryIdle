@@ -252,6 +252,9 @@ class FarmView(
         model.onPropertyChange(FarmModel::productionRate) { rate ->
             productionRateLabel.txt = "Production: ${formatShort(rate)}/s"
             updateColonizationBar(rate)
+            if (rate >= PLANETARY_SCORE && !model.gameCompleted) {
+                stage.fire(GameCompletedEvent())
+            }
         }
         model.onPropertyChange(FarmModel::soilUpgrades) { amount ->
             soilUpgrades = amount
@@ -494,12 +497,17 @@ class FarmView(
     }
 
     private fun checkGoldAchievements(amount: BigDecimal) {
-        if (amount >= GOLD_1M)  stage.fire(AchievementNotificationEvent("gold_1m"))
-        if (amount >= GOLD_1B)  stage.fire(AchievementNotificationEvent("gold_1b"))
-        if (amount >= GOLD_1T)  stage.fire(AchievementNotificationEvent("gold_1t"))
-        if (amount >= GOLD_1Q)  stage.fire(AchievementNotificationEvent("gold_1q"))
-        if (amount >= GOLD_1E33) stage.fire(AchievementNotificationEvent("gold_1e33"))
-        if (amount >= GOLD_1E50) stage.fire(AchievementNotificationEvent("gold_1e50"))
+        if (amount >= GOLD_1M)    stage.fire(AchievementNotificationEvent("gold_1m"))
+        if (amount >= GOLD_1B)    stage.fire(AchievementNotificationEvent("gold_1b"))
+        if (amount >= GOLD_1T)    stage.fire(AchievementNotificationEvent("gold_1t"))
+        if (amount >= GOLD_1Q)    stage.fire(AchievementNotificationEvent("gold_1q"))
+        if (amount >= GOLD_1E33)  stage.fire(AchievementNotificationEvent("gold_1e33"))
+        if (amount >= GOLD_1E50)  stage.fire(AchievementNotificationEvent("gold_1e50"))
+        if (amount >= GOLD_1E75)  stage.fire(AchievementNotificationEvent("gold_1e75"))
+        if (amount >= GOLD_1E100) stage.fire(AchievementNotificationEvent("gold_1e100"))
+        if (amount >= GOLD_1E150) stage.fire(AchievementNotificationEvent("gold_1e150"))
+        if (amount >= GOLD_1E200) stage.fire(AchievementNotificationEvent("gold_1e200"))
+        if (amount >= GOLD_1E308) stage.fire(AchievementNotificationEvent("gold_1e308"))
     }
 
     private fun checkSoilAchievements(amount: BigDecimal) {
@@ -623,13 +631,18 @@ class FarmView(
         @Suppress("unused")
         private val PLANETARY_SCORE = BigDecimal(1e308)
 
-        private val TEN      = BigDecimal(10)
-        private val GOLD_1M  = BigDecimal(1_000_000L)
-        private val GOLD_1B  = BigDecimal(1_000_000_000L)
-        private val GOLD_1T  = BigDecimal(1_000_000_000_000L)
-        private val GOLD_1Q  = BigDecimal(1_000_000_000_000_000L)
-        private val GOLD_1E33 = BigDecimal("1e33")
-        private val GOLD_1E50 = BigDecimal("1e50")
+        private val TEN       = BigDecimal(10)
+        private val GOLD_1M   = BigDecimal(1_000_000L)
+        private val GOLD_1B   = BigDecimal(1_000_000_000L)
+        private val GOLD_1T   = BigDecimal(1_000_000_000_000L)
+        private val GOLD_1Q   = BigDecimal(1_000_000_000_000_000L)
+        private val GOLD_1E33  = BigDecimal("1e33")
+        private val GOLD_1E50  = BigDecimal("1e50")
+        private val GOLD_1E75  = BigDecimal("1e75")
+        private val GOLD_1E100 = BigDecimal("1e100")
+        private val GOLD_1E150 = BigDecimal("1e150")
+        private val GOLD_1E200 = BigDecimal("1e200")
+        private val GOLD_1E308 = BigDecimal("1e308")
     }
 }
 

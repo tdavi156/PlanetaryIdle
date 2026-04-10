@@ -17,6 +17,7 @@ import com.github.jacks.planetaryIdle.events.BarnUnlockedEvent
 import com.github.jacks.planetaryIdle.events.BuyBarnUpgradeEvent
 import com.github.jacks.planetaryIdle.events.CropUnlockedEvent
 import com.github.jacks.planetaryIdle.events.KitchenUnlockedEvent
+import com.github.jacks.planetaryIdle.events.ObservatoryUnlockedEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.UpgradeSoilEvent
 import com.github.jacks.planetaryIdle.events.fire
@@ -138,6 +139,12 @@ class BarnViewModel(
         // Kitchen: fire unlock event (persisted by KitchenViewModel/MenuModel listeners)
         if (upgrade == BarnUpgrade.KITCHEN) {
             stage.fire(KitchenUnlockedEvent())
+        }
+
+        // Observatory: fire unlock event (persisted by ObservatoryViewModel/MenuModel listeners)
+        if (upgrade == BarnUpgrade.OBSERVATORY) {
+            preferences.flush { this["observatory_unlocked"] = true }
+            stage.fire(ObservatoryUnlockedEvent())
         }
 
         // Broadcast updated effects to systems

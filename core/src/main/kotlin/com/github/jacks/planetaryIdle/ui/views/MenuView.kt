@@ -37,11 +37,13 @@ class MenuView(
     private val codexView: Table,
     private val achievementsView: Table,
     private val settingsView: Table,
+    private val observatoryView: Table,
 ) : Table(skin), KTable, EventListener {
 
     private lateinit var barnButton: TextButton
     private lateinit var kitchenButton: TextButton
     private lateinit var codexButton: TextButton
+    private lateinit var observatoryButton: TextButton
 
     init {
         stage.addListener(this)
@@ -88,6 +90,17 @@ class MenuView(
                 addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         this@MenuView.changeActiveView(ViewState.CODEX)
+                    }
+                })
+            }
+            row()
+
+            view.observatoryButton = textButton("Observatory", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
+                cell.top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
+                isDisabled = !model.observatoryUnlocked
+                addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent, actor: Actor) {
+                        this@MenuView.changeActiveView(ViewState.OBSERVATORY)
                     }
                 })
             }
@@ -151,6 +164,9 @@ class MenuView(
             kitchenButton.isDisabled = !unlocked
             codexButton.isDisabled   = !unlocked
         }
+        model.onPropertyChange(MenuModel::observatoryUnlocked) { unlocked ->
+            observatoryButton.isDisabled = !unlocked
+        }
     }
 
     override fun handle(event: Event): Boolean {
@@ -168,6 +184,7 @@ class MenuView(
         codexView.isVisible        = state == ViewState.CODEX
         achievementsView.isVisible = state == ViewState.ACHIEVEMENTS
         settingsView.isVisible     = state == ViewState.SETTINGS
+        observatoryView.isVisible  = state == ViewState.OBSERVATORY
 
         if (state == ViewState.SETTINGS) {
             stage.fire(SettingsOpenEvent())
@@ -190,6 +207,7 @@ fun <S> KWidget<S>.menuView(
     codexView: Table,
     achievementsView: Table,
     settingsView: Table,
+    observatoryView: Table,
     skin: Skin = Scene2DSkin.defaultSkin,
     init: MenuView.(S) -> Unit = {},
-): MenuView = actor(MenuView(model, skin, stage, farmView, barnView, kitchenView, codexView, achievementsView, settingsView), init)
+): MenuView = actor(MenuView(model, skin, stage, farmView, barnView, kitchenView, codexView, achievementsView, settingsView, observatoryView), init)

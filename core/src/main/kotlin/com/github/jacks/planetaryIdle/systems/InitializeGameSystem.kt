@@ -8,6 +8,7 @@ import com.github.jacks.planetaryIdle.components.AchievementComponent
 import com.github.jacks.planetaryIdle.components.AchievementConfiguration
 import com.github.jacks.planetaryIdle.components.AchievementType
 import com.github.jacks.planetaryIdle.components.Achievements
+import com.github.jacks.planetaryIdle.components.Discovery
 import com.github.jacks.planetaryIdle.components.ConfigurationComponent
 import com.github.jacks.planetaryIdle.components.ConfigurationType.*
 import com.github.jacks.planetaryIdle.components.PlanetResources
@@ -213,6 +214,12 @@ class InitializeGameSystem(
             this["bonus_research_speed"] = false
 
             Achievements.entries.forEach { ach -> this["ach_${ach.achId}"] = false }
+
+            // Observatory
+            this["observatory_unlocked"] = false
+            this["observatory_insight"] = "0"
+            this["observatory_total_gold_earned"] = "0"
+            Discovery.entries.forEach { discovery -> this[discovery.prefKey] = false }
         }
     }
 

@@ -12,6 +12,7 @@ import com.github.jacks.planetaryIdle.rendering.IsometricMapRenderer
 import com.github.jacks.planetaryIdle.systems.AudioSystem
 import com.github.jacks.planetaryIdle.systems.FloatingTextSystem
 import com.github.jacks.planetaryIdle.systems.InitializeGameSystem
+import com.github.jacks.planetaryIdle.systems.ObservatorySystem
 import com.github.jacks.planetaryIdle.systems.RenderSystem
 import com.github.jacks.planetaryIdle.systems.ResourceUpdateSystem
 import com.github.jacks.planetaryIdle.systems.SettingsSystem
@@ -24,6 +25,7 @@ import com.github.jacks.planetaryIdle.ui.models.FarmModel
 import com.github.jacks.planetaryIdle.ui.models.KitchenViewModel
 import com.github.jacks.planetaryIdle.ui.models.MenuModel
 import com.github.jacks.planetaryIdle.ui.models.NotificationModel
+import com.github.jacks.planetaryIdle.ui.models.ObservatoryViewModel
 import com.github.jacks.planetaryIdle.ui.models.SettingsModel
 import com.github.jacks.planetaryIdle.ui.views.BackgroundView
 import com.github.jacks.planetaryIdle.ui.views.HeaderView
@@ -36,6 +38,7 @@ import com.github.jacks.planetaryIdle.ui.views.headerView
 import com.github.jacks.planetaryIdle.ui.views.kitchenView
 import com.github.jacks.planetaryIdle.ui.views.menuView
 import com.github.jacks.planetaryIdle.ui.views.notificationView
+import com.github.jacks.planetaryIdle.ui.views.observatoryView
 import com.github.jacks.planetaryIdle.ui.views.settingsView
 import com.github.quillraven.fleks.World
 import com.github.quillraven.fleks.world
@@ -69,13 +72,15 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
             add<FloatingTextSystem>()
             add<SettingsSystem>()
             add<AudioSystem>()
+            add<ObservatorySystem>()
         }
     }
 
-    private val farmModel         = FarmModel(entityWorld, stage)
-    private val kitchenViewModel  = KitchenViewModel(entityWorld, stage, farmModel)
-    private val barnViewModel     = BarnViewModel(entityWorld, stage, farmModel)
-    private val settingsModel     = SettingsModel(
+    private val farmModel             = FarmModel(entityWorld, stage)
+    private val kitchenViewModel      = KitchenViewModel(entityWorld, stage, farmModel)
+    private val barnViewModel         = BarnViewModel(entityWorld, stage, farmModel)
+    private val observatoryViewModel  = ObservatoryViewModel(entityWorld, stage, farmModel)
+    private val settingsModel         = SettingsModel(
         stage,
         entityWorld.system<SettingsSystem>(),
         entityWorld.system<AudioSystem>(),
@@ -111,8 +116,10 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                 var cView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var aView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var sView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var oView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
 
                 val codexModel = CodexModel(kitchenViewModel)
+                achievementsModel.observatoryViewModel = observatoryViewModel
 
                 stack { stackCell ->
                     fView = farmView(farmModel, kitchenViewModel, stage, hdrView!!.goldLabel) { isVisible = true }
@@ -121,6 +128,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                     cView = codexView(codexModel) { isVisible = false }
                     aView = achievementsView(achievementsModel) { isVisible = false }
                     sView = settingsView(settingsModel) { isVisible = false }
+                    oView = observatoryView(observatoryViewModel) { isVisible = false }
                     notificationView(NotificationModel(entityWorld, stage))
                     stackCell.expand().fill()
                 }
@@ -129,7 +137,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                     cell.fillY().width(2f)
                 }
 
-                menuView(MenuModel(stage), stage, fView!!, bView!!, kView!!, cView!!, aView!!, sView!!) { cell ->
+                menuView(MenuModel(stage), stage, fView!!, bView!!, kView!!, cView!!, aView!!, sView!!, oView!!) { cell ->
                     cell.top().fillY().width(MENU_WIDTH)
                 }
             }
@@ -148,11 +156,14 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
 
         stage.addListener(bgView)
         stage.addListener(isometricMapRenderer)
+        stage.addListener(observatoryViewModel)
 
         stage.fire(InitializeGameEvent())
 
         // Fire initial barn effects after all listeners are registered
         barnViewModel.fireInitialEffects()
+        // Fire initial observatory effects after all listeners are registered
+        observatoryViewModel.fireInitialEffects()
 
         KeyboardInputProcessor(entityWorld, stage)
         gdxInputProcessor(stage)

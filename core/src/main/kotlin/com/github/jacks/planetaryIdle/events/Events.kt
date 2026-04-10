@@ -3,6 +3,7 @@ package com.github.jacks.planetaryIdle.events
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.github.jacks.planetaryIdle.components.Discovery
 import com.github.jacks.planetaryIdle.components.Recipe
 import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.ui.ViewState
@@ -77,6 +78,39 @@ class ResearchCompleteEvent(
 
 /** Fired when a new crop type is unlocked via research. Used by BarnViewModel for expertise. */
 class CropUnlockedEvent(val color: String, val cropName: String) : Event()
+
+// ── Observatory events ────────────────────────────────────────────────────────
+
+class ObservatoryUnlockedEvent : Event()
+
+/** Fired by ObservatorySystem once per second as a heartbeat for Insight generation. */
+class InsightTickEvent : Event()
+
+/** Fired when the player purchases a Discovery. */
+class DiscoveryPurchasedEvent(val discovery: Discovery) : Event()
+
+/**
+ * Fired by ObservatoryViewModel whenever purchased discoveries change.
+ * FarmModel and ResourceUpdateSystem consume the multipliers.
+ */
+data class ObservatoryEffects(
+    /** Combined direct production multiplier from all applicable discoveries. */
+    val productionMultiplier: BigDecimal,
+    /** Cycle-speed multiplier (Orbital Survey). */
+    val cycleSpeedMultiplier: BigDecimal,
+    /** Recipe-payout multiplier (Binary Influence). */
+    val recipePayoutMultiplier: BigDecimal,
+    /** Additive bonus to soil base multiplier (Gravity Well). */
+    val soilEffectivenessBonus: BigDecimal,
+    /** Insight-generation multiplier (Solar Current, Abyssal Lens, Luminous Veil, Cascade). */
+    val insightMultiplier: BigDecimal,
+    /** Per-color production multiplier from Spectrum Analysis + Stellar Cartography. */
+    val perColorMultipliers: Map<String, BigDecimal>,
+    /** When true (Resonance Field active), achievement multiplier is applied twice. */
+    val achievementMultiplierSquared: Boolean,
+)
+
+class ObservatoryEffectsChangedEvent(val effects: ObservatoryEffects) : Event()
 
 // ── Settings events ───────────────────────────────────────────────────────────
 

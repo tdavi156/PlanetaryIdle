@@ -19,6 +19,8 @@ import com.github.jacks.planetaryIdle.events.BarnUnlockedEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.CreditGoldEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
+import com.github.jacks.planetaryIdle.events.ObservatoryEffects
+import com.github.jacks.planetaryIdle.events.ObservatoryEffectsChangedEvent
 import com.github.jacks.planetaryIdle.events.RecipeActivatedEvent
 import com.github.jacks.planetaryIdle.events.RecipeDeactivatedEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
@@ -91,6 +93,17 @@ class FarmModel(
 
     /** Per-resource-name payout multiplier from barn value/expertise upgrades. */
     private val barnPayoutMultipliers = mutableMapOf<String, BigDecimal>()
+
+    // ── Observatory effects ───────────────────────────────────────────────────
+    private var observatoryEffects: ObservatoryEffects = ObservatoryEffects(
+        productionMultiplier     = BigDecimal.ONE,
+        cycleSpeedMultiplier     = BigDecimal.ONE,
+        recipePayoutMultiplier   = BigDecimal.ONE,
+        soilEffectivenessBonus   = BigDecimal.ZERO,
+        insightMultiplier        = BigDecimal.ONE,
+        perColorMultipliers      = emptyMap(),
+        achievementMultiplierSquared = false,
+    )
 
     // ── Recipe state ──────────────────────────────────────────────────────────
 
@@ -170,6 +183,17 @@ class FarmModel(
                 barnPayoutMultipliers.putAll(event.payoutMultipliers)
                 upgradeEntities.forEach { entity ->
                     upgradeComponents[entity].soilSpeedMultiplier = event.soilBaseMultiplier
+                        .add(observatoryEffects.soilEffectivenessBonus)
+                }
+                updateModelProductionRate()
+            }
+            is ObservatoryEffectsChangedEvent -> {
+                observatoryEffects = event.effects
+                // Re-apply soil bonus when observatory effects change
+                upgradeEntities.forEach { entity ->
+                    val upgComp = upgradeComponents[entity]
+                    upgComp.soilSpeedMultiplier = upgComp.soilSpeedMultiplier
+                        .add(observatoryEffects.soilEffectivenessBonus)
                 }
                 updateModelProductionRate()
             }
@@ -278,20 +302,26 @@ class FarmModel(
         if (partnerColor == null) {
             // Normal independent production
             val barnMult = barnPayoutMultipliers[color] ?: BigDecimal.ONE
+            val obsColorMult = observatoryEffects.perColorMultipliers[color] ?: BigDecimal.ONE
             val adjustedPayout = rscComp.payout
                 .multiply(calculateAchievementMultiplier())
                 .multiply(barnMult)
                 .multiply(colorProductionBonus(color))
                 .multiply(goldIncomeMultiplier())
+                .multiply(observatoryEffects.productionMultiplier)
+                .multiply(obsColorMult)
             goldCoins += adjustedPayout
             preferences.flush { this["gold_coins"] = goldCoins.toString() }
             lastProductionPayout = color to adjustedPayout
             updateModelProductionRate()
         } else {
             // This color is in a recipe pair
+            val barnMult = barnPayoutMultipliers[color] ?: BigDecimal.ONE
+            val obsColorMult = observatoryEffects.perColorMultipliers[color] ?: BigDecimal.ONE
             val myRawPayout = rscComp.payout
-                .multiply(barnPayoutMultipliers[color] ?: BigDecimal.ONE)
+                .multiply(barnMult)
                 .multiply(colorProductionBonus(color))
+                .multiply(obsColorMult)
             val partnerPending = recipePendingPayouts[partnerColor]
 
             if (partnerPending != null) {
@@ -300,6 +330,8 @@ class FarmModel(
                     .multiply(partnerPending)
                     .multiply(calculateAchievementMultiplier())
                     .multiply(goldIncomeMultiplier())
+                    .multiply(observatoryEffects.productionMultiplier)
+                    .multiply(observatoryEffects.recipePayoutMultiplier)
                 goldCoins += combined
                 preferences.flush { this["gold_coins"] = goldCoins.toString() }
                 lastProductionPayout = color to combined
@@ -377,11 +409,14 @@ class FarmModel(
             if (rscComp.name == ScoreResources.GOLD_COINS.resourceName) return@forEach
             if (rscComp.amountOwned > BigDecimal.ZERO && rscComp.cycleDuration > BigDecimal.ZERO) {
                 val barnMult = barnPayoutMultipliers[rscComp.name] ?: BigDecimal.ONE
+                val obsColorMult = observatoryEffects.perColorMultipliers[rscComp.name] ?: BigDecimal.ONE
                 total += rscComp.payout
                     .multiply(achMult)
                     .multiply(barnMult)
                     .multiply(colorProductionBonus(rscComp.name))
                     .multiply(goldMult)
+                    .multiply(observatoryEffects.productionMultiplier)
+                    .multiply(obsColorMult)
                     .divide(rscComp.cycleDuration, 10, RoundingMode.HALF_UP)
             }
         }
@@ -408,6 +443,10 @@ class FarmModel(
         var mult = BigDecimal.ONE
         achievementEntities.forEach { entity ->
             mult = mult.multiply(achievementComponents[entity].achMultiplier)
+        }
+        // Resonance Field (Observatory): apply achievement multiplier twice
+        if (observatoryEffects.achievementMultiplierSquared) {
+            mult = mult.multiply(mult)
         }
         return mult
     }
@@ -471,10 +510,14 @@ class FarmModel(
             val scaled = Math.pow(owned.toDouble(), 0.75).toBigDecimal()
             var milestone = BigDecimal.ONE
             val o = owned.toInt()
-            if (o >= 10)  milestone = milestone.multiply(BigDecimal("1.2"))
-            if (o >= 25)  milestone = milestone.multiply(BigDecimal("1.5"))
-            if (o >= 50)  milestone = milestone.multiply(BigDecimal("2.0"))
-            if (o >= 100) milestone = milestone.multiply(BigDecimal("3.0"))
+            if (o >= 10)   milestone = milestone.multiply(BigDecimal("1.2"))
+            if (o >= 25)   milestone = milestone.multiply(BigDecimal("1.5"))
+            if (o >= 50)   milestone = milestone.multiply(BigDecimal("2.0"))
+            if (o >= 100)  milestone = milestone.multiply(BigDecimal("3.0"))
+            if (o >= 250)  milestone = milestone.multiply(BigDecimal("5.0"))
+            if (o >= 500)  milestone = milestone.multiply(BigDecimal("15.0"))
+            if (o >= 1000) milestone = milestone.multiply(BigDecimal("50.0"))
+            if (o >= 5000) milestone = milestone.multiply(BigDecimal("200.0"))
             base.multiply(scaled).multiply(milestone)
         }
         return ResourceModelState(owned = owned, cost = cost, payout = payout, cycleDuration = cycleDuration)

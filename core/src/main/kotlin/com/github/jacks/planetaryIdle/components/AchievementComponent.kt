@@ -183,6 +183,21 @@ enum class Achievements(
         "gold_1e50", "The End", "Have 1e50 Gold Coins",
         AchievementBonus.TheEndBonus
     ),
+    ACH_GOLD_1E75(
+        "gold_1e75", "Immeasurable", "Have 1e75 Gold Coins"
+    ),
+    ACH_GOLD_1E100(
+        "gold_1e100", "Unfathomable", "Have 1e100 Gold Coins"
+    ),
+    ACH_GOLD_1E150(
+        "gold_1e150", "Cosmic Wealth", "Have 1e150 Gold Coins"
+    ),
+    ACH_GOLD_1E200(
+        "gold_1e200", "Universal Fortune", "Have 1e200 Gold Coins"
+    ),
+    ACH_GOLD_1E308(
+        "gold_1e308", "Planetary Wealth", "Have 1e308 Gold Coins"
+    ),
 
     // ── Soil milestones ───────────────────────────────────────────────────────
     ACH_SOIL_1(
@@ -213,6 +228,32 @@ enum class Achievements(
     ACH_BARN_15(
         "barn_15", "Master Builder", "Purchase 15 Barn upgrades",
         AchievementBonus.ResearchSpeedBonus(1.2f)
+    ),
+
+    // ── Observatory milestones ────────────────────────────────────────────────
+    ACH_OBSERVATORY_UNLOCK(
+        "observatory_unlock", "Eyes to the Sky", "Unlock the Observatory"
+    ),
+    ACH_DISCOVERY_1(
+        "discovery_1", "First Discovery", "Purchase 1 Discovery"
+    ),
+    ACH_DISCOVERY_5(
+        "discovery_5", "Keen Observer", "Purchase 5 Discoveries"
+    ),
+    ACH_DISCOVERY_10(
+        "discovery_10", "Astral Scholar", "Purchase 10 Discoveries"
+    ),
+    ACH_DISCOVERY_15(
+        "discovery_15", "Cosmic Sage", "Purchase 15 Discoveries"
+    ),
+    ACH_INSIGHT_1B(
+        "insight_1b", "Insightful", "Accumulate 1 Billion Insight"
+    ),
+    ACH_INSIGHT_1T(
+        "insight_1t", "Brilliant Mind", "Accumulate 1 Trillion Insight"
+    ),
+    ACH_MYTHICAL_FIRST(
+        "mythical_first", "Beyond the Veil", "Purchase your first Mythical Discovery"
     ),
 
     // ── Kitchen milestones ────────────────────────────────────────────────────

@@ -33,6 +33,13 @@ enum class BarnUpgrade(
         BarnUpgradeCategory.SOIL,
         80f, 530f
     ),
+    OBSERVATORY(
+        "Observatory",
+        "Unlocks the Observatory, where you can spend Insight to research Discoveries that massively boost production.\nPersists through all prestiges.",
+        BigDecimal("1e20"), BigDecimal.ONE, 1,
+        BarnUpgradeCategory.SOIL,
+        80f, 720f
+    ),
     IMPROVED_SEEDS(
         "Improved Seeds",
         "Increases the harvest speed of all crops by 5% per level.",
@@ -207,6 +214,7 @@ enum class BarnUpgrade(
          */
         val prerequisites: Map<BarnUpgrade, List<BarnUpgrade>> = mapOf(
             KITCHEN                to listOf(SOIL),
+            OBSERVATORY            to listOf(KITCHEN),
             IMPROVED_SEEDS         to listOf(SOIL),
             IMPROVED_SOIL_QUALITY  to listOf(SOIL),
             RED_VALUE              to listOf(SOIL),

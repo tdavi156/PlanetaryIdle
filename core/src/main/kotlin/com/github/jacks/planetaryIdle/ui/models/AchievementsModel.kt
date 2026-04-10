@@ -12,6 +12,8 @@ import com.github.jacks.planetaryIdle.components.BarnUpgradeCategory
 import com.github.jacks.planetaryIdle.components.CropRegistry
 import com.github.jacks.planetaryIdle.events.AchievementCompletedEvent
 import com.github.jacks.planetaryIdle.events.BuyBarnUpgradeEvent
+import com.github.jacks.planetaryIdle.events.DiscoveryPurchasedEvent
+import com.github.jacks.planetaryIdle.events.ObservatoryUnlockedEvent
 import com.github.jacks.planetaryIdle.ui.views.HeaderView.Companion.formatShort
 import com.github.quillraven.fleks.ComponentMapper
 import com.github.quillraven.fleks.World
@@ -40,6 +42,9 @@ class AchievementsModel(
     private val kitchenViewModel: KitchenViewModel,
 ) : PropertyChangeSource(), EventListener {
 
+    /** Set by GameScreen after construction to avoid circular dependency. */
+    var observatoryViewModel: ObservatoryViewModel? = null
+
     private val preferences: Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
     private val achievementComponents: ComponentMapper<AchievementComponent> = world.mapper()
     private val achievementEntities = world.family(allOf = arrayOf(AchievementComponent::class))
@@ -60,6 +65,12 @@ class AchievementsModel(
 
     /** Running total of non-SOIL barn upgrade levels purchased (mirrors BarnViewModel logic). */
     private var barnNonSoilUpgradeCount: Int = 0
+
+    /** Whether the Observatory has been unlocked. */
+    private var observatoryIsUnlocked: Boolean = preferences["observatory_unlocked", false]
+
+    /** Running count of purchased discoveries (mirrors ObservatoryViewModel). */
+    private var discoveryCount: Int = 0
 
     init {
         stage.addListener(this)
@@ -87,6 +98,10 @@ class AchievementsModel(
         kitchenViewModel.onPropertyChange(KitchenViewModel::kitchenUnlocked)   { updateAllProgress() }
         kitchenViewModel.onPropertyChange(KitchenViewModel::unlockedCrops)     { updateAllProgress() }
         kitchenViewModel.onPropertyChange(KitchenViewModel::discoveredRecipes) { updateAllProgress() }
+
+        // Load initial discovery count from prefs
+        discoveryCount = com.github.jacks.planetaryIdle.components.Discovery.entries
+            .count { preferences[it.prefKey, false] }
 
         // Seed initial progress map
         updateAllProgress()
@@ -117,6 +132,16 @@ class AchievementsModel(
                 }
                 return false
             }
+            is ObservatoryUnlockedEvent -> {
+                observatoryIsUnlocked = true
+                updateAllProgress()
+                return false
+            }
+            is DiscoveryPurchasedEvent -> {
+                discoveryCount++
+                updateAllProgress()
+                return false
+            }
             else -> return false
         }
         return true
@@ -132,24 +157,28 @@ class AchievementsModel(
         if (ach.achId in completedAchievements) return AchievementProgress(1f, "Complete!")
         val t = parseThreshold(ach.achId)
         return when {
-            ach.achId == "combined_full_spectrum" -> fullSpectrumProgress()
-            ach.achId.startsWith("red_")           -> cropProgress(farmModel.redState.owned.toLong(), t)
-            ach.achId.startsWith("orange_")        -> cropProgress(farmModel.orangeState.owned.toLong(), t)
-            ach.achId.startsWith("yellow_")        -> cropProgress(farmModel.yellowState.owned.toLong(), t)
-            ach.achId.startsWith("green_")         -> cropProgress(farmModel.greenState.owned.toLong(), t)
-            ach.achId.startsWith("blue_")          -> cropProgress(farmModel.blueState.owned.toLong(), t)
-            ach.achId.startsWith("purple_")        -> cropProgress(farmModel.purpleState.owned.toLong(), t)
-            ach.achId.startsWith("pink_")          -> cropProgress(farmModel.pinkState.owned.toLong(), t)
-            ach.achId.startsWith("brown_")         -> cropProgress(farmModel.brownState.owned.toLong(), t)
-            ach.achId.startsWith("white_")         -> cropProgress(farmModel.whiteState.owned.toLong(), t)
-            ach.achId.startsWith("black_")         -> cropProgress(farmModel.blackState.owned.toLong(), t)
-            ach.achId.startsWith("gold_")          -> goldProgress(ach)
-            ach.achId.startsWith("soil_")          -> cropProgress(farmModel.soilUpgrades.toLong(), t)
-            ach.achId.startsWith("barn_")          -> cropProgress(barnNonSoilUpgradeCount.toLong(), t)
-            ach.achId == "kitchen_unlock"          -> AchievementProgress(0f, "0 / 1")
-            ach.achId.startsWith("kitchen_crop_")  -> kitchenCropProgress(t)
-            ach.achId.startsWith("kitchen_recipe_")-> kitchenRecipeProgress(t)
-            else                                   -> AchievementProgress(0f, "")
+            ach.achId == "combined_full_spectrum"   -> fullSpectrumProgress()
+            ach.achId.startsWith("red_")            -> cropProgress(farmModel.redState.owned.toLong(), t)
+            ach.achId.startsWith("orange_")         -> cropProgress(farmModel.orangeState.owned.toLong(), t)
+            ach.achId.startsWith("yellow_")         -> cropProgress(farmModel.yellowState.owned.toLong(), t)
+            ach.achId.startsWith("green_")          -> cropProgress(farmModel.greenState.owned.toLong(), t)
+            ach.achId.startsWith("blue_")           -> cropProgress(farmModel.blueState.owned.toLong(), t)
+            ach.achId.startsWith("purple_")         -> cropProgress(farmModel.purpleState.owned.toLong(), t)
+            ach.achId.startsWith("pink_")           -> cropProgress(farmModel.pinkState.owned.toLong(), t)
+            ach.achId.startsWith("brown_")          -> cropProgress(farmModel.brownState.owned.toLong(), t)
+            ach.achId.startsWith("white_")          -> cropProgress(farmModel.whiteState.owned.toLong(), t)
+            ach.achId.startsWith("black_")          -> cropProgress(farmModel.blackState.owned.toLong(), t)
+            ach.achId.startsWith("gold_")           -> goldProgress(ach)
+            ach.achId.startsWith("soil_")           -> cropProgress(farmModel.soilUpgrades.toLong(), t)
+            ach.achId.startsWith("barn_")           -> cropProgress(barnNonSoilUpgradeCount.toLong(), t)
+            ach.achId == "kitchen_unlock"           -> AchievementProgress(0f, "0 / 1")
+            ach.achId.startsWith("kitchen_crop_")   -> kitchenCropProgress(t)
+            ach.achId.startsWith("kitchen_recipe_") -> kitchenRecipeProgress(t)
+            ach.achId == "observatory_unlock"       -> AchievementProgress(if (observatoryIsUnlocked) 1f else 0f, if (observatoryIsUnlocked) "1 / 1" else "0 / 1")
+            ach.achId.startsWith("discovery_")      -> cropProgress(discoveryCount.toLong(), t)
+            ach.achId == "mythical_first"           -> cropProgress(discoveryCount.toLong().coerceAtMost(1), 1)
+            ach.achId.startsWith("insight_")        -> insightProgress(ach)
+            else                                    -> AchievementProgress(0f, "")
         }
     }
 
@@ -166,15 +195,32 @@ class AchievementsModel(
 
     private fun goldProgress(ach: Achievements): AchievementProgress {
         val target = when (ach.achId) {
-            "gold_1m"   -> GOLD_1M
-            "gold_1b"   -> GOLD_1B
-            "gold_1t"   -> GOLD_1T
-            "gold_1q"   -> GOLD_1Q
-            "gold_1e33" -> GOLD_1E33
-            "gold_1e50" -> GOLD_1E50
-            else        -> return AchievementProgress(0f, "")
+            "gold_1m"    -> GOLD_1M
+            "gold_1b"    -> GOLD_1B
+            "gold_1t"    -> GOLD_1T
+            "gold_1q"    -> GOLD_1Q
+            "gold_1e33"  -> GOLD_1E33
+            "gold_1e50"  -> GOLD_1E50
+            "gold_1e75"  -> GOLD_1E75
+            "gold_1e100" -> GOLD_1E100
+            "gold_1e150" -> GOLD_1E150
+            "gold_1e200" -> GOLD_1E200
+            "gold_1e308" -> GOLD_1E308
+            else         -> return AchievementProgress(0f, "")
         }
         val current = farmModel.goldCoins.min(target)
+        val fraction = current.divide(target, 6, RoundingMode.HALF_UP).toFloat().coerceIn(0f, 1f)
+        return AchievementProgress(fraction, "${formatShort(current)} / ${formatShort(target)}")
+    }
+
+    private fun insightProgress(ach: Achievements): AchievementProgress {
+        val ovm = observatoryViewModel ?: return AchievementProgress(0f, "0 / ?")
+        val target = when (ach.achId) {
+            "insight_1b" -> INSIGHT_1B
+            "insight_1t" -> INSIGHT_1T
+            else         -> return AchievementProgress(0f, "")
+        }
+        val current = ovm.insight.min(target)
         val fraction = current.divide(target, 6, RoundingMode.HALF_UP).toFloat().coerceIn(0f, 1f)
         return AchievementProgress(fraction, "${formatShort(current)} / ${formatShort(target)}")
     }
@@ -206,12 +252,19 @@ class AchievementsModel(
     // ── Companion ─────────────────────────────────────────────────────────────
 
     companion object {
-        private val TEN      = BigDecimal(10)
-        private val GOLD_1M  = BigDecimal(1_000_000L)
-        private val GOLD_1B  = BigDecimal(1_000_000_000L)
-        private val GOLD_1T  = BigDecimal(1_000_000_000_000L)
-        private val GOLD_1Q  = BigDecimal(1_000_000_000_000_000L)
-        private val GOLD_1E33 = BigDecimal("1e33")
-        private val GOLD_1E50 = BigDecimal("1e50")
+        private val TEN       = BigDecimal(10)
+        private val GOLD_1M   = BigDecimal(1_000_000L)
+        private val GOLD_1B   = BigDecimal(1_000_000_000L)
+        private val GOLD_1T   = BigDecimal(1_000_000_000_000L)
+        private val GOLD_1Q   = BigDecimal(1_000_000_000_000_000L)
+        private val GOLD_1E33  = BigDecimal("1e33")
+        private val GOLD_1E50  = BigDecimal("1e50")
+        private val GOLD_1E75  = BigDecimal("1e75")
+        private val GOLD_1E100 = BigDecimal("1e100")
+        private val GOLD_1E150 = BigDecimal("1e150")
+        private val GOLD_1E200 = BigDecimal("1e200")
+        private val GOLD_1E308 = BigDecimal("1e308")
+        private val INSIGHT_1B = BigDecimal("1000000000")
+        private val INSIGHT_1T = BigDecimal("1000000000000")
     }
 }

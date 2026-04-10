@@ -8,6 +8,7 @@ import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.components.ScoreResources
 import com.github.jacks.planetaryIdle.components.UpgradeComponent
 import com.github.jacks.planetaryIdle.events.BarnEffectsChangedEvent
+import com.github.jacks.planetaryIdle.events.ObservatoryEffectsChangedEvent
 import com.github.jacks.planetaryIdle.events.ResourceUpdateEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.quillraven.fleks.AllOf
@@ -31,6 +32,9 @@ class ResourceUpdateSystem(
     /** Speed multiplier from Barn's Improved Seeds upgrade. */
     private var barnSpeedMultiplier: BigDecimal = BigDecimal.ONE
 
+    /** Speed multiplier from Observatory's Orbital Survey discovery. */
+    private var observatorySpeedMultiplier: BigDecimal = BigDecimal.ONE
+
     override fun onTickEntity(entity: Entity) {
         val rscComp = resourceComponents[entity]
         if (rscComp.name == ScoreResources.GOLD_COINS.resourceName) return
@@ -44,8 +48,9 @@ class ResourceUpdateSystem(
     }
 
     override fun handle(event: Event): Boolean {
-        if (event is BarnEffectsChangedEvent) {
-            barnSpeedMultiplier = event.speedMultiplier
+        when (event) {
+            is BarnEffectsChangedEvent -> barnSpeedMultiplier = event.speedMultiplier
+            is ObservatoryEffectsChangedEvent -> observatorySpeedMultiplier = event.effects.cycleSpeedMultiplier
         }
         return false
     }
@@ -55,7 +60,7 @@ class ResourceUpdateSystem(
         upgradeEntities.forEach { entity ->
             soilMultiplier = soilMultiplier * upgradeComponents[entity].multiplier
         }
-        val combined = soilMultiplier.multiply(barnSpeedMultiplier)
+        val combined = soilMultiplier.multiply(barnSpeedMultiplier).multiply(observatorySpeedMultiplier)
         if (combined <= BigDecimal.ZERO) return tickCount
         return BigDecimal(tickCount).divide(combined, 2, RoundingMode.UP).toInt()
     }

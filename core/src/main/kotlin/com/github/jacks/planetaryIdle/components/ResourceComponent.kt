@@ -56,10 +56,14 @@ data class ResourceComponent(
         get() {
             var mult = BigDecimal.ONE
             val owned = amountOwned.toInt()
-            if (owned >= 10)  mult = mult.multiply(BigDecimal("1.2"))
-            if (owned >= 25)  mult = mult.multiply(BigDecimal("1.5"))
-            if (owned >= 50)  mult = mult.multiply(BigDecimal("2.0"))
-            if (owned >= 100) mult = mult.multiply(BigDecimal("3.0"))
+            if (owned >= 10)   mult = mult.multiply(BigDecimal("1.2"))
+            if (owned >= 25)   mult = mult.multiply(BigDecimal("1.5"))
+            if (owned >= 50)   mult = mult.multiply(BigDecimal("2.0"))
+            if (owned >= 100)  mult = mult.multiply(BigDecimal("3.0"))
+            if (owned >= 250)  mult = mult.multiply(BigDecimal("5.0"))
+            if (owned >= 500)  mult = mult.multiply(BigDecimal("15.0"))
+            if (owned >= 1000) mult = mult.multiply(BigDecimal("50.0"))
+            if (owned >= 5000) mult = mult.multiply(BigDecimal("200.0"))
             return mult
         }
 
