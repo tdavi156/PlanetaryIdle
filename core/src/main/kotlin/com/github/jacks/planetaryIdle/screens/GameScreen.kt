@@ -22,6 +22,7 @@ import com.github.jacks.planetaryIdle.ui.models.AchievementsModel
 import com.github.jacks.planetaryIdle.ui.models.BarnViewModel
 import com.github.jacks.planetaryIdle.ui.models.CodexModel
 import com.github.jacks.planetaryIdle.ui.models.FarmModel
+import com.github.jacks.planetaryIdle.ui.models.HelpViewModel
 import com.github.jacks.planetaryIdle.ui.models.KitchenViewModel
 import com.github.jacks.planetaryIdle.ui.models.MenuModel
 import com.github.jacks.planetaryIdle.ui.models.NotificationModel
@@ -35,6 +36,8 @@ import com.github.jacks.planetaryIdle.ui.views.barnView
 import com.github.jacks.planetaryIdle.ui.views.codexView
 import com.github.jacks.planetaryIdle.ui.views.farmView
 import com.github.jacks.planetaryIdle.ui.views.headerView
+import com.github.jacks.planetaryIdle.ui.views.helpToastView
+import com.github.jacks.planetaryIdle.ui.views.helpView
 import com.github.jacks.planetaryIdle.ui.views.kitchenView
 import com.github.jacks.planetaryIdle.ui.views.menuView
 import com.github.jacks.planetaryIdle.ui.views.notificationView
@@ -80,6 +83,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
     private val kitchenViewModel      = KitchenViewModel(entityWorld, stage, farmModel)
     private val barnViewModel         = BarnViewModel(entityWorld, stage, farmModel)
     private val observatoryViewModel  = ObservatoryViewModel(entityWorld, stage, farmModel)
+    private val helpViewModel         = HelpViewModel(stage)
     private val settingsModel         = SettingsModel(
         stage,
         entityWorld.system<SettingsSystem>(),
@@ -117,19 +121,22 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                 var aView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var sView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var oView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var hlView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
 
                 val codexModel = CodexModel(kitchenViewModel)
                 achievementsModel.observatoryViewModel = observatoryViewModel
 
                 stack { stackCell ->
-                    fView = farmView(farmModel, kitchenViewModel, stage, hdrView!!.goldLabel) { isVisible = true }
-                    bView = barnView(barnViewModel, stage) { isVisible = false }
-                    kView = kitchenView(kitchenViewModel) { isVisible = false }
-                    cView = codexView(codexModel) { isVisible = false }
-                    aView = achievementsView(achievementsModel) { isVisible = false }
-                    sView = settingsView(settingsModel) { isVisible = false }
-                    oView = observatoryView(observatoryViewModel) { isVisible = false }
+                    fView  = farmView(farmModel, kitchenViewModel, stage, hdrView!!.goldLabel) { isVisible = true }
+                    bView  = barnView(barnViewModel, stage) { isVisible = false }
+                    kView  = kitchenView(kitchenViewModel) { isVisible = false }
+                    cView  = codexView(codexModel) { isVisible = false }
+                    aView  = achievementsView(achievementsModel) { isVisible = false }
+                    sView  = settingsView(settingsModel) { isVisible = false }
+                    oView  = observatoryView(observatoryViewModel) { isVisible = false }
+                    hlView = helpView(helpViewModel) { isVisible = false }
                     notificationView(NotificationModel(entityWorld, stage))
+                    helpToastView(helpViewModel)
                     stackCell.expand().fill()
                 }
 
@@ -137,7 +144,19 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                     cell.fillY().width(2f)
                 }
 
-                menuView(MenuModel(stage), stage, fView!!, bView!!, kView!!, cView!!, aView!!, sView!!, oView!!) { cell ->
+                menuView(
+                    model          = MenuModel(stage),
+                    helpViewModel  = helpViewModel,
+                    stage          = stage,
+                    farmView       = fView!!,
+                    barnView       = bView!!,
+                    kitchenView    = kView!!,
+                    codexView      = cView!!,
+                    achievementsView = aView!!,
+                    settingsView   = sView!!,
+                    observatoryView = oView!!,
+                    helpView       = hlView!!,
+                ) { cell ->
                     cell.top().fillY().width(MENU_WIDTH)
                 }
             }

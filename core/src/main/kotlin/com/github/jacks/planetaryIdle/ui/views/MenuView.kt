@@ -1,13 +1,19 @@
 package com.github.jacks.planetaryIdle.ui.views
 
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.Pixmap
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
+import com.badlogic.gdx.scenes.scene2d.ui.Stack
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.github.jacks.planetaryIdle.events.QuitGameEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.SaveGameEvent
@@ -17,6 +23,7 @@ import com.github.jacks.planetaryIdle.events.ViewStateChangeEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.ui.Buttons
 import com.github.jacks.planetaryIdle.ui.ViewState
+import com.github.jacks.planetaryIdle.ui.models.HelpViewModel
 import com.github.jacks.planetaryIdle.ui.models.MenuModel
 import ktx.log.logger
 import ktx.scene2d.KTable
@@ -29,6 +36,7 @@ import ktx.scene2d.textButton
 
 class MenuView(
     model: MenuModel,
+    helpViewModel: HelpViewModel,
     skin: Skin,
     private val stage: Stage,
     private val farmView: Table,
@@ -38,15 +46,24 @@ class MenuView(
     private val achievementsView: Table,
     private val settingsView: Table,
     private val observatoryView: Table,
+    private val helpView: Table,
 ) : Table(skin), KTable, EventListener {
 
-    private lateinit var barnButton: TextButton
-    private lateinit var kitchenButton: TextButton
-    private lateinit var codexButton: TextButton
+    private lateinit var barnButton:        TextButton
+    private lateinit var kitchenButton:     TextButton
+    private lateinit var codexButton:       TextButton
     private lateinit var observatoryButton: TextButton
+    private lateinit var helpBadgeDot:      Image
 
     init {
         stage.addListener(this)
+
+        // Small orange dot used as the unread-sections badge on the Help button
+        val dotPixmap = Pixmap(1, 1, Pixmap.Format.RGBA8888).apply {
+            drawPixel(0, 0, Color.rgba8888(0.95f, 0.65f, 0.1f, 1f))
+        }
+        val dotDrawable = TextureRegionDrawable(Texture(dotPixmap))
+        dotPixmap.dispose()
 
         val view = this@MenuView
         table { tableCell ->
@@ -122,6 +139,27 @@ class MenuView(
             }
             row()
 
+            // Help button with unread-badge dot overlay
+            val helpBtn = textButton("Help", Buttons.GREY_BUTTON_MEDIUM.skinKey) {
+                addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent, actor: Actor) {
+                        this@MenuView.changeActiveView(ViewState.HELP)
+                    }
+                })
+            }
+            // Badge dot — 12×12, anchored top-right of the Help button via a Stack
+            view.helpBadgeDot = Image(dotDrawable).apply {
+                isVisible = helpViewModel.hasUnread
+            }
+            val helpStack = Stack()
+            helpStack.add(helpBtn)
+            val dotWrapper = Table(skin)
+            dotWrapper.add(view.helpBadgeDot).size(12f, 12f).top().right().pad(4f, 0f, 0f, 4f)
+            helpStack.add(dotWrapper)
+
+            add(helpStack).top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
+            row()
+
             textButton("Settings", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
                 addListener(object : ChangeListener() {
@@ -157,6 +195,7 @@ class MenuView(
             tableCell.expand().fill()
         }
 
+        // Model property bindings
         model.onPropertyChange(MenuModel::barnUnlocked) { unlocked ->
             barnButton.isDisabled = !unlocked
         }
@@ -166,6 +205,9 @@ class MenuView(
         }
         model.onPropertyChange(MenuModel::observatoryUnlocked) { unlocked ->
             observatoryButton.isDisabled = !unlocked
+        }
+        helpViewModel.onPropertyChange(HelpViewModel::hasUnread) { unread ->
+            helpBadgeDot.isVisible = unread
         }
     }
 
@@ -185,6 +227,7 @@ class MenuView(
         achievementsView.isVisible = state == ViewState.ACHIEVEMENTS
         settingsView.isVisible     = state == ViewState.SETTINGS
         observatoryView.isVisible  = state == ViewState.OBSERVATORY
+        helpView.isVisible         = state == ViewState.HELP
 
         if (state == ViewState.SETTINGS) {
             stage.fire(SettingsOpenEvent())
@@ -200,6 +243,7 @@ class MenuView(
 @Scene2dDsl
 fun <S> KWidget<S>.menuView(
     model: MenuModel,
+    helpViewModel: HelpViewModel,
     stage: Stage,
     farmView: Table,
     barnView: Table,
@@ -208,6 +252,14 @@ fun <S> KWidget<S>.menuView(
     achievementsView: Table,
     settingsView: Table,
     observatoryView: Table,
+    helpView: Table,
     skin: Skin = Scene2DSkin.defaultSkin,
     init: MenuView.(S) -> Unit = {},
-): MenuView = actor(MenuView(model, skin, stage, farmView, barnView, kitchenView, codexView, achievementsView, settingsView, observatoryView), init)
+): MenuView = actor(
+    MenuView(
+        model, helpViewModel, skin, stage,
+        farmView, barnView, kitchenView, codexView,
+        achievementsView, settingsView, observatoryView, helpView
+    ),
+    init
+)

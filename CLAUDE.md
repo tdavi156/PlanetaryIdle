@@ -31,10 +31,10 @@ Idle/incremental game about producing resources to earn gold coins. Kotlin + Lib
 - **Skin** (`ui/Skin.kt`) — Enums: `Buttons`, `Labels`, `Drawables`
 
 ### View Navigation
-`ViewState` enum: `FARM, BARN, KITCHEN, CODEX, ACHIEVEMENTS, STATISTICS, SETTINGS, OBSERVATORY`.
+`ViewState` enum: `FARM, BARN, KITCHEN, CODEX, ACHIEVEMENTS, STATISTICS, SETTINGS, OBSERVATORY, HELP`.
 `MenuView` controls visibility; menu buttons fire `ViewStateChangeEvent`. `BackgroundView` and `IsometricMapRenderer` both listen to this event.
 
-**Stub views (future, not in-game):** `AutomationView`, `ChallengesView`, `GalaxyView`, `ShopView`, `NotificationView`.
+**Stub views (future, not in-game):** `AutomationView`, `ChallengesView`, `GalaxyView`, `ShopView`.
 
 ### Rendering
 - **`BackgroundView`** — shows barn/kitchen backgrounds per state; grey fallback; transparent for FARM (tile map shows through)
@@ -117,7 +117,9 @@ Sounds queued during events, played next tick. Add WAV files to `assets/audio/` 
 ```
 BuyResourceEvent → FarmModel → ResourceUpdateEvent → views
 ViewStateChangeEvent → BackgroundView, IsometricMapRenderer, MenuView
-BarnUnlockedEvent / KitchenUnlockedEvent → MenuModel, IsometricMapRenderer (layer toggle)
+BarnUnlockedEvent / KitchenUnlockedEvent → MenuModel, IsometricMapRenderer (layer toggle), HelpViewModel (unlocks sections + toast)
+ObservatoryUnlockedEvent → HelpViewModel (unlocks Observatory section + toast)
+GameCompletedEvent → HelpViewModel (unlocks Planetary tab)
 BuyBarnUpgradeEvent → BarnViewModel → BarnEffectsChangedEvent → FarmModel, ResourceUpdateSystem
 BarnUpgrade.OBSERVATORY purchase → BarnViewModel → ObservatoryUnlockedEvent → MenuModel, ObservatoryViewModel
 ActiveCropChangedEvent → FarmModel (updates basePayout + cycleDuration)
@@ -139,6 +141,7 @@ All keys in `planetaryIdlePrefs` (LibGDX `Preferences`):
 - **Barn:** `barn_unlocked`, `barn_upgrade_{id}_level`
 - **Kitchen:** `kitchen_unlocked`, `kitchen_unlocked_crops_{color}`, `kitchen_active_crop_{color}`, `kitchen_discovered_recipes`, `kitchen_active_recipes`, `kitchen_researcher_count`, `kitchen_researcher_{i}_input_slots/speed_level`
 - **Observatory:** `observatory_unlocked`, `observatory_insight`, `observatory_total_gold_earned`, `observatory_discovery_{id}_purchased` (20 keys)
+- **Help:** `help_planetary_unlocked`, `help_read_{sectionId}` (10 keys, one per HelpSection)
 - **Settings:** `settings_master_volume`, `settings_music_volume`, `settings_effects_volume`, `settings_number_notation`
 
 ## Key Files
@@ -162,7 +165,11 @@ All keys in `planetaryIdlePrefs` (LibGDX `Preferences`):
 | `ObservatoryViewModel.kt` | Observatory state; insight generation, discovery purchases, effect computation |
 | `ObservatoryView.kt` | Scrollable discovery list grouped by tier; insight header; buy/lock/researched state |
 | `HeaderView.kt` | Gold display, achievement count button, `formatShort()` |
-| `MenuView.kt` | Side menu: Farm · Barn · Kitchen · Codex · Achievements · Statistics · Settings · Observatory |
+| `MenuView.kt` | Side menu: Farm · Barn · Kitchen · Codex · Achievements · Statistics · Help · Settings · Observatory; Help button has orange unread badge dot |
+| `HelpSection.kt` | `HelpUnlockGroup` enum + `HelpSection` enum (10 entries) with id, title, content text, and unlock group |
+| `HelpViewModel.kt` | Manages Help unlock state, unread tracking (persisted), toast messages, `planetaryUnlocked`; listens to Barn/Kitchen/Observatory/GameCompleted/Reset events |
+| `HelpView.kt` | Two-panel Help view: tab bar (General/Planetary locked until completion/Galaxy+Universe+Dimension permanently locked), left glossary with green NEW dots, right scrollable content panel |
+| `HelpToastView.kt` | Full-screen overlay; shows auto-dismissing dark pill toast at bottom-center on building unlocks |
 | `SettingsView.kt` / `SettingsModel.kt` | Volume + notation controls |
 | `AudioSystem.kt` | Deferred sound queue + background music |
 | `IsometricMapRenderer.kt` | TMX map; layer toggling |
