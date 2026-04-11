@@ -3,6 +3,7 @@ package com.github.jacks.planetaryIdle.ui
 enum class HelpUnlockGroup {
     ALWAYS,
     BARN,
+    AUTOMATION,
     KITCHEN,
     OBSERVATORY
 }
@@ -132,6 +133,42 @@ Two of the most important Barn upgrades are:
   Kitchen — Unlocks the Kitchen building, opening up a second layer of production via crops and recipes.
 
   Observatory — A high-cost, high-reward upgrade that unlocks the Observatory building and the Insight/Discoveries progression system."""
+    ),
+
+    AUTOMATION(
+        id = "automation",
+        title = "Automation",
+        unlockGroup = HelpUnlockGroup.AUTOMATION,
+        content = """Automation unlocks after purchasing the Automation Basic upgrade in the Barn (requires Soil, costs around 1e10 gold). Once unlocked, it runs entirely in the background and does not need to be open to function.
+
+Crop Auto-Buy
+Automation purchases crops for you on a regular tick. Buying happens in a round-robin order across all 10 crop colors, advancing one color per tick. You can toggle each color ON or OFF individually in the Automation view.
+
+By default, automation will spend gold freely. Once you unlock the Market Analysis Observatory Discovery (Treasured tier), per-crop gold threshold sliders become available. These let you reserve a percentage of your gold before a crop is bought — for example, setting a color to 20% means automation will only buy that crop if the purchase costs less than 20% of your current gold. This prevents runaway spending when you are saving for a large upgrade.
+
+Tick Speed Upgrades
+Four Barn upgrades increase how often automation fires:
+
+  Basic — 1 buy per second
+  Speed I — 4 buys per second
+  Speed II — 10 buys per second
+  Speed III — 60 buys per second (every frame)
+
+Bulk Buy Upgrades
+Three additional Barn upgrades increase how many crops are purchased per tick:
+
+  Bulk I — Buy 5 per tick
+  Bulk II — Buy 10 per tick
+  Bulk Max — Buy as many as affordable (capped at 500 per tick for safety)
+
+Soil Auto-Upgrade
+The Automation Soil upgrade (requires Automation Basic) enables automatic soil purchasing. When toggled on, automation will buy a soil upgrade whenever you can afford one. This can be toggled in the Automation view. Note that soil upgrades reset your gold, so consider pausing this when saving for expensive Barn upgrades.
+
+Kitchen Automation
+The Automation Kitchen upgrade (requires Automation Basic and Kitchen) adds per-researcher auto-research. When enabled for a researcher, it will automatically restart the same research inputs whenever a job completes. If nothing new can be discovered, the Kitchen button in the side menu will display an orange badge to let you know research has stalled.
+
+Auto Best Recipe
+The Automation Recipe upgrade (requires Automation Kitchen) automatically assigns the highest-payout non-conflicting set of recipes across your active slots. It runs a greedy pass every two seconds, sorting all discovered recipes by estimated payout and assigning the best combination with no overlapping crop colors."""
     ),
 
     KITCHEN(

@@ -5,6 +5,7 @@ import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.github.jacks.planetaryIdle.events.AutomationUnlockedEvent
 import com.github.jacks.planetaryIdle.events.BarnUnlockedEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
 import com.github.jacks.planetaryIdle.events.KitchenUnlockedEvent
@@ -89,6 +90,12 @@ class HelpViewModel(stage: Stage) : PropertyChangeSource(), EventListener {
                 updateHasUnread()
                 updateCount++
             }
+            is AutomationUnlockedEvent -> {
+                unlockedGroups.add(HelpUnlockGroup.AUTOMATION)
+                toastMessage = "Automation is now available! Check Help for details."
+                updateHasUnread()
+                updateCount++
+            }
             is KitchenUnlockedEvent -> {
                 unlockedGroups.add(HelpUnlockGroup.KITCHEN)
                 toastMessage = "The Kitchen is now open! Check Help for details."
@@ -127,6 +134,7 @@ class HelpViewModel(stage: Stage) : PropertyChangeSource(), EventListener {
     private fun loadState() {
         // Restore unlock groups from existing save data
         if (prefs["barn_unlocked",        false]) unlockedGroups.add(HelpUnlockGroup.BARN)
+        if (prefs["automation_unlocked",  false]) unlockedGroups.add(HelpUnlockGroup.AUTOMATION)
         if (prefs["kitchen_unlocked",     false]) unlockedGroups.add(HelpUnlockGroup.KITCHEN)
         if (prefs["observatory_unlocked", false]) unlockedGroups.add(HelpUnlockGroup.OBSERVATORY)
 
