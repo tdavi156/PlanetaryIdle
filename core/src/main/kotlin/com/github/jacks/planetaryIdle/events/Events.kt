@@ -112,6 +112,20 @@ data class ObservatoryEffects(
 
 class ObservatoryEffectsChangedEvent(val effects: ObservatoryEffects) : Event()
 
+// ── Automation events ─────────────────────────────────────────────────────────
+
+/** Fired by BarnViewModel when AUTOMATION_BASIC is purchased for the first time. */
+class AutomationUnlockedEvent : Event()
+
+/** Fired by AutomationSystem each automation tick; AutomationModel handles the buy logic. */
+class AutomationTickEvent : Event()
+
+/** Fired by ObservatoryViewModel when the MARKET_ANALYSIS discovery is purchased. */
+class SmartBuyUnlockedEvent : Event()
+
+/** Fired by KitchenViewModel when an auto-researcher completes with no new discovery. */
+class ResearchExhaustedEvent(val researcherIndex: Int) : Event()
+
 // ── Settings events ───────────────────────────────────────────────────────────
 
 class SettingsOpenEvent : Event()

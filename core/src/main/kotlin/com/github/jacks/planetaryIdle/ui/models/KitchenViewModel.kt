@@ -12,9 +12,11 @@ import com.github.jacks.planetaryIdle.components.Recipe
 import com.github.jacks.planetaryIdle.components.RecipeRegistry
 import com.github.jacks.planetaryIdle.components.AchievementBonus
 import com.github.jacks.planetaryIdle.components.Achievements
+import com.github.jacks.planetaryIdle.components.BarnUpgrade
 import com.github.jacks.planetaryIdle.events.AchievementCompletedEvent
 import com.github.jacks.planetaryIdle.events.AchievementNotificationEvent
 import com.github.jacks.planetaryIdle.events.ActiveCropChangedEvent
+import com.github.jacks.planetaryIdle.events.BuyBarnUpgradeEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
 import com.github.jacks.planetaryIdle.events.CropUnlockedEvent
 import com.github.jacks.planetaryIdle.events.KitchenUnlockedEvent
@@ -22,6 +24,7 @@ import com.github.jacks.planetaryIdle.events.RecipeActivatedEvent
 import com.github.jacks.planetaryIdle.events.RecipeDeactivatedEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
 import com.github.jacks.planetaryIdle.events.ResearchCompleteEvent
+import com.github.jacks.planetaryIdle.events.ResearchExhaustedEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.quillraven.fleks.World
 import ktx.log.logger
@@ -44,6 +47,7 @@ data class ResearcherState(
     val inputSlotCount: Int,
     val speedLevel: Int = 0,
     val activeJob: ResearchJob? = null,
+    val autoResearchEnabled: Boolean = false,
 ) {
     val speedMultiplier: Float get() = 1f + speedLevel * 0.25f
 }
@@ -63,7 +67,9 @@ class KitchenViewModel(
 
     private val preferences: Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
 
-    var kitchenUnlocked by propertyNotify(false)
+    var kitchenUnlocked     by propertyNotify(false)
+    /** True once the AUTOMATION_KITCHEN barn upgrade is purchased. Drives auto-research UI. */
+    var kitchenAutoUnlocked by propertyNotify(false)
 
     /** color → ordered list of unlocked crop names for that color. */
     var unlockedCrops: Map<String, List<String>> by propertyNotify(emptyMap())
@@ -86,6 +92,7 @@ class KitchenViewModel(
     init {
         stage.addListener(this)
         researchSpeedBonusMultiplier = if (preferences["bonus_research_speed", false]) 1.2f else 1f
+        kitchenAutoUnlocked = preferences["automation_kitchen_unlocked", false]
         load()
     }
 
@@ -148,6 +155,13 @@ class KitchenViewModel(
                 }
                 return false
             }
+            is BuyBarnUpgradeEvent -> {
+                if (event.upgrade == BarnUpgrade.AUTOMATION_KITCHEN && !kitchenAutoUnlocked) {
+                    kitchenAutoUnlocked = true
+                    // Preference is managed by AutomationModel; no duplicate persist needed here
+                }
+                return false
+            }
             is AchievementCompletedEvent -> {
                 if (event.achId.isEmpty()) return false
                 val ach = Achievements.entries.find { it.achId == event.achId }
@@ -159,6 +173,9 @@ class KitchenViewModel(
             }
             is ResetGameEvent -> {
                 researchSpeedBonusMultiplier = 1f
+                kitchenAutoUnlocked = false
+                // Disable auto-research on all researchers after reset
+                researchers = researchers.map { it.copy(autoResearchEnabled = false) }
                 return false
             }
             else -> return false
@@ -266,6 +283,15 @@ class KitchenViewModel(
         return true
     }
 
+    /** Toggles auto-research for the given researcher. Called by KitchenView and AutomationView. */
+    fun setAutoResearch(researcherIndex: Int, enabled: Boolean) {
+        val researcher = researchers.getOrNull(researcherIndex) ?: return
+        val updated = researchers.toMutableList()
+        updated[researcherIndex] = researcher.copy(autoResearchEnabled = enabled)
+        researchers = updated
+        preferences.flush { this["kitchen_researcher_${researcherIndex}_auto_research"] = enabled }
+    }
+
     fun upgradeResearcherSpeed(researcherIndex: Int): Boolean {
         val researcher = researchers.getOrNull(researcherIndex) ?: return false
         val cost = speedUpgradeCost(researcher)
@@ -311,12 +337,29 @@ class KitchenViewModel(
             if (newElapsed >= job.duration) {
                 val result = resolveResearch(job)
                 if (result != null) applyResearchResult(result)
-                updated[index] = researcher.copy(activeJob = null)
                 stage.fire(ResearchCompleteEvent(
-                    researcherIndex   = index,
-                    discoveredCropId  = (result as? ResearchResult.NewCrop)?.cropType?.id,
+                    researcherIndex    = index,
+                    discoveredCropId   = (result as? ResearchResult.NewCrop)?.cropType?.id,
                     discoveredRecipeId = (result as? ResearchResult.NewRecipe)?.recipe?.id,
                 ))
+
+                // Auto-research: restart with same inputs if enabled and discoveries remain
+                if (researcher.autoResearchEnabled && kitchenAutoUnlocked) {
+                    val inputs = job.inputs
+                    if (canDiscoverAnything(inputs)) {
+                        val rawDuration = inputs.sumOf { it.tier * it.tier } * BASE_RESEARCH_SECONDS
+                        val duration = rawDuration / researcher.speedMultiplier / researchSpeedBonusMultiplier
+                        val chance = computeDiscoveryChance(inputs)
+                        val newJob = ResearchJob(inputs = inputs, duration = duration, elapsed = 0f, discoveryChance = chance)
+                        updated[index] = researcher.copy(activeJob = newJob)
+                    } else {
+                        // Nothing left to discover with these inputs — clear job and notify
+                        updated[index] = researcher.copy(activeJob = null)
+                        stage.fire(ResearchExhaustedEvent(index))
+                    }
+                } else {
+                    updated[index] = researcher.copy(activeJob = null)
+                }
                 changed = true
             } else {
                 updated[index] = researcher.copy(activeJob = job.copy(elapsed = newElapsed))
@@ -522,9 +565,10 @@ class KitchenViewModel(
         } else {
             (0 until count).map { i ->
                 ResearcherState(
-                    id             = i,
-                    inputSlotCount = preferences["kitchen_researcher_${i}_input_slots", 2],
-                    speedLevel     = preferences["kitchen_researcher_${i}_speed_level", 0],
+                    id                  = i,
+                    inputSlotCount      = preferences["kitchen_researcher_${i}_input_slots", 2],
+                    speedLevel          = preferences["kitchen_researcher_${i}_speed_level", 0],
+                    autoResearchEnabled = preferences["kitchen_researcher_${i}_auto_research", false],
                 )
             }
         }
@@ -567,8 +611,9 @@ class KitchenViewModel(
         preferences.flush {
             this["kitchen_researcher_count"] = researchers.size
             researchers.forEachIndexed { i, r ->
-                this["kitchen_researcher_${i}_input_slots"] = r.inputSlotCount
-                this["kitchen_researcher_${i}_speed_level"] = r.speedLevel
+                this["kitchen_researcher_${i}_input_slots"]    = r.inputSlotCount
+                this["kitchen_researcher_${i}_speed_level"]    = r.speedLevel
+                this["kitchen_researcher_${i}_auto_research"]  = r.autoResearchEnabled
             }
         }
     }

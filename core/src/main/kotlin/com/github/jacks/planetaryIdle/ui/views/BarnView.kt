@@ -36,7 +36,7 @@ import ktx.scene2d.textButton
 
 private const val NODE_SIZE       = 80f
 private const val CANVAS_WIDTH    = 2500f
-private const val CANVAS_HEIGHT   = 700f
+private const val CANVAS_HEIGHT   = 900f
 private const val DOUBLE_CLICK_MS = 300L
 
 /** Draws connection lines between revealed nodes using ShapeRenderer. */

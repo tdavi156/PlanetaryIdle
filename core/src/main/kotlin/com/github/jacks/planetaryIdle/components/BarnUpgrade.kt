@@ -2,7 +2,7 @@ package com.github.jacks.planetaryIdle.components
 
 import java.math.BigDecimal
 
-enum class BarnUpgradeCategory { SOIL, EXPERTISE, VALUE, EFFICIENCY }
+enum class BarnUpgradeCategory { SOIL, EXPERTISE, VALUE, EFFICIENCY, AUTOMATION }
 
 enum class BarnUpgrade(
     val displayName: String,
@@ -203,6 +203,78 @@ enum class BarnUpgrade(
         BigDecimal("500000000000000"), BigDecimal("2"), 100,
         BarnUpgradeCategory.VALUE,
         2280f, 530f
+    ),
+
+    // ── Automation branch ─────────────────────────────────────────────────────
+    AUTOMATION_BASIC(
+        "Basic Automation",
+        "Unlocks the Automation panel. Automatically purchases enabled crops once per second.",
+        BigDecimal("1e10"), BigDecimal.ONE, 1,
+        BarnUpgradeCategory.AUTOMATION,
+        80f, 140f
+    ),
+    AUTOMATION_SPEED_1(
+        "Automation Speed I",
+        "Increases automation purchase rate to 4 times per second.",
+        BigDecimal("1e13"), BigDecimal.ONE, 1,
+        BarnUpgradeCategory.AUTOMATION,
+        280f, 140f
+    ),
+    AUTOMATION_SPEED_2(
+        "Automation Speed II",
+        "Increases automation purchase rate to 10 times per second.",
+        BigDecimal("1e15"), BigDecimal.ONE, 1,
+        BarnUpgradeCategory.AUTOMATION,
+        480f, 140f
+    ),
+    AUTOMATION_SPEED_3(
+        "Maximum Automation",
+        "Automation purchases happen every frame (60 times per second).",
+        BigDecimal("1e18"), BigDecimal.ONE, 1,
+        BarnUpgradeCategory.AUTOMATION,
+        680f, 140f
+    ),
+    AUTOMATION_KITCHEN(
+        "Kitchen Automation",
+        "Unlocks auto-research in the Kitchen. Researchers automatically restart with the same inputs on completion.",
+        BigDecimal("1e16"), BigDecimal.ONE, 1,
+        BarnUpgradeCategory.AUTOMATION,
+        880f, 140f
+    ),
+    AUTOMATION_RECIPE(
+        "Recipe Optimizer",
+        "Unlocks auto best recipe. Automatically assigns the highest-yield non-conflicting recipes.",
+        BigDecimal("1e18"), BigDecimal.ONE, 1,
+        BarnUpgradeCategory.AUTOMATION,
+        1080f, 140f
+    ),
+    AUTOMATION_SOIL(
+        "Soil Automation",
+        "Automatically purchases Soil upgrades when you can afford them.",
+        BigDecimal("1e11"), BigDecimal.ONE, 1,
+        BarnUpgradeCategory.AUTOMATION,
+        80f, 20f
+    ),
+    AUTOMATION_BULK_1(
+        "Bulk Buy I",
+        "Each automation tick purchases up to 5 crops at once.",
+        BigDecimal("1e14"), BigDecimal.ONE, 1,
+        BarnUpgradeCategory.AUTOMATION,
+        280f, 20f
+    ),
+    AUTOMATION_BULK_2(
+        "Bulk Buy II",
+        "Each automation tick purchases up to 10 crops at once.",
+        BigDecimal("1e17"), BigDecimal.ONE, 1,
+        BarnUpgradeCategory.AUTOMATION,
+        480f, 20f
+    ),
+    AUTOMATION_BULK_MAX(
+        "Buy Max",
+        "Each automation tick purchases the maximum number of crops you can afford.",
+        BigDecimal("1e19"), BigDecimal.ONE, 1,
+        BarnUpgradeCategory.AUTOMATION,
+        680f, 20f
     );
 
     val prefKey: String get() = "barn_upgrade_${name.lowercase()}_level"
@@ -237,6 +309,18 @@ enum class BarnUpgrade(
             WHITE_VALUE            to listOf(WHITE_EXPERTISE),
             BLACK_EXPERTISE        to listOf(WHITE_EXPERTISE),
             BLACK_VALUE            to listOf(BLACK_EXPERTISE),
+
+            // Automation branch
+            AUTOMATION_BASIC    to listOf(SOIL),
+            AUTOMATION_SPEED_1  to listOf(AUTOMATION_BASIC),
+            AUTOMATION_SPEED_2  to listOf(AUTOMATION_SPEED_1),
+            AUTOMATION_SPEED_3  to listOf(AUTOMATION_SPEED_2),
+            AUTOMATION_KITCHEN  to listOf(AUTOMATION_BASIC, KITCHEN),
+            AUTOMATION_RECIPE   to listOf(AUTOMATION_KITCHEN),
+            AUTOMATION_SOIL     to listOf(AUTOMATION_BASIC),
+            AUTOMATION_BULK_1   to listOf(AUTOMATION_SPEED_1),
+            AUTOMATION_BULK_2   to listOf(AUTOMATION_BULK_1),
+            AUTOMATION_BULK_MAX to listOf(AUTOMATION_BULK_2),
         )
 
         /** Edges used to draw connection lines: each pair is (parent, child). */

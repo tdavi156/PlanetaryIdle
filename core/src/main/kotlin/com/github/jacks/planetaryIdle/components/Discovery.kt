@@ -97,6 +97,13 @@ enum class Discovery(
         DiscoveryCategory.TREASURED,
         BigDecimal("20000000"),
     ),
+    MARKET_ANALYSIS(
+        "market_analysis",
+        "Market Analysis",
+        "Unlocks per-crop gold thresholds in Automation. Set a percentage to limit how much of your gold can be spent on each crop, preventing runaway spending.",
+        DiscoveryCategory.TREASURED,
+        BigDecimal("50000000"),
+    ),
 
     // ── Legendary ─────────────────────────────────────────────────────────────
     COSMIC_EXPANSION(

@@ -270,6 +270,20 @@ class KitchenView(
         })
         row.add(speedBtn).height(32f).pad(2f, 2f, 4f, 4f).minWidth(110f)
 
+        // Auto-research toggle — only visible when AUTOMATION_KITCHEN upgrade is purchased
+        if (model.kitchenAutoUnlocked) {
+            val autoEnabled = researcher.autoResearchEnabled
+            val autoBtn = TextButton(if (autoEnabled) "Auto ON" else "Auto OFF", skin, Buttons.GREY_BUTTON_SMALL.skinKey)
+            autoBtn.color = if (autoEnabled) com.badlogic.gdx.graphics.Color.GREEN else com.badlogic.gdx.graphics.Color.LIGHT_GRAY
+            autoBtn.addListener(object : ChangeListener() {
+                override fun changed(event: ChangeEvent, actor: Actor) {
+                    val current = model.researchers.getOrNull(index)?.autoResearchEnabled ?: false
+                    model.setAutoResearch(index, !current)
+                }
+            })
+            row.add(autoBtn).height(32f).pad(2f, 6f, 4f, 4f).minWidth(90f)
+        }
+
         researcherContainer.add(row).expandX().fillX().left().pad(4f)
         researcherContainer.row()
 

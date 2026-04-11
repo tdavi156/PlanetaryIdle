@@ -523,6 +523,21 @@ class FarmModel(
         return ResourceModelState(owned = owned, cost = cost, payout = payout, cycleDuration = cycleDuration)
     }
 
+    /** Returns the current [ResourceModelState] for [color], or null if not found. */
+    fun stateForColor(color: String): ResourceModelState? = when (color) {
+        PlanetResources.RED.resourceName    -> redState
+        PlanetResources.ORANGE.resourceName -> orangeState
+        PlanetResources.YELLOW.resourceName -> yellowState
+        PlanetResources.GREEN.resourceName  -> greenState
+        PlanetResources.BLUE.resourceName   -> blueState
+        PlanetResources.PURPLE.resourceName -> purpleState
+        PlanetResources.PINK.resourceName   -> pinkState
+        PlanetResources.BROWN.resourceName  -> brownState
+        PlanetResources.WHITE.resourceName  -> whiteState
+        PlanetResources.BLACK.resourceName  -> blackState
+        else -> null
+    }
+
     companion object {
         private val log = logger<FarmModel>()
     }

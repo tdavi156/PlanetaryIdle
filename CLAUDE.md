@@ -23,7 +23,7 @@ Idle/incremental game about producing resources to earn gold coins. Kotlin + Lib
 
 ### ECS (Fleks)
 - **Components** — Pure data: `ResourceComponent`, `UpgradeComponent`, `AchievementComponent`, `ConfigurationComponent`
-- **Systems** — `InitializeGameSystem` (save load), `ResourceUpdateSystem` (60fps production tick), `RenderSystem`, `SettingsSystem` (holds `Settings` data class), `AudioSystem` (deferred sound queue + music), `FloatingTextSystem` (animates payout labels farm→gold), `ObservatorySystem` (per-second Insight tick)
+- **Systems** — `InitializeGameSystem` (save load), `ResourceUpdateSystem` (60fps production tick), `RenderSystem`, `SettingsSystem` (holds `Settings` data class), `AudioSystem` (deferred sound queue + music), `FloatingTextSystem` (animates payout labels farm→gold), `ObservatorySystem` (per-second Insight tick), `AutomationSystem` (configurable-rate automation tick)
 
 ### UI (MVC-inspired)
 - **Models** (`ui/models/`) — Extend `PropertyChangeSource`; listen to ECS events; notify views via `onPropertyChange`
@@ -31,10 +31,10 @@ Idle/incremental game about producing resources to earn gold coins. Kotlin + Lib
 - **Skin** (`ui/Skin.kt`) — Enums: `Buttons`, `Labels`, `Drawables`
 
 ### View Navigation
-`ViewState` enum: `FARM, BARN, KITCHEN, CODEX, ACHIEVEMENTS, STATISTICS, SETTINGS, OBSERVATORY, HELP`.
+`ViewState` enum: `FARM, BARN, KITCHEN, CODEX, ACHIEVEMENTS, STATISTICS, SETTINGS, OBSERVATORY, HELP, AUTOMATION`.
 `MenuView` controls visibility; menu buttons fire `ViewStateChangeEvent`. `BackgroundView` and `IsometricMapRenderer` both listen to this event.
 
-**Stub views (future, not in-game):** `AutomationView`, `ChallengesView`, `GalaxyView`, `ShopView`.
+**Stub views (future, not in-game):** `ChallengesView`, `GalaxyView`, `ShopView`.
 
 ### Rendering
 - **`BackgroundView`** — shows barn/kitchen backgrounds per state; grey fallback; transparent for FARM (tile map shows through)
@@ -43,9 +43,10 @@ Idle/incremental game about producing resources to earn gold coins. Kotlin + Lib
 ## Key Systems
 
 ### Barn
-25 upgrades (`BarnUpgrade` enum) in a node-tree. Unlocks on first green crop purchase. `BarnViewModel` fires `BarnEffectsChangedEvent` with per-color payout multipliers, speed multiplier, and soil multiplier. Soil upgrade lives here (not FarmView). No barn upgrades reset on prestige.
+35 upgrades (`BarnUpgrade` enum) in a node-tree. Unlocks on first green crop purchase. `BarnViewModel` fires `BarnEffectsChangedEvent` with per-color payout multipliers, speed multiplier, and soil multiplier. Soil upgrade lives here (not FarmView). No barn upgrades reset on prestige.
 
 The `OBSERVATORY` upgrade (cost 1e20, requires KITCHEN) unlocks the Observatory building.
+The `AUTOMATION_BASIC` upgrade (cost 1e10, requires SOIL) unlocks the Automation system.
 
 ### Observatory
 Unlocks via `BarnUpgrade.OBSERVATORY`. Uses **Insight** as its currency, earned passively based on total crop production rate: `rate^0.4` Insight/sec (capped at Double.MAX_VALUE).
@@ -57,7 +58,7 @@ Unlocks via `BarnUpgrade.OBSERVATORY`. Uses **Insight** as its currency, earned 
 | Tier | Color | Effects |
 |---|---|---|
 | **Common** | Grey | Small production multipliers, speed bonus, insight generation boost |
-| **Treasured** | Green | Per-color multipliers, recipe payout boost, achievement multiplier bonus |
+| **Treasured** | Green | Per-color multipliers, recipe payout boost, achievement multiplier bonus, Market Analysis (unlocks Automation smart buy) |
 | **Legendary** | Blue | Large all-production multipliers, tick speed boost, compounding bonuses |
 | **Fabled** | Purple | Massive multipliers, achievement multiplier squared, insight multiplier |
 | **Mythical** | Gold | Endgame-tier bonuses: Cascade (×10⁵⁰ production), Singularity (insight ×10²⁰), Unified Principle (multiplies all other discoveries' effects) |
@@ -72,10 +73,42 @@ Unlocks via `BarnUpgrade.OBSERVATORY`. Uses **Insight** as its currency, earned 
 - `soilEffectivenessBonus: BigDecimal` — additive bonus to barn soil effectiveness
 
 #### Key classes
-- `Discovery.kt` — `DiscoveryCategory` enum + `Discovery` enum (20 entries); `isCategoryUnlocked(purchased, category)` companion method; `prefKey` = `"observatory_discovery_{id}_purchased"`
+- `Discovery.kt` — `DiscoveryCategory` enum + `Discovery` enum (21 entries); `isCategoryUnlocked(purchased, category)` companion method; `prefKey` = `"observatory_discovery_{id}_purchased"`. `MARKET_ANALYSIS` (TREASURED, 50M insight) fires `SmartBuyUnlockedEvent` on purchase → unlocks per-crop gold threshold sliders in AutomationView
 - `ObservatorySystem.kt` — Fleks `IteratingSystem(Fixed(1/fps))`; fires `InsightTickEvent` once/sec
 - `ObservatoryViewModel.kt` — handles `ObservatoryUnlockedEvent`, `InsightTickEvent`, `DiscoveryPurchasedEvent`, `CreditGoldEvent`, `AchievementCompletedEvent`, `BarnEffectsChangedEvent`, `CropUnlockedEvent`, `ResetGameEvent`; exposes `observatoryUnlocked`, `insight`, `insightPerSecond`, `discoveryStates`, `totalDiscoveriesPurchased`
 - `ObservatoryView.kt` — scrollable list grouped by category; `refreshDiscoveryStates()` updates button text (Researched/Locked/Research) and name label colors
+
+### Automation
+Unlocks via `BarnUpgrade.AUTOMATION_BASIC` (cost 1e10, requires SOIL). Always runs in the background — not view-dependent. `AutomationSystem` drives the tick; `AutomationModel` holds all state and logic.
+
+#### Barn Upgrade Tree (AUTOMATION category, 10 nodes)
+| Upgrade | Cost | Effect |
+|---|---|---|
+| `AUTOMATION_BASIC` | 1e10 | Unlocks automation; 1 buy/sec round-robin |
+| `AUTOMATION_SPEED_1` | 1e13 | 4 buys/sec |
+| `AUTOMATION_SPEED_2` | 1e15 | 10 buys/sec |
+| `AUTOMATION_SPEED_3` | 1e18 | 60 buys/sec (every frame) |
+| `AUTOMATION_SOIL` | 1e11 | Auto-buy soil upgrades when affordable |
+| `AUTOMATION_BULK_1` | 1e14 | Buy ×5 per tick |
+| `AUTOMATION_BULK_2` | 1e17 | Buy ×10 per tick |
+| `AUTOMATION_BULK_MAX` | 1e19 | Buy max per tick (safety cap 500) |
+| `AUTOMATION_KITCHEN` | 1e16 | Auto-restart kitchen research on completion |
+| `AUTOMATION_RECIPE` | 1e18 | Auto best-recipe assignment |
+
+#### AutomationModel behaviour
+- **Crop buy**: round-robin across all 10 colors each tick; respects per-crop ON/OFF toggle and smart-buy gold threshold (buy only if `gold >= cost / threshold`). Fires `BuyResourceEvent`.
+- **Soil auto**: fires `BuyBarnUpgradeEvent(BarnUpgrade.SOIL)` each tick when enabled; BarnViewModel handles affordability.
+- **Auto-recipe** (every 120 ticks): greedy algorithm — sort discovered recipes by `estimatedRecipePayout()` desc, assign non-conflicting (no shared color), deactivate old, activate new via `KitchenViewModel`.
+- **Smart buy**: unlocked by `Discovery.MARKET_ANALYSIS` (Observatory TREASURED tier). Per-crop gold-threshold sliders in AutomationView (−10%/+10%, 10%–100%).
+- **Kitchen exhausted badge**: when auto-research has nothing left to discover, fires `ResearchExhaustedEvent` → orange badge dot on Kitchen menu button (cleared on `ViewStateChangeEvent(KITCHEN)`).
+
+#### Persistence keys
+`automation_unlocked`, `automation_soil_auto_unlocked`, `automation_soil_auto_enabled`, `automation_kitchen_unlocked`, `automation_recipe_unlocked`, `automation_recipe_enabled`, `automation_smart_buy_unlocked`, `automation_crop_{color}_enabled`, `automation_threshold_{color}`, `kitchen_researcher_{i}_auto_research`
+
+#### Key classes
+- `AutomationSystem.kt` — `@AllOf([AchievementComponent::class])` Fleks system; reads `automationModel.tickIntervalFrames`; calls `automationModel.performTick(totalTicks)` directly
+- `AutomationModel.kt` — created before Fleks world; `lateinit var farmModel/kitchenViewModel` wired post-construction in GameScreen; constants `TICK_1_PER_SEC=60`, `TICK_4_PER_SEC=15`, `TICK_10_PER_SEC=6`, `TICK_60_PER_SEC=1`, `BUY_MAX_SAFETY_LIMIT=500`
+- `AutomationView.kt` — scrollable UI: crop rows, soil section, kitchen section; all sections dynamically shown/hidden on unlock
 
 ### Achievements
 65 achievements (`Achievements` enum in `AchievementComponent.kt`). Each grants ×1.05 multiplier (compounding; upgrades to ×1.06 via "The End"). 7 have special `AchievementBonus` effects:
@@ -116,12 +149,14 @@ Sounds queued during events, played next tick. Add WAV files to `assets/audio/` 
 ## Event Flow
 ```
 BuyResourceEvent → FarmModel → ResourceUpdateEvent → views
-ViewStateChangeEvent → BackgroundView, IsometricMapRenderer, MenuView
+ViewStateChangeEvent → BackgroundView, IsometricMapRenderer, MenuView, MenuModel (clears Kitchen badge on KITCHEN)
 BarnUnlockedEvent / KitchenUnlockedEvent → MenuModel, IsometricMapRenderer (layer toggle), HelpViewModel (unlocks sections + toast)
 ObservatoryUnlockedEvent → HelpViewModel (unlocks Observatory section + toast)
+AutomationUnlockedEvent → BarnViewModel → MenuModel (shows Automation button)
 GameCompletedEvent → HelpViewModel (unlocks Planetary tab)
-BuyBarnUpgradeEvent → BarnViewModel → BarnEffectsChangedEvent → FarmModel, ResourceUpdateSystem
+BuyBarnUpgradeEvent → BarnViewModel → BarnEffectsChangedEvent → FarmModel, ResourceUpdateSystem; also updates AutomationModel tick rate / unlocks
 BarnUpgrade.OBSERVATORY purchase → BarnViewModel → ObservatoryUnlockedEvent → MenuModel, ObservatoryViewModel
+BarnUpgrade.AUTOMATION_BASIC purchase → BarnViewModel → AutomationUnlockedEvent → MenuModel
 ActiveCropChangedEvent → FarmModel (updates basePayout + cycleDuration)
 RecipeActivatedEvent / RecipeDeactivatedEvent → FarmModel
 AchievementNotificationEvent → AchievementsModel → AchievementCompletedEvent → FarmModel, KitchenViewModel, AchievementsModel
@@ -130,7 +165,9 @@ SettingsOpenEvent / SettingsClosedEvent → SettingsModel / MenuView
 CreditGoldEvent → FarmModel (direct gold credit, used for recipe payouts) + ObservatoryViewModel (tracks total gold earned for insight)
 InsightTickEvent → ObservatoryViewModel (generates insight, fires ObservatoryEffectsChangedEvent)
 DiscoveryPurchasedEvent → ObservatoryViewModel → ObservatoryEffectsChangedEvent → FarmModel, ResourceUpdateSystem
+Discovery.MARKET_ANALYSIS purchase → ObservatoryViewModel → SmartBuyUnlockedEvent → AutomationModel (enables per-crop thresholds)
 ObservatoryEffectsChangedEvent → FarmModel (production/recipe multipliers, achievement squaring), ResourceUpdateSystem (speed multiplier)
+ResearchExhaustedEvent → MenuModel (sets kitchenHasExhausted = true → orange badge dot on Kitchen button)
 ```
 
 ## Persistence
@@ -140,7 +177,8 @@ All keys in `planetaryIdlePrefs` (LibGDX `Preferences`):
 - **Achievements:** `ach_<achId>` (65 keys), `achievement_multiplier`, `achievement_multiplier_scale`, `bonus_*` flags
 - **Barn:** `barn_unlocked`, `barn_upgrade_{id}_level`
 - **Kitchen:** `kitchen_unlocked`, `kitchen_unlocked_crops_{color}`, `kitchen_active_crop_{color}`, `kitchen_discovered_recipes`, `kitchen_active_recipes`, `kitchen_researcher_count`, `kitchen_researcher_{i}_input_slots/speed_level`
-- **Observatory:** `observatory_unlocked`, `observatory_insight`, `observatory_total_gold_earned`, `observatory_discovery_{id}_purchased` (20 keys)
+- **Observatory:** `observatory_unlocked`, `observatory_insight`, `observatory_total_gold_earned`, `observatory_discovery_{id}_purchased` (21 keys)
+- **Automation:** `automation_unlocked`, `automation_soil_auto_unlocked/enabled`, `automation_kitchen_unlocked`, `automation_recipe_unlocked/enabled`, `automation_smart_buy_unlocked`, `automation_crop_{color}_enabled` (10 keys), `automation_threshold_{color}` (10 keys), `kitchen_researcher_{i}_auto_research`
 - **Help:** `help_planetary_unlocked`, `help_read_{sectionId}` (10 keys, one per HelpSection)
 - **Settings:** `settings_master_volume`, `settings_music_volume`, `settings_effects_volume`, `settings_number_notation`
 
@@ -152,7 +190,10 @@ All keys in `planetaryIdlePrefs` (LibGDX `Preferences`):
 | `FarmModel.kt` | Core logic; gold, buy/sell, multipliers, save/load |
 | `FarmView.kt` | Farm UI; resource rows, production display, next-milestone labels, achievement triggers; fires `GameCompletedEvent` at rate ≥ 1e308 |
 | `BarnView.kt` / `BarnViewModel.kt` | Upgrade tree UI and purchase logic |
-| `BarnUpgrade.kt` | Enum of 25 upgrades with costs, prerequisites, categories |
+| `BarnUpgrade.kt` | Enum of 35 upgrades with costs, prerequisites, categories |
+| `AutomationSystem.kt` | Fleks system; configurable tick rate; calls `automationModel.performTick()` |
+| `AutomationModel.kt` | All automation state: crop buy, soil auto, auto-recipe, smart buy; save/load |
+| `AutomationView.kt` | Scrollable automation UI: crop toggles + threshold sliders, soil, kitchen sections |
 | `KitchenView.kt` / `KitchenViewModel.kt` | Kitchen UI and logic; crops, recipes, research |
 | `CropType.kt` / `CropRegistry` | 50 crops (10 colors × 5 tiers) |
 | `Recipe.kt` / `RecipeRegistry.kt` | Recipe definitions; `twoColorRecipes` + `curatedRecipes` → `all` |
@@ -165,7 +206,7 @@ All keys in `planetaryIdlePrefs` (LibGDX `Preferences`):
 | `ObservatoryViewModel.kt` | Observatory state; insight generation, discovery purchases, effect computation |
 | `ObservatoryView.kt` | Scrollable discovery list grouped by tier; insight header; buy/lock/researched state |
 | `HeaderView.kt` | Gold display, achievement count button, `formatShort()` |
-| `MenuView.kt` | Side menu: Farm · Barn · Kitchen · Codex · Achievements · Statistics · Help · Settings · Observatory; Help button has orange unread badge dot |
+| `MenuView.kt` | Side menu: Farm · Barn · Kitchen · Codex · Achievements · Statistics · Help · Settings · Observatory · Automation; Help button has orange unread badge dot; Kitchen button has orange exhausted-research badge dot |
 | `HelpSection.kt` | `HelpUnlockGroup` enum + `HelpSection` enum (10 entries) with id, title, content text, and unlock group |
 | `HelpViewModel.kt` | Manages Help unlock state, unread tracking (persisted), toast messages, `planetaryUnlocked`; listens to Barn/Kitchen/Observatory/GameCompleted/Reset events |
 | `HelpView.kt` | Two-panel Help view: tab bar (General/Planetary locked until completion/Galaxy+Universe+Dimension permanently locked), left glossary with green NEW dots, right scrollable content panel |

@@ -47,23 +47,28 @@ class MenuView(
     private val settingsView: Table,
     private val observatoryView: Table,
     private val helpView: Table,
+    private val automationView: Table,
 ) : Table(skin), KTable, EventListener {
 
     private lateinit var barnButton:        TextButton
     private lateinit var kitchenButton:     TextButton
     private lateinit var codexButton:       TextButton
     private lateinit var observatoryButton: TextButton
+    private lateinit var automationButton:  TextButton
     private lateinit var helpBadgeDot:      Image
+    private lateinit var kitchenBadgeDot:   Image
 
     init {
         stage.addListener(this)
 
-        // Small orange dot used as the unread-sections badge on the Help button
-        val dotPixmap = Pixmap(1, 1, Pixmap.Format.RGBA8888).apply {
-            drawPixel(0, 0, Color.rgba8888(0.95f, 0.65f, 0.1f, 1f))
+        // Shared dot factory for menu badge overlays
+        fun makeDotDrawable(r: Float, g: Float, b: Float): TextureRegionDrawable {
+            val px = Pixmap(1, 1, Pixmap.Format.RGBA8888).apply { drawPixel(0, 0, Color.rgba8888(r, g, b, 1f)) }
+            val d = TextureRegionDrawable(Texture(px))
+            px.dispose()
+            return d
         }
-        val dotDrawable = TextureRegionDrawable(Texture(dotPixmap))
-        dotPixmap.dispose()
+        val orangeDot = makeDotDrawable(0.95f, 0.65f, 0.1f)
 
         val view = this@MenuView
         table { tableCell ->
@@ -90,8 +95,8 @@ class MenuView(
             }
             row()
 
-            view.kitchenButton = textButton("Kitchen", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
-                cell.top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
+            // Kitchen button with exhausted-research badge dot
+            val kitchenBtn = textButton("Kitchen", Buttons.GREY_BUTTON_MEDIUM.skinKey) {
                 isDisabled = !model.kitchenUnlocked
                 addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
@@ -99,7 +104,16 @@ class MenuView(
                     }
                 })
             }
+            view.kitchenBadgeDot = Image(orangeDot).apply { isVisible = model.kitchenHasExhausted }
+            val kitchenStack = Stack()
+            kitchenStack.add(kitchenBtn)
+            val kitchenDotWrapper = Table(skin)
+            kitchenDotWrapper.add(view.kitchenBadgeDot).size(12f, 12f).top().right().pad(4f, 0f, 0f, 4f)
+            kitchenStack.add(kitchenDotWrapper)
+            add(kitchenStack).top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
             row()
+
+            view.kitchenButton = kitchenBtn
 
             view.codexButton = textButton("Codex", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
@@ -118,6 +132,17 @@ class MenuView(
                 addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         this@MenuView.changeActiveView(ViewState.OBSERVATORY)
+                    }
+                })
+            }
+            row()
+
+            view.automationButton = textButton("Automation", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
+                cell.top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
+                isDisabled = !model.automationUnlocked
+                addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent, actor: Actor) {
+                        this@MenuView.changeActiveView(ViewState.AUTOMATION)
                     }
                 })
             }
@@ -147,10 +172,7 @@ class MenuView(
                     }
                 })
             }
-            // Badge dot — 12×12, anchored top-right of the Help button via a Stack
-            view.helpBadgeDot = Image(dotDrawable).apply {
-                isVisible = helpViewModel.hasUnread
-            }
+            view.helpBadgeDot = Image(orangeDot).apply { isVisible = helpViewModel.hasUnread }
             val helpStack = Stack()
             helpStack.add(helpBtn)
             val dotWrapper = Table(skin)
@@ -206,6 +228,12 @@ class MenuView(
         model.onPropertyChange(MenuModel::observatoryUnlocked) { unlocked ->
             observatoryButton.isDisabled = !unlocked
         }
+        model.onPropertyChange(MenuModel::automationUnlocked) { unlocked ->
+            automationButton.isDisabled = !unlocked
+        }
+        model.onPropertyChange(MenuModel::kitchenHasExhausted) { exhausted ->
+            kitchenBadgeDot.isVisible = exhausted
+        }
         helpViewModel.onPropertyChange(HelpViewModel::hasUnread) { unread ->
             helpBadgeDot.isVisible = unread
         }
@@ -228,6 +256,7 @@ class MenuView(
         settingsView.isVisible     = state == ViewState.SETTINGS
         observatoryView.isVisible  = state == ViewState.OBSERVATORY
         helpView.isVisible         = state == ViewState.HELP
+        automationView.isVisible   = state == ViewState.AUTOMATION
 
         if (state == ViewState.SETTINGS) {
             stage.fire(SettingsOpenEvent())
@@ -253,13 +282,15 @@ fun <S> KWidget<S>.menuView(
     settingsView: Table,
     observatoryView: Table,
     helpView: Table,
+    automationView: Table,
     skin: Skin = Scene2DSkin.defaultSkin,
     init: MenuView.(S) -> Unit = {},
 ): MenuView = actor(
     MenuView(
         model, helpViewModel, skin, stage,
         farmView, barnView, kitchenView, codexView,
-        achievementsView, settingsView, observatoryView, helpView
+        achievementsView, settingsView, observatoryView, helpView,
+        automationView,
     ),
     init
 )

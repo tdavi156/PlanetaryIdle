@@ -21,6 +21,7 @@ import com.github.jacks.planetaryIdle.events.ObservatoryEffects
 import com.github.jacks.planetaryIdle.events.ObservatoryEffectsChangedEvent
 import com.github.jacks.planetaryIdle.events.ObservatoryUnlockedEvent
 import com.github.jacks.planetaryIdle.events.ResetGameEvent
+import com.github.jacks.planetaryIdle.events.SmartBuyUnlockedEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.quillraven.fleks.World
 import ktx.log.logger
@@ -183,6 +184,11 @@ class ObservatoryViewModel(
 
         discoveryStates = buildDiscoveryStates()
         fireEffects()
+
+        // Fire smart buy unlock for Automation
+        if (discovery == Discovery.MARKET_ANALYSIS) {
+            stage.fire(SmartBuyUnlockedEvent())
+        }
 
         // Fire achievement notifications
         val count = purchasedDiscoveries.size

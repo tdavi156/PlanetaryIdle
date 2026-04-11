@@ -10,6 +10,7 @@ import com.github.jacks.planetaryIdle.input.KeyboardInputProcessor
 import com.github.jacks.planetaryIdle.input.gdxInputProcessor
 import com.github.jacks.planetaryIdle.rendering.IsometricMapRenderer
 import com.github.jacks.planetaryIdle.systems.AudioSystem
+import com.github.jacks.planetaryIdle.systems.AutomationSystem
 import com.github.jacks.planetaryIdle.systems.FloatingTextSystem
 import com.github.jacks.planetaryIdle.systems.InitializeGameSystem
 import com.github.jacks.planetaryIdle.systems.ObservatorySystem
@@ -19,6 +20,7 @@ import com.github.jacks.planetaryIdle.systems.SettingsSystem
 import com.github.jacks.planetaryIdle.ui.Drawables
 import com.github.jacks.planetaryIdle.ui.get
 import com.github.jacks.planetaryIdle.ui.models.AchievementsModel
+import com.github.jacks.planetaryIdle.ui.models.AutomationModel
 import com.github.jacks.planetaryIdle.ui.models.BarnViewModel
 import com.github.jacks.planetaryIdle.ui.models.CodexModel
 import com.github.jacks.planetaryIdle.ui.models.FarmModel
@@ -31,6 +33,7 @@ import com.github.jacks.planetaryIdle.ui.models.SettingsModel
 import com.github.jacks.planetaryIdle.ui.views.BackgroundView
 import com.github.jacks.planetaryIdle.ui.views.HeaderView
 import com.github.jacks.planetaryIdle.ui.views.achievementsView
+import com.github.jacks.planetaryIdle.ui.views.automationView
 import com.github.jacks.planetaryIdle.ui.views.backgroundView
 import com.github.jacks.planetaryIdle.ui.views.barnView
 import com.github.jacks.planetaryIdle.ui.views.codexView
@@ -60,10 +63,15 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
 
     private val isometricMapRenderer = IsometricMapRenderer()
 
+    // AutomationModel must be created before the world so it can be injected
+    // into AutomationSystem. FarmModel and KitchenViewModel refs are wired in init{}.
+    private val automationModel = AutomationModel(stage)
+
     private val entityWorld: World = world {
         injectables {
             add(stage)
             add(isometricMapRenderer)
+            add(automationModel)
         }
         components {
             add<FloatingTextComponentListener>()
@@ -76,6 +84,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
             add<SettingsSystem>()
             add<AudioSystem>()
             add<ObservatorySystem>()
+            add<AutomationSystem>()
         }
     }
 
@@ -95,6 +104,8 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
     init {
         // Wire cross-references that couldn't be set at construction time
         barnViewModel.kitchenViewModel = kitchenViewModel
+        automationModel.farmModel = farmModel
+        automationModel.kitchenViewModel = kitchenViewModel
 
         stage.actors {
             bgView = backgroundView()
@@ -114,27 +125,29 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                 }
                 row()
 
-                var fView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
-                var bView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
-                var kView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
-                var cView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
-                var aView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
-                var sView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
-                var oView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var fView:  com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var bView:  com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var kView:  com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var cView:  com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var aView:  com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var sView:  com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var oView:  com.badlogic.gdx.scenes.scene2d.ui.Table? = null
                 var hlView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
+                var autoView: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
 
                 val codexModel = CodexModel(kitchenViewModel)
                 achievementsModel.observatoryViewModel = observatoryViewModel
 
                 stack { stackCell ->
-                    fView  = farmView(farmModel, kitchenViewModel, stage, hdrView!!.goldLabel) { isVisible = true }
-                    bView  = barnView(barnViewModel, stage) { isVisible = false }
-                    kView  = kitchenView(kitchenViewModel) { isVisible = false }
-                    cView  = codexView(codexModel) { isVisible = false }
-                    aView  = achievementsView(achievementsModel) { isVisible = false }
-                    sView  = settingsView(settingsModel) { isVisible = false }
-                    oView  = observatoryView(observatoryViewModel) { isVisible = false }
-                    hlView = helpView(helpViewModel) { isVisible = false }
+                    fView    = farmView(farmModel, kitchenViewModel, stage, hdrView!!.goldLabel) { isVisible = true }
+                    bView    = barnView(barnViewModel, stage) { isVisible = false }
+                    kView    = kitchenView(kitchenViewModel) { isVisible = false }
+                    cView    = codexView(codexModel) { isVisible = false }
+                    aView    = achievementsView(achievementsModel) { isVisible = false }
+                    sView    = settingsView(settingsModel) { isVisible = false }
+                    oView    = observatoryView(observatoryViewModel) { isVisible = false }
+                    hlView   = helpView(helpViewModel) { isVisible = false }
+                    autoView = automationView(automationModel, kitchenViewModel) { isVisible = false }
                     notificationView(NotificationModel(entityWorld, stage))
                     helpToastView(helpViewModel)
                     stackCell.expand().fill()
@@ -145,17 +158,18 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                 }
 
                 menuView(
-                    model          = MenuModel(stage),
-                    helpViewModel  = helpViewModel,
-                    stage          = stage,
-                    farmView       = fView!!,
-                    barnView       = bView!!,
-                    kitchenView    = kView!!,
-                    codexView      = cView!!,
+                    model            = MenuModel(stage),
+                    helpViewModel    = helpViewModel,
+                    stage            = stage,
+                    farmView         = fView!!,
+                    barnView         = bView!!,
+                    kitchenView      = kView!!,
+                    codexView        = cView!!,
                     achievementsView = aView!!,
-                    settingsView   = sView!!,
-                    observatoryView = oView!!,
-                    helpView       = hlView!!,
+                    settingsView     = sView!!,
+                    observatoryView  = oView!!,
+                    helpView         = hlView!!,
+                    automationView   = autoView!!,
                 ) { cell ->
                     cell.top().fillY().width(MENU_WIDTH)
                 }

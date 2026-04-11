@@ -12,6 +12,7 @@ import com.github.jacks.planetaryIdle.components.AchievementBonus
 import com.github.jacks.planetaryIdle.components.Achievements
 import com.github.jacks.planetaryIdle.events.AchievementCompletedEvent
 import com.github.jacks.planetaryIdle.events.AchievementNotificationEvent
+import com.github.jacks.planetaryIdle.events.AutomationUnlockedEvent
 import com.github.jacks.planetaryIdle.events.BarnEffectsChangedEvent
 import com.github.jacks.planetaryIdle.events.BarnUnlockedEvent
 import com.github.jacks.planetaryIdle.events.BuyBarnUpgradeEvent
@@ -145,6 +146,11 @@ class BarnViewModel(
         if (upgrade == BarnUpgrade.OBSERVATORY) {
             preferences.flush { this["observatory_unlocked"] = true }
             stage.fire(ObservatoryUnlockedEvent())
+        }
+
+        // Automation: fire unlock event on first purchase
+        if (upgrade == BarnUpgrade.AUTOMATION_BASIC) {
+            stage.fire(AutomationUnlockedEvent())
         }
 
         // Broadcast updated effects to systems
