@@ -11,9 +11,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
-import com.github.jacks.planetaryIdle.components.CropRegistry
-import com.github.jacks.planetaryIdle.components.CropType
-import com.github.jacks.planetaryIdle.components.Recipe
+import com.github.jacks.planetaryIdle.data.CropRegistry
+import com.github.jacks.planetaryIdle.data.CropType
+import com.github.jacks.planetaryIdle.data.Recipe
 import com.github.jacks.planetaryIdle.ui.Buttons
 import com.github.jacks.planetaryIdle.ui.Drawables
 import com.github.jacks.planetaryIdle.ui.Labels

@@ -6,7 +6,7 @@ import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.github.jacks.planetaryIdle.PlanetaryIdle.Companion.MATH_CONTEXT
-import com.github.jacks.planetaryIdle.components.BarnUpgrade
+import com.github.jacks.planetaryIdle.data.BarnUpgrade
 import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.components.AchievementBonus
 import com.github.jacks.planetaryIdle.components.Achievements

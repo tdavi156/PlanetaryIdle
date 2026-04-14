@@ -5,8 +5,9 @@ import com.badlogic.gdx.Preferences
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.github.jacks.planetaryIdle.components.BarnUpgrade
-import com.github.jacks.planetaryIdle.components.Discovery
+import com.github.jacks.planetaryIdle.data.BarnUpgrade
+import com.github.jacks.planetaryIdle.data.Discovery
+import com.github.jacks.planetaryIdle.data.Recipe
 import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.events.AutomationUnlockedEvent
 import com.github.jacks.planetaryIdle.events.BuyBarnUpgradeEvent
@@ -213,7 +214,7 @@ class AutomationModel(
 
         // Greedy assignment: pick best recipe, mark its colors used, continue
         val usedColors = mutableSetOf<String>()
-        val toActivate = mutableListOf<com.github.jacks.planetaryIdle.components.Recipe>()
+        val toActivate = mutableListOf<Recipe>()
         for (recipe in sortedRecipes) {
             val colors = recipe.crops.map { it.color }
             if (colors.none { it in usedColors }) {

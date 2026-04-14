@@ -1,4 +1,4 @@
-package com.github.jacks.planetaryIdle.components
+package com.github.jacks.planetaryIdle.data
 
 import ktx.log.logger
 

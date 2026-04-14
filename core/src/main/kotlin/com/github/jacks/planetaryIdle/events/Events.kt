@@ -3,8 +3,8 @@ package com.github.jacks.planetaryIdle.events
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Event
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.github.jacks.planetaryIdle.components.Discovery
-import com.github.jacks.planetaryIdle.components.Recipe
+import com.github.jacks.planetaryIdle.data.Discovery
+import com.github.jacks.planetaryIdle.data.Recipe
 import com.github.jacks.planetaryIdle.components.ResourceComponent
 import com.github.jacks.planetaryIdle.ui.ViewState
 import java.math.BigDecimal
@@ -34,7 +34,7 @@ class CreditGoldEvent(val amount: BigDecimal) : Event()
 class ViewStateChangeEvent(val state: ViewState) : Event()
 
 class BarnUnlockedEvent : Event()
-class BuyBarnUpgradeEvent(val upgrade: com.github.jacks.planetaryIdle.components.BarnUpgrade) : Event()
+class BuyBarnUpgradeEvent(val upgrade: com.github.jacks.planetaryIdle.data.BarnUpgrade) : Event()
 class BarnEffectsChangedEvent(
     /** Per-resource-name payout multiplier (e.g. "red" → 1.331 for 3 levels of Red Value). */
     val payoutMultipliers: Map<String, BigDecimal>,

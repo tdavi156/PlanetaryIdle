@@ -8,7 +8,7 @@ import com.github.jacks.planetaryIdle.components.AchievementComponent
 import com.github.jacks.planetaryIdle.components.AchievementConfiguration
 import com.github.jacks.planetaryIdle.components.AchievementType
 import com.github.jacks.planetaryIdle.components.Achievements
-import com.github.jacks.planetaryIdle.components.Discovery
+import com.github.jacks.planetaryIdle.data.Discovery
 import com.github.jacks.planetaryIdle.components.ConfigurationComponent
 import com.github.jacks.planetaryIdle.components.ConfigurationType.*
 import com.github.jacks.planetaryIdle.components.PlanetResources

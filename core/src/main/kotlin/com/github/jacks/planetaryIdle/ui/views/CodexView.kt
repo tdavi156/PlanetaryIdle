@@ -8,8 +8,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
-import com.github.jacks.planetaryIdle.components.CropRegistry
-import com.github.jacks.planetaryIdle.components.RecipeRegistry
+import com.github.jacks.planetaryIdle.data.CropRegistry
+import com.github.jacks.planetaryIdle.data.RecipeRegistry
 import com.github.jacks.planetaryIdle.ui.Buttons
 import com.github.jacks.planetaryIdle.ui.Colors
 import com.github.jacks.planetaryIdle.ui.Drawables

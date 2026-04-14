@@ -1,4 +1,4 @@
-package com.github.jacks.planetaryIdle.components
+package com.github.jacks.planetaryIdle.data
 
 /**
  * Hand-curated multi-color recipes (3 or more sequential colors).

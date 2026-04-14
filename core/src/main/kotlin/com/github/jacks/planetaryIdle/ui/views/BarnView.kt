@@ -14,7 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.Align
-import com.github.jacks.planetaryIdle.components.BarnUpgrade
+import com.github.jacks.planetaryIdle.data.BarnUpgrade
 import com.github.jacks.planetaryIdle.events.BuyBarnUpgradeEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.ui.Buttons

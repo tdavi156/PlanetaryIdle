@@ -7,8 +7,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
-import com.github.jacks.planetaryIdle.components.Discovery
-import com.github.jacks.planetaryIdle.components.DiscoveryCategory
+import com.github.jacks.planetaryIdle.data.Discovery
+import com.github.jacks.planetaryIdle.data.DiscoveryCategory
 import com.github.jacks.planetaryIdle.ui.Buttons
 import com.github.jacks.planetaryIdle.ui.Labels
 import com.github.jacks.planetaryIdle.ui.models.DiscoveryViewState

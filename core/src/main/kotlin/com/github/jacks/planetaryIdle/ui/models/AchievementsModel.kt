@@ -7,9 +7,10 @@ import com.badlogic.gdx.scenes.scene2d.EventListener
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.github.jacks.planetaryIdle.components.AchievementComponent
 import com.github.jacks.planetaryIdle.components.Achievements
-import com.github.jacks.planetaryIdle.components.BarnUpgrade
-import com.github.jacks.planetaryIdle.components.BarnUpgradeCategory
-import com.github.jacks.planetaryIdle.components.CropRegistry
+import com.github.jacks.planetaryIdle.data.BarnUpgrade
+import com.github.jacks.planetaryIdle.data.BarnUpgradeCategory
+import com.github.jacks.planetaryIdle.data.CropRegistry
+import com.github.jacks.planetaryIdle.data.Discovery
 import com.github.jacks.planetaryIdle.events.AchievementCompletedEvent
 import com.github.jacks.planetaryIdle.events.BuyBarnUpgradeEvent
 import com.github.jacks.planetaryIdle.events.DiscoveryPurchasedEvent
@@ -100,7 +101,7 @@ class AchievementsModel(
         kitchenViewModel.onPropertyChange(KitchenViewModel::discoveredRecipes) { updateAllProgress() }
 
         // Load initial discovery count from prefs
-        discoveryCount = com.github.jacks.planetaryIdle.components.Discovery.entries
+        discoveryCount = Discovery.entries
             .count { preferences[it.prefKey, false] }
 
         // Seed initial progress map

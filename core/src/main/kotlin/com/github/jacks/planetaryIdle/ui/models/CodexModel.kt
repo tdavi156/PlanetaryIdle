@@ -1,6 +1,6 @@
 package com.github.jacks.planetaryIdle.ui.models
 
-import com.github.jacks.planetaryIdle.components.Recipe
+import com.github.jacks.planetaryIdle.data.Recipe
 import java.math.BigDecimal
 
 class CodexModel(
