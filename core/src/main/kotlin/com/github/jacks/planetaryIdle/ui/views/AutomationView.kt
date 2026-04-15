@@ -50,12 +50,12 @@ class AutomationView(
         scrollPane { spCell ->
             this@AutomationView.contentTable = table { _ ->
                 top().left().pad(10f)
-                this@AutomationView.buildContent()
             }
             setScrollingDisabled(true, false)
             spCell.expand().fill()
         }
 
+        buildContent()
         bindModelProperties()
     }
 

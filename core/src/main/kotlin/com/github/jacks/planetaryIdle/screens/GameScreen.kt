@@ -59,8 +59,6 @@ import ktx.scene2d.table
 class GameScreen(game: PlanetaryIdle) : KtxScreen {
 
     private val stage = game.stage
-    private val skin = Scene2DSkin.defaultSkin
-
     private val isometricMapRenderer = IsometricMapRenderer()
 
     // AutomationModel must be created before the world so it can be injected
@@ -175,7 +173,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                 }
             }
         }
-        stage.isDebugAll = false
+        stage.isDebugAll = true
     }
 
     override fun show() {
