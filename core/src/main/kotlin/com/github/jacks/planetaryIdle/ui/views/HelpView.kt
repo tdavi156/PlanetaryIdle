@@ -89,6 +89,8 @@ class HelpView(
     // -------------------------------------------------------------------------
 
     init {
+        setFillParent(true)
+
         // Build shared drawables
         glossaryPanelBg   = solidDrawable(0.17f, 0.17f, 0.17f, 1f)
         contentHeaderBg   = solidDrawable(0.13f, 0.13f, 0.13f, 1f)
@@ -146,7 +148,7 @@ class HelpView(
             })
 
             tabButtons[tab] = btn
-            tabBar.add(btn).expandX().fillX().height(TAB_HEIGHT).pad(2f, 2f, 0f, 2f)
+            tabBar.add(btn).expandX().fillX().height(TAB_HEIGHT).pad(2f, 2f, 0f, 2f).prefWidth(0f)
         }
     }
 

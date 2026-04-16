@@ -148,7 +148,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                     autoView = automationView(automationModel, kitchenViewModel) { isVisible = false }
                     notificationView(NotificationModel(entityWorld, stage))
                     helpToastView(helpViewModel)
-                    stackCell.expand().fill()
+                    stackCell.expand().fill().prefWidth(0f).minWidth(0f)
                 }
 
                 image(skin[Drawables.BAR_BLACK_THIN]) { cell ->
@@ -173,7 +173,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                 }
             }
         }
-        stage.isDebugAll = true
+        stage.isDebugAll = false
     }
 
     override fun show() {
@@ -201,8 +201,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
     }
 
     override fun render(delta: Float) {
-        val deltaTime = delta.coerceAtMost(0.25f)
-        entityWorld.update(deltaTime)
+        entityWorld.update(delta.coerceAtMost(0.25f))
     }
 
     override fun dispose() {

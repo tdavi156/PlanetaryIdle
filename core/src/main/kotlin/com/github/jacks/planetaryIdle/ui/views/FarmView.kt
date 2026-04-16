@@ -148,7 +148,7 @@ class FarmView(
                                 color = view.colorFor(resource).color
                                 scaleX = 0f
                             }
-                            stackCell.expandX().fillX().height(30f).pad(3f, 0f, 3f, 5f)
+                            stackCell.expandX().fillX().height(30f).pad(3f, 0f, 3f, 5f).prefWidth(0f)
                         }
 
                         val milestone = label(

@@ -96,7 +96,7 @@ class MenuView(
             row()
 
             // Kitchen button with exhausted-research badge dot
-            val kitchenBtn = textButton("Kitchen", Buttons.GREY_BUTTON_MEDIUM.skinKey) {
+            val kitchenBtn = TextButton("Kitchen", skin, Buttons.GREY_BUTTON_MEDIUM.skinKey).apply {
                 isDisabled = !model.kitchenUnlocked
                 addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
@@ -104,6 +104,7 @@ class MenuView(
                     }
                 })
             }
+            view.kitchenButton = kitchenBtn
             view.kitchenBadgeDot = Image(orangeDot).apply { isVisible = model.kitchenHasExhausted }
             val kitchenStack = Stack()
             kitchenStack.add(kitchenBtn)
@@ -112,8 +113,6 @@ class MenuView(
             kitchenStack.add(kitchenDotWrapper)
             add(kitchenStack).top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
             row()
-
-            view.kitchenButton = kitchenBtn
 
             view.codexButton = textButton("Codex", Buttons.GREY_BUTTON_MEDIUM.skinKey) { cell ->
                 cell.top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
@@ -165,7 +164,7 @@ class MenuView(
             row()
 
             // Help button with unread-badge dot overlay
-            val helpBtn = textButton("Help", Buttons.GREY_BUTTON_MEDIUM.skinKey) {
+            val helpBtn = TextButton("Help", skin, Buttons.GREY_BUTTON_MEDIUM.skinKey).apply {
                 addListener(object : ChangeListener() {
                     override fun changed(event: ChangeEvent, actor: Actor) {
                         this@MenuView.changeActiveView(ViewState.HELP)
@@ -178,7 +177,6 @@ class MenuView(
             val dotWrapper = Table(skin)
             dotWrapper.add(view.helpBadgeDot).size(12f, 12f).top().right().pad(4f, 0f, 0f, 4f)
             helpStack.add(dotWrapper)
-
             add(helpStack).top().left().width(200f).height(45f).pad(2f, 2f, 2f, 2f)
             row()
 

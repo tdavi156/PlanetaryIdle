@@ -54,7 +54,7 @@ class CodexView(
                         }
                     })
                     view.tabButtons[tab] = btn
-                    add(btn).height(30f).pad(4f).minWidth(120f)
+                    add(btn).height(30f).pad(4f).width(120f)
                 }
                 tabCell.expandX().left().padLeft(8f).height(40f)
             }
@@ -126,6 +126,7 @@ class CodexView(
                     .expandX().fillX()
                     .height(TILE_HEIGHT)
                     .pad(2f, 4f, 2f, 4f)
+                    .prefWidth(0f)
                     .center()
             }
             contentTable.row()

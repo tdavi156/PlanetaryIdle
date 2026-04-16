@@ -97,7 +97,7 @@ class AchievementsView(
                         }
                     })
                     view.filterButtons[tab] = btn
-                    add(btn).height(30f).pad(4f, 4f, 4f, 4f).minWidth(100f)
+                    add(btn).height(30f).pad(4f, 4f, 4f, 4f).width(100f)
                 }
                 tabCell.expandX().left().padLeft(8f).height(40f)
             }
@@ -258,7 +258,7 @@ class AchievementsView(
         val barFill = Image(skin[Drawables.BAR_GREEN_THICK]).also { it.scaleX = 0f }
         barStack.add(barBg)
         barStack.add(barFill)
-        card.add(barStack).colspan(2).expandX().fillX().height(BAR_HEIGHT).pad(0f, INNER_PAD, INNER_PAD, INNER_PAD)
+        card.add(barStack).colspan(2).expandX().fillX().height(BAR_HEIGHT).pad(0f, INNER_PAD, INNER_PAD, INNER_PAD).prefWidth(0f)
         progressFills[ach.achId] = barFill
 
         return card

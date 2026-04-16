@@ -30,9 +30,6 @@ import ktx.scene2d.KWidget
 import ktx.scene2d.Scene2DSkin
 import ktx.scene2d.Scene2dDsl
 import ktx.scene2d.actor
-import ktx.scene2d.label
-import ktx.scene2d.table
-import ktx.scene2d.textButton
 
 private const val NODE_SIZE       = 80f
 private const val CANVAS_WIDTH    = 2500f
@@ -112,49 +109,47 @@ class BarnView(
         }
 
         // ── Info panel at bottom ─────────────────────────────────────────
-        val infoPanel = table { panelCell ->
-            background = view.skin[Drawables.BACKGROUND_GREY]
+        // Constructed as a plain Table (not via the KTX 'table {}' DSL) so it
+        // is never auto-added as a phantom unconstrained Cell to BarnView.
+        val infoPanel = Table(skin)
+        infoPanel.background = view.skin[Drawables.BACKGROUND_GREY]
 
-            table { leftCell ->
-                view.infoName = label("Select an upgrade", Labels.MEDIUM.skinKey) { cell ->
-                    cell.left().padLeft(10f).row()
-                    setAlignment(Align.left)
-                }
-                view.infoDescription = label("", Labels.SMALL.skinKey) { cell ->
-                    cell.left().padLeft(10f).width(500f).row()
-                    setAlignment(Align.topLeft)
-                    wrap = true
-                }
-                leftCell.top().left().expandX().fillX().pad(5f)
-            }
-
-            table { rightCell ->
-                view.infoLevel = label("", Labels.SMALL.skinKey) { cell ->
-                    cell.right().padRight(10f).row()
-                }
-                view.infoCost = label("", Labels.SMALL.skinKey) { cell ->
-                    cell.right().padRight(10f).row()
-                }
-                view.infoBuyButton = textButton("Buy", Buttons.GREEN_BUTTON_MEDIUM.skinKey) { cell ->
-                    cell.right().width(140f).height(45f).pad(5f, 5f, 5f, 10f)
-                    isDisabled = true
-                    addListener(object : ChangeListener() {
-                        override fun changed(event: ChangeEvent, actor: Actor) {
-                            view.selectedUpgrade?.let { upgrade ->
-                                view.stage.fire(BuyBarnUpgradeEvent(upgrade))
-                            }
-                        }
-                    })
-                }
-                rightCell.top().right().pad(5f)
-            }
-
-            panelCell.expandX().fillX().height(INFO_PANEL_HEIGHT)
+        val leftTable = Table(skin)
+        view.infoName = Label("Select an upgrade", skin, Labels.MEDIUM.skinKey).also {
+            it.setAlignment(Align.left)
         }
+        view.infoDescription = Label("", skin, Labels.SMALL.skinKey).also {
+            it.setAlignment(Align.topLeft)
+            it.wrap = true
+        }
+        leftTable.add(view.infoName).left().padLeft(10f)
+        leftTable.row()
+        leftTable.add(view.infoDescription).left().padLeft(10f).width(500f)
+        infoPanel.add(leftTable).top().left().expandX().fillX().pad(5f)
+
+        val rightTable = Table(skin)
+        view.infoLevel = Label("", skin, Labels.SMALL.skinKey)
+        view.infoCost  = Label("", skin, Labels.SMALL.skinKey)
+        view.infoBuyButton = TextButton("Buy", skin, Buttons.GREEN_BUTTON_MEDIUM.skinKey).also { btn ->
+            btn.isDisabled = true
+            btn.addListener(object : ChangeListener() {
+                override fun changed(event: ChangeEvent, actor: Actor) {
+                    view.selectedUpgrade?.let { upgrade ->
+                        view.stage.fire(BuyBarnUpgradeEvent(upgrade))
+                    }
+                }
+            })
+        }
+        rightTable.add(view.infoLevel).right().padRight(10f)
+        rightTable.row()
+        rightTable.add(view.infoCost).right().padRight(10f)
+        rightTable.row()
+        rightTable.add(view.infoBuyButton).right().width(140f).height(45f).pad(5f, 5f, 5f, 10f)
+        infoPanel.add(rightTable).top().right().pad(5f)
 
         add(scrollPane).expand().fill()
         row()
-        add(infoPanel).expandX().fillX().height(INFO_PANEL_HEIGHT)
+        add(infoPanel).expandX().fillX().height(INFO_PANEL_HEIGHT).prefWidth(0f)
 
         // ── Model bindings ───────────────────────────────────────────────
         model.onPropertyChange(BarnViewModel::upgradeStates) { states ->
