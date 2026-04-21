@@ -38,6 +38,7 @@ import com.github.jacks.planetaryIdle.ui.views.backgroundView
 import com.github.jacks.planetaryIdle.ui.views.barnView
 import com.github.jacks.planetaryIdle.ui.views.codexView
 import com.github.jacks.planetaryIdle.ui.views.farmView
+import com.github.jacks.planetaryIdle.ui.views.footerView
 import com.github.jacks.planetaryIdle.ui.views.headerView
 import com.github.jacks.planetaryIdle.ui.views.helpToastView
 import com.github.jacks.planetaryIdle.ui.views.helpView
@@ -113,13 +114,13 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
 
                 val achievementsModel = AchievementsModel(entityWorld, stage, farmModel, kitchenViewModel)
                 var hdrView: HeaderView? = null
-                hdrView = headerView(farmModel, achievementsModel, stage) { cell ->
-                    cell.expandX().fillX().height(HEADER_HEIGHT).colspan(3)
+                hdrView = headerView(farmModel, observatoryViewModel, stage) { cell ->
+                    cell.expandX().fillX().height(HEADER_HEIGHT).colspan(2)
                 }
                 row()
 
                 image(skin[Drawables.BAR_BLACK_THIN]) { cell ->
-                    cell.expandX().fillX().height(2f).colspan(3)
+                    cell.expandX().fillX().height(2f).colspan(2)
                 }
                 row()
 
@@ -137,7 +138,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                 achievementsModel.observatoryViewModel = observatoryViewModel
 
                 stack { stackCell ->
-                    fView    = farmView(farmModel, kitchenViewModel, stage, hdrView!!.goldLabel) { isVisible = true }
+                    fView    = farmView(farmModel, kitchenViewModel, stage, hdrView!!.goldLabel, isometricMapRenderer) { isVisible = true }
                     bView    = barnView(barnViewModel, stage) { isVisible = false }
                     kView    = kitchenView(kitchenViewModel) { isVisible = false }
                     cView    = codexView(codexModel) { isVisible = false }
@@ -149,10 +150,6 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                     notificationView(NotificationModel(entityWorld, stage))
                     helpToastView(helpViewModel)
                     stackCell.expand().fill().prefWidth(0f).minWidth(0f)
-                }
-
-                image(skin[Drawables.BAR_BLACK_THIN]) { cell ->
-                    cell.fillY().width(2f)
                 }
 
                 menuView(
@@ -170,6 +167,11 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
                     automationView   = autoView!!,
                 ) { cell ->
                     cell.top().fillY().width(MENU_WIDTH)
+                }
+
+                row()
+                footerView(farmModel, stage) { cell ->
+                    cell.expandX().fillX().colspan(2).height(FOOTER_HEIGHT)
                 }
             }
         }
@@ -196,7 +198,7 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
         // Fire initial observatory effects after all listeners are registered
         observatoryViewModel.fireInitialEffects()
 
-        KeyboardInputProcessor(entityWorld, stage)
+        KeyboardInputProcessor(entityWorld, stage, isometricMapRenderer)
         gdxInputProcessor(stage)
     }
 
@@ -213,5 +215,6 @@ class GameScreen(game: PlanetaryIdle) : KtxScreen {
         val log = logger<PlanetaryIdle>()
         const val MENU_WIDTH    = 204f
         const val HEADER_HEIGHT = 44f
+        const val FOOTER_HEIGHT = 68f
     }
 }

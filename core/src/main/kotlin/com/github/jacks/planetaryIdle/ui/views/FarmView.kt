@@ -1,13 +1,15 @@
 package com.github.jacks.planetaryIdle.ui.views
 
-import ch.obermuhlner.math.big.BigDecimalMath
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.scenes.scene2d.Actor
+import com.github.jacks.planetaryIdle.rendering.IsometricMapRenderer
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.InputListener
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
@@ -19,7 +21,6 @@ import com.badlogic.gdx.utils.Align
 import com.github.jacks.planetaryIdle.components.PlanetResources
 import com.github.jacks.planetaryIdle.events.AchievementNotificationEvent
 import com.github.jacks.planetaryIdle.events.BuyResourceEvent
-import com.github.jacks.planetaryIdle.events.FloatingTextEvent
 import com.github.jacks.planetaryIdle.events.GameCompletedEvent
 import com.github.jacks.planetaryIdle.events.fire
 import com.github.jacks.planetaryIdle.ui.Buttons
@@ -33,7 +34,6 @@ import com.github.jacks.planetaryIdle.ui.models.ResourceModelState
 import com.github.jacks.planetaryIdle.ui.views.HeaderView.Companion.formatShort
 import ktx.actors.txt
 import ktx.log.logger
-import ktx.math.vec2
 import ktx.scene2d.KTable
 import ktx.scene2d.KWidget
 import ktx.scene2d.Scene2DSkin
@@ -45,7 +45,6 @@ import ktx.scene2d.stack
 import ktx.scene2d.table
 import ktx.scene2d.textButton
 import java.math.BigDecimal
-import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 
@@ -55,6 +54,7 @@ private data class ResourceWidgets(
     val button: TextButton,
     val dropdownButton: TextButton,
     val progressFill: Image,
+    val buttonFlash: Image,
     val tooltipLabel: Label,
     val milestoneLabel: Label,
 )
@@ -64,21 +64,19 @@ class FarmView(
     private val kitchenModel: KitchenViewModel,
     private val stage: Stage,
     private val goldLabel: Label,
+    private val mapRenderer: IsometricMapRenderer,
     skin: Skin,
 ) : Table(skin), KTable {
 
     private val noDecFormat = DecimalFormat("#,##0", DecimalFormatSymbols.getInstance())
 
-    private val resourceWidgets = mutableMapOf<PlanetResources, ResourceWidgets>()
-    private val localStates     = mutableMapOf<PlanetResources, ResourceModelState>()
-    private val elapsedSeconds  = mutableMapOf<PlanetResources, Float>()
+    private val resourceWidgets    = mutableMapOf<PlanetResources, ResourceWidgets>()
+    private val localStates        = mutableMapOf<PlanetResources, ResourceModelState>()
+    private val elapsedSeconds     = mutableMapOf<PlanetResources, Float>()
+    private val particleCooldowns  = mutableMapOf<PlanetResources, Float>()
 
     private var goldCoins    = model.goldCoins
     private var soilUpgrades = model.soilUpgrades
-
-    private lateinit var productionRateLabel: Label
-    private lateinit var colonizationProgress: Image
-    private lateinit var productionRateProgressLabel: Label
 
     // Currently active recipe pairs for visual linking
     private val linkedColors = mutableSetOf<String>()  // colors currently in a recipe
@@ -106,6 +104,7 @@ class FarmView(
         PlanetResources.entries.forEach { resource ->
             localStates[resource] = stateFor(resource)
             elapsedSeconds[resource] = 0f
+            particleCooldowns[resource] = 0f
         }
 
         table { gameCell ->
@@ -115,18 +114,26 @@ class FarmView(
                     val state = view.localStates[resource]!!
                     val rowTable = table { rowCell ->
 
-                        // Buy button (color-styled)
-                        val btn = textButton(
-                            view.makeButtonText(resource, state),
-                            view.buttonStyleFor(resource)
-                        ) { cell ->
-                            cell.left().width(210f).height(55f).pad(3f, 5f, 3f, 0f)
-                            isDisabled = view.goldCoins < state.cost
-                            addListener(object : ChangeListener() {
-                                override fun changed(event: ChangeEvent, actor: Actor) {
-                                    view.stage.fire(BuyResourceEvent(resource.resourceName))
-                                }
-                            })
+                        // Buy button (color-styled) + white flash overlay in a Stack
+                        var btn: TextButton? = null
+                        var btnFlash: Image? = null
+                        stack { stackCell ->
+                            btn = textButton(
+                                view.makeButtonText(resource, state),
+                                view.buttonStyleFor(resource)
+                            ) {
+                                isDisabled = view.goldCoins < state.cost
+                                addListener(object : ChangeListener() {
+                                    override fun changed(event: ChangeEvent, actor: Actor) {
+                                        view.stage.fire(BuyResourceEvent(resource.resourceName))
+                                    }
+                                })
+                            }
+                            btnFlash = image(view.skin[Drawables.BAR_WHITE]) {
+                                color = Color(1f, 1f, 1f, 0f)  // fully transparent until triggered
+                                touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+                            }
+                            stackCell.left().width(210f).height(55f).pad(3f, 5f, 3f, 0f)
                         }
 
                         // Crop dropdown arrow button (shown when kitchen has multiple options)
@@ -138,17 +145,6 @@ class FarmView(
                                     view.showCropDropdown(resource)
                                 }
                             })
-                        }
-
-                        // Progress bar
-                        var fillImage: Image? = null
-                        stack { stackCell ->
-                            image(view.skin[Drawables.BAR_GREY_THICK])
-                            fillImage = image(view.skin[Drawables.BAR_GREY_THICK]) {
-                                color = view.colorFor(resource).color
-                                scaleX = 0f
-                            }
-                            stackCell.expandX().fillX().height(30f).pad(3f, 0f, 3f, 5f).prefWidth(0f)
                         }
 
                         val milestone = label(
@@ -170,7 +166,7 @@ class FarmView(
                             isVisible = false
                         }
 
-                        btn.addListener(object : InputListener() {
+                        btn!!.addListener(object : InputListener() {
                             override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
                                 if (pointer == -1) tooltip.isVisible = true
                             }
@@ -179,13 +175,28 @@ class FarmView(
                             }
                         })
 
+                        // spacer — absorbs remaining horizontal space so content stays left-aligned
+                        add().expandX()
+
+                        // ── Row 2: thin progress bar under the buy button ──────────────
+                        row()
+                        var fillImage: Image? = null
+                        stack { stackCell ->
+                            image(view.skin[Drawables.BAR_GREY_THICK])
+                            fillImage = image(view.skin[Drawables.BAR_WHITE]) {
+                                scaleX = 0f
+                            }
+                            stackCell.left().width(210f).height(6f).pad(0f, 5f, 2f, 0f)
+                        }
+
                         rowCell.expandX().fillX()
 
                         view.resourceWidgets[resource] = ResourceWidgets(
                             rowTable       = this,
-                            button         = btn,
+                            button         = btn!!,
                             dropdownButton = dropBtn,
                             progressFill   = fillImage!!,
+                            buttonFlash    = btnFlash!!,
                             tooltipLabel   = tooltip,
                             milestoneLabel = milestone,
                         )
@@ -204,40 +215,7 @@ class FarmView(
                     rowTable.isVisible = resource == PlanetResources.RED
                 }
 
-                rowsCell.expandY().fillY().top().left()
-            }
-
-            row()
-            image(skin[Drawables.BAR_BLACK_THIN]) { cell ->
-                cell.expandX().fillX().height(2f)
-            }
-            row()
-
-            // ── Bottom info row ────────────────────────────────────────────
-            table { bottomCell ->
-                view.productionRateLabel = label(
-                    "Production: ${formatShort(view.model.productionRate)}/s",
-                    Labels.SMALL.skinKey
-                ) { cell ->
-                    cell.expandX().left().padLeft(10f)
-                }
-                bottomCell.expandX().fillX().height(30f)
-            }
-            row()
-
-            // ── Colonization progress bar ──────────────────────────────────
-            table { barCell ->
-                stack { stackCell ->
-                    image(view.skin[Drawables.BAR_GREY_THICK])
-                    view.colonizationProgress = image(view.skin[Drawables.BAR_GREEN_THICK]) {
-                        scaleX = 0f
-                    }
-                    view.productionRateProgressLabel = label("0.00 %", Labels.MEDIUM.skinKey) {
-                        setAlignment(Align.center)
-                    }
-                    stackCell.center().width(600f).height(30f)
-                }
-                barCell.expandX().top().height(44f).padTop(5f)
+                rowsCell.expand().fill().top().left()
             }
 
             gameCell.expand().fill().pad(5f, 0f, 5f, 0f)
@@ -250,8 +228,6 @@ class FarmView(
             checkGoldAchievements(amount)
         }
         model.onPropertyChange(FarmModel::productionRate) { rate ->
-            productionRateLabel.txt = "Production: ${formatShort(rate)}/s"
-            updateColonizationBar(rate)
             if (rate >= PLANETARY_SCORE && !model.gameCompleted) {
                 stage.fire(GameCompletedEvent())
             }
@@ -276,14 +252,27 @@ class FarmView(
         model.onPropertyChange(FarmModel::whiteState)  { stateChanged(PlanetResources.WHITE,  it) }
         model.onPropertyChange(FarmModel::blackState)  { stateChanged(PlanetResources.BLACK,  it) }
 
-        model.onPropertyChange(FarmModel::lastProductionPayout) { (name, amount) ->
+        model.onPropertyChange(FarmModel::lastProductionPayout) { (name, _) ->
             if (name.isEmpty()) return@onPropertyChange
             val resource = PlanetResources.entries.find { it.resourceName == name } ?: return@onPropertyChange
             elapsedSeconds[resource] = 0f
-            val fillImage = resourceWidgets[resource]?.progressFill ?: return@onPropertyChange
-            val startPos  = fillImage.localToStageCoordinates(vec2(fillImage.width, fillImage.height / 2f))
-            val targetPos = goldLabel.localToStageCoordinates(vec2(goldLabel.width / 2f, goldLabel.height / 2f))
-            stage.fire(FloatingTextEvent(startPos, targetPos, amount, "+${formatShort(amount)}"))
+
+            // Button flash
+            val flash = resourceWidgets[resource]?.buttonFlash
+            if (flash != null) {
+                flash.clearActions()
+                flash.color.a = 0.45f
+                flash.addAction(Actions.fadeOut(0.25f))
+            }
+
+            // Particle burst at the tree — only while the FARM view is on screen
+            if (view.isVisible && (particleCooldowns[resource] ?: 0f) <= 0f) {
+                val owned = localStates[resource]?.owned?.toLong() ?: 1L
+                val count = if (owned >= 100L) 10
+                            else ((owned - 1L) / 10L + 1L).toInt().coerceIn(1, 9)
+                repeat(count) { spawnParticle(resource) }
+                particleCooldowns[resource] = MIN_PARTICLE_INTERVAL
+            }
         }
 
         // Kitchen bindings
@@ -317,7 +306,35 @@ class FarmView(
             elapsedSeconds[resource] = elapsed
             val progress = (elapsed / state.cycleDuration.toFloat()).coerceIn(0f, 1f)
             resourceWidgets[resource]?.progressFill?.scaleX = progress
+            // Tick particle cooldown down to zero each frame
+            val cd = particleCooldowns[resource] ?: 0f
+            if (cd > 0f) particleCooldowns[resource] = (cd - delta).coerceAtLeast(0f)
         }
+    }
+
+    // ── Ambient particles ─────────────────────────────────────────────────────
+
+    private fun spawnParticle(resource: PlanetResources) {
+        val base  = mapRenderer.getTreeScreenPosition(resource.resourceName) ?: return
+        val scale = mapRenderer.particleScale
+        val particle = Image(skin[Drawables.BAR_WHITE])
+        val size = MathUtils.random(3f, 5f) * scale
+        particle.setSize(size, size)
+        particle.setPosition(
+            base.x + 35f * scale + MathUtils.random(-45f, 45f) * scale,
+            base.y + MathUtils.random(-20f, 20f) * scale
+        )
+        val c = colorFor(resource).color
+        particle.color.set(c.r, c.g, c.b, 1f)
+        val life = MathUtils.random(1.25f, 2.25f)
+        particle.addAction(Actions.sequence(
+            Actions.parallel(
+                Actions.moveBy(MathUtils.random(-20f, 20f) * scale, MathUtils.random(53f, 98f) * scale, life),
+                Actions.fadeOut(life)
+            ),
+            Actions.removeActor()
+        ))
+        stage.addActor(particle)
     }
 
     // ── Crop dropdown ─────────────────────────────────────────────────────────
@@ -518,18 +535,6 @@ class FarmView(
         if (n >= 25) stage.fire(AchievementNotificationEvent("soil_25"))
     }
 
-    // ── Colonization progress bar ─────────────────────────────────────────
-    private fun updateColonizationBar(rate: BigDecimal) {
-        val prodMantissa = BigDecimalMath.mantissa(rate)
-        val prodExponent = BigDecimalMath.exponent(rate).toBigDecimal()
-        val expPercent   = prodExponent.divide(PLANETARY_EXPONENT, 6, RoundingMode.UP)
-        val manPercent   = expPercent.multiply(prodMantissa.divide(BigDecimal(10), 10, RoundingMode.HALF_UP))
-        val prodPercent  = if (rate > BigDecimal.ONE) (expPercent + manPercent).toFloat() else manPercent.toFloat()
-        val clamped      = prodPercent.coerceIn(0f, 1f)
-        productionRateProgressLabel.txt = "${"%.2f".format(clamped * 100f)} %"
-        colonizationProgress.scaleX = clamped
-    }
-
     // ── Milestone helpers ─────────────────────────────────────────────────────
 
     private fun milestonesFor(resource: PlanetResources): List<Long> = when (resource) {
@@ -627,8 +632,9 @@ class FarmView(
 
     companion object {
         private val log = logger<FarmView>()
-        private val PLANETARY_EXPONENT = BigDecimal(308)
-        @Suppress("unused")
+
+        /** Minimum seconds between particle bursts per crop — throttles extreme production speeds. */
+        private const val MIN_PARTICLE_INTERVAL = 0.15f
         private val PLANETARY_SCORE = BigDecimal(1e308)
 
         private val TEN       = BigDecimal(10)
@@ -652,6 +658,7 @@ fun <S> KWidget<S>.farmView(
     kitchenModel: KitchenViewModel,
     stage: Stage,
     goldLabel: Label,
+    mapRenderer: IsometricMapRenderer,
     skin: Skin = Scene2DSkin.defaultSkin,
     init: FarmView.(S) -> Unit = {},
-): FarmView = actor(FarmView(model, kitchenModel, stage, goldLabel, skin), init)
+): FarmView = actor(FarmView(model, kitchenModel, stage, goldLabel, mapRenderer, skin), init)

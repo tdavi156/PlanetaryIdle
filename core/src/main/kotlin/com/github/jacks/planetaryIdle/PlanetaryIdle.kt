@@ -27,12 +27,21 @@ class PlanetaryIdle : KtxGame<KtxScreen>(), EventListener {
     val stage : Stage by lazy { Stage(ScreenViewport(), batch) }
     private val preferences : Preferences by lazy { Gdx.app.getPreferences("planetaryIdlePrefs") }
     private val resetOnStart : Boolean = true
+    private val devMode      : Boolean = true
 
     override fun create() {
         Gdx.app.logLevel = Application.LOG_DEBUG
         if (resetOnStart) {
             preferences.flush {
                 this.clear()
+            }
+        }
+        if (devMode) {
+            preferences.flush {
+                putString("gold_coins",    "1E+100")
+                putBoolean("barn_unlocked", true)
+                // soil_upgrades = 1 so the full barn upgrade tree is revealed on first open
+                putString("soil_upgrades", "1")
             }
         }
         loadSkin()

@@ -23,6 +23,7 @@ class BackgroundView(skin: Skin) : Table(skin), KTable, EventListener {
     private val greyDrawable: TextureRegionDrawable
     private val barnDrawable: TextureRegionDrawable?
     private val kitchenDrawable: TextureRegionDrawable?
+    private val observatoryDrawable: TextureRegionDrawable?
 
     init {
         setFillParent(true)
@@ -33,21 +34,23 @@ class BackgroundView(skin: Skin) : Table(skin), KTable, EventListener {
         greyDrawable = TextureRegionDrawable(Texture(pixmap))
         pixmap.dispose()
 
-        barnDrawable    = tryLoadTexture("graphics/barn_background.png")
-        kitchenDrawable = tryLoadTexture("graphics/kitchen_background.png")
+        barnDrawable        = tryLoadTexture("maps/images/background_barn.png")
+        kitchenDrawable     = tryLoadTexture("maps/images/background_kitchen.png")
+        observatoryDrawable = tryLoadTexture("maps/images/background_observatory.png")
 
-        // Default: grey (farm view switches to null so the isometric map shows through)
-        background = greyDrawable
+        // Default: null (FARM is the starting state — isometric map renders behind the stage)
+        background = null
     }
 
     override fun handle(event: Event): Boolean {
         if (event is ViewStateChangeEvent) {
             background = when (event.state) {
-                ViewState.BARN    -> barnDrawable ?: greyDrawable
-                ViewState.KITCHEN -> kitchenDrawable ?: greyDrawable
+                ViewState.BARN        -> barnDrawable ?: greyDrawable
+                ViewState.KITCHEN     -> kitchenDrawable ?: greyDrawable
+                ViewState.OBSERVATORY -> observatoryDrawable ?: greyDrawable
                 // Farm: no background — isometric map renders underneath via RenderSystem
-                ViewState.FARM    -> null
-                else              -> greyDrawable
+                ViewState.FARM        -> null
+                else                  -> greyDrawable
             }
         }
         return false

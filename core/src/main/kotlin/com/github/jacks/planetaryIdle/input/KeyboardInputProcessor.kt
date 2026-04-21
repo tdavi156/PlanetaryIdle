@@ -5,6 +5,7 @@ import com.badlogic.gdx.Input.Keys.W
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.github.jacks.planetaryIdle.rendering.IsometricMapRenderer
 import com.github.quillraven.fleks.World
 import ktx.app.KtxInputAdapter
 import ktx.log.logger
@@ -27,6 +28,7 @@ fun gdxInputProcessor(processor : InputProcessor) {
 class KeyboardInputProcessor(
     private val world : World,
     private val stage : Stage,
+    private val mapRenderer: IsometricMapRenderer,
 ) : KtxInputAdapter {
 
     init {
@@ -44,6 +46,10 @@ class KeyboardInputProcessor(
 
     override fun keyUp(keycode: Int): Boolean {
         return super.keyUp(keycode)
+    }
+
+    override fun scrolled(amountX: Float, amountY: Float): Boolean {
+        return mapRenderer.adjustZoom(amountY)
     }
 
     companion object {

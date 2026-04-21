@@ -2,6 +2,8 @@ package com.github.jacks.planetaryIdle.ui
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.Pixmap
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.TextureAtlas
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
@@ -37,9 +39,11 @@ enum class Drawables(
     BAR_GREEN_THICK("bar_green_thick"),
     BAR_GREEN_THICK_A25("bar_green_thick_a25"),
     BAR_GREY_THICK("bar_grey_thick"),
+    BAR_WHITE("bar_white"),
     BAR_BLACK_THIN("bar_black_thin"),
 
     BACKGROUND_GREY("button_grey_up"),
+    BACKGROUND_SOLID_GREY("background_solid_grey"),
 
     BUTTON_RED_UP("button_red_up"),
     BUTTON_RED_OVER("button_red_over"),
@@ -180,8 +184,27 @@ enum class Buttons {
 operator fun Skin.get(drawable : Drawables) : Drawable = this.getDrawable(drawable.atlasKey)
 operator fun Skin.get(font : Fonts) : BitmapFont = this.getFont(font.skinKey)
 
+// Solid-colour textures created at runtime — disposed separately in disposeSkin()
+private var solidGreyTexture: Texture? = null
+private var solidWhiteTexture: Texture? = null
+
 fun loadSkin() {
     Scene2DSkin.defaultSkin = skin(TextureAtlas("ui/ui.atlas")) { skin ->
+        // 1×1 grey pixel — perfectly rectangular, no rounded corners
+        val pixmap = Pixmap(1, 1, Pixmap.Format.RGBA8888)
+        pixmap.setColor(Color(0.22f, 0.22f, 0.22f, 1f))
+        pixmap.fill()
+        solidGreyTexture = Texture(pixmap)
+        pixmap.dispose()
+        skin.add(Drawables.BACKGROUND_SOLID_GREY.atlasKey, solidGreyTexture!!)
+
+        val whitePixmap = Pixmap(1, 1, Pixmap.Format.RGBA8888)
+        whitePixmap.setColor(Color.WHITE)
+        whitePixmap.fill()
+        solidWhiteTexture = Texture(whitePixmap)
+        whitePixmap.dispose()
+        skin.add(Drawables.BAR_WHITE.atlasKey, solidWhiteTexture!!)
+
         loadFonts(skin)
         loadLabels(skin)
         loadButtons(skin)
@@ -542,4 +565,8 @@ private fun @SkinDsl Skin.loadButtons(skin: Skin) {
 
 fun disposeSkin() {
     Scene2DSkin.defaultSkin.disposeSafely()
+    solidGreyTexture.disposeSafely()
+    solidGreyTexture = null
+    solidWhiteTexture.disposeSafely()
+    solidWhiteTexture = null
 }

@@ -199,14 +199,14 @@ class AchievementsView(
         val visible = visibleAchievements()
         visible.forEachIndexed { index, ach ->
             val card = cards[ach.achId] ?: return@forEachIndexed
-            gridTable.add(card).expandX().fillX().height(CARD_HEIGHT).pad(CARD_PAD)
+            gridTable.add(card).expandX().fillX().height(CARD_HEIGHT).pad(CARD_PAD).prefWidth(0f)
             if ((index + 1) % columns == 0) gridTable.row()
         }
 
         val remainder = visible.size % columns
         if (remainder != 0) {
             repeat(columns - remainder) {
-                gridTable.add().expandX().fillX().height(CARD_HEIGHT).pad(CARD_PAD)
+                gridTable.add().expandX().fillX().height(CARD_HEIGHT).pad(CARD_PAD).prefWidth(0f)
             }
         }
 
