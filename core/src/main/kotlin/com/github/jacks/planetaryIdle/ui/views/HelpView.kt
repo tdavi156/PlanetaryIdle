@@ -148,7 +148,7 @@ class HelpView(
             })
 
             tabButtons[tab] = btn
-            tabBar.add(btn).expandX().fillX().height(TAB_HEIGHT).pad(2f, 2f, 0f, 2f).prefWidth(0f)
+            tabBar.add(btn).expandX().fillX().height(TAB_HEIGHT).minHeight(0f).minWidth(0f).pad(2f, 2f, 0f, 2f).prefWidth(0f)
         }
     }
 
@@ -266,7 +266,7 @@ class HelpView(
         sections.forEachIndexed { index, section ->
             val rowTable = buildGlossaryRow(section)
             glossaryItemRows.add(section to rowTable)
-            glossaryInner.add(rowTable).expandX().fillX().height(GLOSSARY_ROW_HEIGHT).pad(
+            glossaryInner.add(rowTable).expandX().fillX().height(GLOSSARY_ROW_HEIGHT).minHeight(0f).pad(
                 if (index == 0) 4f else 2f, 4f, 2f, 4f
             )
             glossaryInner.row()
@@ -277,7 +277,7 @@ class HelpView(
         lockedSections.forEach { section ->
             val lockedBtn = TextButton(section.title, skin, Buttons.GREY_BUTTON_MEDIUM.skinKey)
             lockedBtn.isDisabled = true
-            glossaryInner.add(lockedBtn).expandX().fillX().height(GLOSSARY_ROW_HEIGHT).pad(2f, 4f, 2f, 4f)
+            glossaryInner.add(lockedBtn).expandX().fillX().height(GLOSSARY_ROW_HEIGHT).minHeight(0f).pad(2f, 4f, 2f, 4f)
             glossaryInner.row()
         }
 

@@ -44,7 +44,8 @@ data class ResourceModelState(
     val owned: BigDecimal = BigDecimal.ZERO,
     val cost: BigDecimal = BigDecimal.ZERO,
     val payout: BigDecimal = BigDecimal.ZERO,
-    val cycleDuration: BigDecimal = BigDecimal.ZERO
+    val cycleDuration: BigDecimal = BigDecimal.ZERO,
+    val isUnlocked: Boolean = false,
 )
 
 class FarmModel(
@@ -388,7 +389,8 @@ class FarmModel(
                 owned = rscComp.amountOwned,
                 cost = rscComp.cost,
                 payout = rscComp.payout,
-                cycleDuration = rscComp.cycleDuration
+                cycleDuration = rscComp.cycleDuration,
+                isUnlocked = rscComp.isUnlocked,
             )
         )
     }
@@ -520,7 +522,8 @@ class FarmModel(
             if (o >= 5000) milestone = milestone.multiply(BigDecimal("200.0"))
             base.multiply(scaled).multiply(milestone)
         }
-        return ResourceModelState(owned = owned, cost = cost, payout = payout, cycleDuration = cycleDuration)
+        val isUnlocked = preferences["${resource.resourceName}_unlocked", false]
+        return ResourceModelState(owned = owned, cost = cost, payout = payout, cycleDuration = cycleDuration, isUnlocked = isUnlocked)
     }
 
     /** Returns the current [ResourceModelState] for [color], or null if not found. */

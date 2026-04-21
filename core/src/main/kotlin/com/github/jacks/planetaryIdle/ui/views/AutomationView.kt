@@ -71,7 +71,7 @@ class AutomationView(
         contentTable.row()
 
         // ── Crop section ──────────────────────────────────────────────────────
-        contentTable.add(buildSectionHeader("Crop Auto-Buy")).expandX().fillX().padTop(4f)
+        contentTable.add(buildSectionHeader("Crop Auto-Buy")).expandX().fillX().height(32f).minHeight(0f).padTop(4f)
         contentTable.row()
 
         val crops = Table(skin)
@@ -166,7 +166,7 @@ class AutomationView(
 
     private fun buildSoilSection(container: Table) {
         container.clear()
-        container.add(buildSectionHeader("Soil Auto-Buy")).expandX().fillX()
+        container.add(buildSectionHeader("Soil Auto-Buy")).expandX().fillX().height(32f).minHeight(0f)
         container.row()
 
         val row = Table(skin)
@@ -192,7 +192,7 @@ class AutomationView(
 
     private fun buildKitchenSection(container: Table) {
         container.clear()
-        container.add(buildSectionHeader("Kitchen Automation")).expandX().fillX()
+        container.add(buildSectionHeader("Kitchen Automation")).expandX().fillX().height(32f).minHeight(0f)
         container.row()
 
         // Per-researcher auto-research toggles

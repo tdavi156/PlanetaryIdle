@@ -62,9 +62,6 @@ class AutomationModel(
     /** Max crops to buy per tick per color. -1 = buy max. */
     private var bulkQuantity: Int = 1
 
-    /** Index into the enabled-colors list for round-robin cycling. */
-    private var roundRobinIndex: Int = 0
-
     /** Counter passed in from AutomationSystem used to throttle recipe checks. */
     private var recipeTickCounter: Int = 0
 
@@ -171,34 +168,37 @@ class AutomationModel(
         }
     }
 
-    // ── Crop auto-buy (round-robin) ───────────────────────────────────────────
+    // ── Crop auto-buy ─────────────────────────────────────────────────────────
 
     private fun performCropBuyTick() {
         val fm = if (::farmModel.isInitialized) farmModel else return
-        val enabledColors = PlanetResources.entries
-            .filter { cropAutoEnabled[it.resourceName] == true }
-            .map { it.resourceName }
-        if (enabledColors.isEmpty()) return
-
-        // Advance round-robin index
-        if (roundRobinIndex >= enabledColors.size) roundRobinIndex = 0
-        val color = enabledColors[roundRobinIndex]
-        roundRobinIndex = (roundRobinIndex + 1) % enabledColors.size
-
         val maxBuys = if (bulkQuantity == BUY_MAX) BUY_MAX_SAFETY_LIMIT else bulkQuantity
-        var bought = 0
-        while (bought < maxBuys) {
-            val cost = fm.stateForColor(color)?.cost ?: break
 
-            // Smart-buy threshold: only buy if gold >= cost / threshold
-            // threshold=1.0 → no restriction; threshold=0.1 → need 10× cost in gold
-            val threshold = if (smartBuyUnlocked) (cropGoldThreshold[color] ?: 1.0f).toDouble() else 1.0
-            val requiredGold = if (threshold >= 1.0) cost
-            else cost.divide(BigDecimal(threshold), 10, RoundingMode.HALF_UP)
+        // Every tick, attempt to buy ALL enabled + unlocked crops in PlanetResources order
+        // (red first, then orange, yellow … black). Each color has its own independent
+        // attempt — not round-robin. A locked crop is skipped even if its toggle is ON.
+        PlanetResources.entries.forEach { res ->
+            val color = res.resourceName
+            if (cropAutoEnabled[color] != true) return@forEach
 
-            if (fm.goldCoins < requiredGold) break
-            stage.fire(BuyResourceEvent(color))
-            bought++
+            // Skip crops not yet unlocked via soil upgrades.
+            val state = fm.stateForColor(color) ?: return@forEach
+            if (!state.isUnlocked) return@forEach
+
+            var bought = 0
+            while (bought < maxBuys) {
+                val cost = fm.stateForColor(color)?.cost ?: break
+
+                // Smart-buy threshold: only buy if gold >= cost / threshold
+                // threshold=1.0 → no restriction; threshold=0.1 → need 10× cost in gold
+                val threshold = if (smartBuyUnlocked) (cropGoldThreshold[color] ?: 1.0f).toDouble() else 1.0
+                val requiredGold = if (threshold >= 1.0) cost
+                else cost.divide(BigDecimal(threshold), 10, RoundingMode.HALF_UP)
+
+                if (fm.goldCoins < requiredGold) break
+                stage.fire(BuyResourceEvent(color))
+                bought++
+            }
         }
     }
 
@@ -290,7 +290,6 @@ class AutomationModel(
         cropGoldThreshold   = PlanetResources.entries.associate { it.resourceName to 1.0f }
         tickIntervalFrames  = TICK_1_PER_SEC
         bulkQuantity        = 1
-        roundRobinIndex     = 0
         log.debug { "Automation state reset." }
     }
 

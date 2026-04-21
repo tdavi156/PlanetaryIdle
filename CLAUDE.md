@@ -48,6 +48,17 @@ Idle/incremental game about producing resources to earn gold coins. Kotlin + Lib
 The `OBSERVATORY` upgrade (cost 1e20, requires KITCHEN) unlocks the Observatory building.
 The `AUTOMATION_BASIC` upgrade (cost 1e10, requires SOIL) unlocks the Automation system.
 
+#### BarnView canvas
+`BarnView` renders a **4000×1800 px canvas** of node actors inside a `ScrollPane`. SOIL sits at the central hub (800, 1100); branches spread right (expertise chain), down (automation), up (Kitchen/Observatory), left (efficiency). Node positions are fixed `nodeX/nodeY` fields on `BarnUpgrade`.
+
+Key implementation details:
+- Canvas is a plain `Group` (not `WidgetGroup`/`Layout`). `ScrollPane` reads `getWidth/Height` for non-Layout content, so the group's size is kept equal to `CANVAS_WIDTH * zoomScale × CANVAS_HEIGHT * zoomScale` at all times.
+- `setScrollingDisabled(false, false)` + `setFlickScroll(false)` — scrolling disabled by input but scroll position set programmatically; keeps content sized to canvas (not viewport).
+- `setCullingArea` overridden to no-op: LibGDX ScrollPane sets culling in unscaled local coords, which incorrectly culls on-screen nodes when `setScale(zoomScale)` is applied. The ScrollPane's scissor test (screen-space) remains active and provides correct clipping.
+- **Scroll-wheel zoom**: ±7.4% per tick (`×1.08` / `×1/1.08`), range 0.25–3×. Captures viewport centre in unscaled canvas coords *before* changing zoom; sets new scrollX/Y *before* `validate()` to avoid one-frame snap.
+- **Drag-to-pan**: canvas `InputListener` on empty space; uses stage coords for stable deltas.
+- `ConnectionLinesActor` draws edges via `ShapeRenderer` using `batch.projectionMatrix` / `batch.transformMatrix` so lines render in the same scaled space as the nodes.
+
 ### Observatory
 Unlocks via `BarnUpgrade.OBSERVATORY`. Uses **Insight** as its currency, earned passively based on total crop production rate: `rate^0.4` Insight/sec (capped at Double.MAX_VALUE).
 
@@ -84,7 +95,7 @@ Unlocks via `BarnUpgrade.AUTOMATION_BASIC` (cost 1e10, requires SOIL). Always ru
 #### Barn Upgrade Tree (AUTOMATION category, 10 nodes)
 | Upgrade | Cost | Effect |
 |---|---|---|
-| `AUTOMATION_BASIC` | 1e10 | Unlocks automation; 1 buy/sec round-robin |
+| `AUTOMATION_BASIC` | 1e10 | Unlocks automation; 1 buy/sec, all enabled crops |
 | `AUTOMATION_SPEED_1` | 1e13 | 4 buys/sec |
 | `AUTOMATION_SPEED_2` | 1e15 | 10 buys/sec |
 | `AUTOMATION_SPEED_3` | 1e18 | 60 buys/sec (every frame) |
@@ -96,7 +107,7 @@ Unlocks via `BarnUpgrade.AUTOMATION_BASIC` (cost 1e10, requires SOIL). Always ru
 | `AUTOMATION_RECIPE` | 1e18 | Auto best-recipe assignment |
 
 #### AutomationModel behaviour
-- **Crop buy**: round-robin across all 10 colors each tick; respects per-crop ON/OFF toggle and smart-buy gold threshold (buy only if `gold >= cost / threshold`). Fires `BuyResourceEvent`.
+- **Crop buy**: every tick, **all** enabled + unlocked crops attempt to buy in `PlanetResources` order (red first … black last). Each color is independent — not round-robin. Locked crops (not yet unlocked via soil upgrades) are skipped even if their toggle is ON; unlock is checked via `ResourceModelState.isUnlocked`. Respects per-crop ON/OFF toggle and smart-buy gold threshold (buy only if `gold >= cost / threshold`). Fires `BuyResourceEvent`.
 - **Soil auto**: fires `BuyBarnUpgradeEvent(BarnUpgrade.SOIL)` each tick when enabled; BarnViewModel handles affordability.
 - **Auto-recipe** (every 120 ticks): greedy algorithm — sort discovered recipes by `estimatedRecipePayout()` desc, assign non-conflicting (no shared color), deactivate old, activate new via `KitchenViewModel`.
 - **Smart buy**: unlocked by `Discovery.MARKET_ANALYSIS` (Observatory TREASURED tier). Per-crop gold-threshold sliders in AutomationView (−10%/+10%, 10%–100%).
@@ -187,7 +198,7 @@ All keys in `planetaryIdlePrefs` (LibGDX `Preferences`):
 |------|------|
 | `PlanetaryIdle.kt` | Entry point; creates Stage, skin, GameScreen |
 | `GameScreen.kt` | Builds Fleks World; wires all systems and UI |
-| `FarmModel.kt` | Core logic; gold, buy/sell, multipliers, save/load |
+| `FarmModel.kt` | Core logic; gold, buy/sell, multipliers, save/load. `ResourceModelState` exposes `owned`, `cost`, `payout`, `cycleDuration`, `isUnlocked` — populated from `ResourceComponent` in `updateModel()` and from prefs (`{color}_unlocked`) in `initialState()`. |
 | `FarmView.kt` | Farm UI; resource rows, production display, next-milestone labels, achievement triggers; fires `GameCompletedEvent` at rate ≥ 1e308 |
 | `BarnView.kt` / `BarnViewModel.kt` | Upgrade tree UI and purchase logic |
 | `BarnUpgrade.kt` | Enum of 35 upgrades with costs, prerequisites, categories |
